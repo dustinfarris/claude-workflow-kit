@@ -1,0 +1,43 @@
+#+title: workflow-kit — Org-Native Artifact Layer for Spec-Driven Development
+
+A Claude Code plugin that layers on obra/superpowers: Superpowers owns the process phases (brainstorming, TDD inner loop), this kit owns the artifact/record layer — the org document chain (PRD/DESIGN/PLAN/stories), verification ledger, and consistency passes. Design rationale lives in docs/workflow-alignment-plan.org; this repo's own editing rules live in CLAUDE.md.
+
+* Install (plugin, recommended)
+
+1. =/plugin marketplace add <github-user>/claude-workflow-kit=
+2. =/plugin install workflow-kit@dustin-plugins=
+3. In each project repo: copy the matching =project-setup/CLAUDE.md.{mvp,workgrade}= to =CLAUDE.md= and fill in project name, stack, commands. That is the entire per-repo setup — skills, agents, hooks, and templates all travel with the plugin.
+4. Optional per-repo override: create a local =templates/= directory to shadow the plugin's templates for that project.
+5. Optional, work-grade repos: wire =stop-test-gate.sh= into the repo's =.claude/settings.json= per the script header. It stays out of the plugin's hooks.json deliberately — plugin hooks fire in every repo where the plugin is enabled, and a mandatory test gate is a work-grade opinion, not a universal one. (prd-lock and post-edit-format are safe globally: both self-gate on file patterns.)
+
+* Local development of the kit
+
+- =claude --plugin-dir /path/to/claude-workflow-kit= loads the working copy for a session, taking precedence over the installed version.
+- =/reload-plugins= picks up edits without restarting.
+- =test/hooks_test.sh= must be green before any commit that touches hooks/ (CI enforces this on push/PR).
+
+* Install (copy-in fallback, no plugin)
+
+Copy =skills/=, =agents/=, and =hooks/= into a repo's =.claude/= directory, add =project-setup/copy-in-settings.json= as =.claude/settings.json= (it wires hooks via =$CLAUDE_PROJECT_DIR=), copy =templates/= to the repo root, and =chmod +x .claude/hooks/*.sh=. Note the skills lose their =/workflow-kit:= namespace in this mode — invoke them bare (=/user-stories=).
+
+* The pipeline
+
+| Stage             | Invocation                                        | Owner                       |
+|-------------------+---------------------------------------------------+-----------------------------|
+| Brainstorm        | automatic (Superpowers)                           | Superpowers brainstorming   |
+| PRD               | =/workflow-kit:promote-prd=                       | this kit                    |
+| Design            | =/workflow-kit:promote-design=                    | this kit (+ skeptic agent)  |
+| Stories + plan    | =/workflow-kit:user-stories PRD.org DESIGN.org=   | this kit                    |
+| Implementation    | normal session, Superpowers TDD                   | Superpowers                 |
+| Story close-out   | =/workflow-kit:story-closeout stories/story-NN-*.org= | this kit (+ verifier agent) |
+| Doc consistency   | =/workflow-kit:update-design=                     | this kit                    |
+| Phase close       | =/workflow-kit:phase-close=                       | this kit                    |
+
+The weight-class section in each project's CLAUDE.md is the amplitude knob: it selects the DoD variant, toggles the skeptic review, and sets PRD length expectations. Skills and plugins set the shape of the process; CLAUDE.md sets the amplitude.
+
+* Notes
+
+- *Namespace*: the =name= field in =.claude-plugin/plugin.json= defines the =/workflow-kit:= prefix. Renaming the plugin means updating the namespaced references in =skills/= and =project-setup/= — CI checks for this.
+- *Model routing*: =agents/skeptic-reviewer.md= is pinned to =model: opus=; swap in a specific model identifier (e.g. a Fable model string) if your plan supports it. =story-verifier= inherits the session model deliberately — auditing is builder-class work.
+- *PRD lock, defense in depth*: the =prd-lock= hook covers file tools plus write-shaped Bash, and its block message teaches the Amendment protocol. A permissions deny rule on =PRD.org= can be added per-repo as belt-and-suspenders.
+- *Iteration loop*: friction.org entry → kit edit → CHANGELOG.org entry → version bump. The kit should shrink over time, not grow.

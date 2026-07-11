@@ -1,0 +1,30 @@
+#+title: DESIGN — <project name>
+#+date: <promotion date>
+
+# Mutability: adaptive. Body edits are allowed when implementation surfaces new information, but every body edit is paired with a Changelog entry (format: .claude/references/org-conventions.md). A Changelog entry without a body edit is never correct.
+
+PRD (invariant contract): [[file:PRD.org]]
+
+* Overview
+
+<What this design delivers and the shape of the approach, in a paragraph or two.>
+
+* Data Model
+
+<Schemas, fields, associations. For Phoenix projects: Ecto schemas.>
+
+* Screens / Interfaces
+
+<Each screen or interface, what it shows, what actions it exposes.>
+
+* Key Behaviors
+
+<The behaviors with actual design content in them: recurrence logic, flows, resets, integration points. Use #+begin_src blocks for code and prose for constraints — story excerpts are copied verbatim from these sections, so write them to be excerptable.>
+
+* Out of Scope for This Design
+
+<Anything the PRD allows but this design deliberately defers.>
+
+* Changelog
+
+# Pivots discovered during implementation land here, newest last, each paired with a body edit above. Initial promotion needs no entry.

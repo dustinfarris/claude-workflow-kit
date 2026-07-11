@@ -1,0 +1,19 @@
+#+title: Friction Log — workflow-kit
+
+Every kit edit starts here: friction observed in real project use → entry below → kit edit → CHANGELOG entry → version bump. Edits without a friction entry are suspect (see CLAUDE.md). Entries also record friction that was considered and deliberately NOT acted on, so the same idea isn't relitigated.
+
+Entry format:
+
+#+begin_example
+* TODO [project] one-line description of the friction
+:LOGBOOK:
+- Note taken on [YYYY-MM-DD Day HH:MM] \\
+  What happened, which stage/skill/hook, and what the fix candidate is.
+:END:
+#+end_example
+
+Mark =DONE= when the fix ships (cite the CHANGELOG version) or =CANCELLED= with the reason it was declined.
+
+* Entries
+
+# (awaiting the chores-app shakedown)

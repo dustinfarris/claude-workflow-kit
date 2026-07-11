@@ -1,0 +1,9 @@
+#+title: Changelog — workflow-kit
+
+* 0.2.0 — [2026-07-11]
+
+Plugin conversion. Restructured from copy-in =.claude/= layout to Claude Code plugin layout: manifest at =.claude-plugin/plugin.json=, components at plugin root, hooks wired via =hooks/hooks.json= with =${CLAUDE_PLUGIN_ROOT}= paths. org-conventions reference promoted to a skill (auto-loads, solves cross-plugin pathing). Templates resolve repo-local first, plugin fallback second. Skill cross-references namespaced to =/workflow-kit:*=. Added =test/hooks_test.sh= (24 checks: hook behavior, JSON validity, frontmatter lint) and GitHub Actions CI with plugin-structure sanity checks. Copy-in fallback preserved under =project-setup/=. Marketplace manifest added (single-repo pattern; repo is both plugin and marketplace).
+
+* 0.1.0 — [2026-07-11]
+
+Initial kit. Six skills (promote-prd, promote-design, user-stories, story-closeout, update-design, phase-close) converted from yasnippet prompts with verbatim preservation of load-bearing constraints; skeptic-reviewer and story-verifier agents; prd-lock, post-edit-format, and optional stop-test-gate hooks; PRD/DESIGN/PLAN org templates; weight-class CLAUDE.md variants. Design rationale in docs/workflow-alignment-plan.org.

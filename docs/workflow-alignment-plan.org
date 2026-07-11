@@ -1,0 +1,98 @@
+#+title: Workflow Alignment Plan — Superpowers Chassis + Custom Skill Layer
+#+date: [2026-07-10 Fri]
+
+* Principles locked in
+
+1. Ceremony scales with the project, not the model. Every repo declares a weight class in CLAUDE.md; skills and gates read it.
+2. Model routing: Fable = consultant (short, high-leverage, escalate-then-drop-back), Opus = architect, Sonnet = builder.
+3. Superpowers owns *process* phases; my skills own the *artifact/record* layer. The seam is process vs. record-keeping.
+4. The document chain (PRD.org, DESIGN.org, PLAN.org, stories/) is org because org is where history accumulates (LOGBOOK, Changelog). Everything upstream/ephemeral can be any format; a promote step is the boundary.
+5. Mutability policy per layer: PRD = invariant contract (human-only amendments, hook-enforced), DESIGN = adaptive mechanism (changelog-requires-body-edit), PLAN/stories = execution state (LOGBOOK evidence).
+6. Reviews compose because they check different things: Superpowers checks the spec is well-written; my skeptic subagent checks the design survives reality; I check it's what I want.
+
+* Target architecture by stage
+
+| Stage                  | Owner                        | Durable artifact                | Model                              | Gate / enforcement                                        |
+|------------------------+------------------------------+---------------------------------+------------------------------------+-----------------------------------------------------------|
+| 0. Project init        | template + weight-class block | CLAUDE.md                       | —                                  | weight class declared before any stage runs               |
+| 1. Brainstorm          | Superpowers =brainstorming=  | none (scratch spec, any format) | Sonnet; Fable if genuinely gnarly  | HARD-GATE: no code before design approval                 |
+| 2. PRD promotion       | =/promote-prd= (mine)        | PRD.org                         | Sonnet drafts, human approves      | PreToolUse lock on PRD.org after approval                 |
+| 3. Design promotion    | =/promote-design= (mine)     | DESIGN.org (Changelog stub)     | Sonnet                             | skeptic reviewer subagent (Fable/Opus) — work-grade only  |
+| 4. Stories + plan      | =/user-stories= (mine)       | stories/*.org, PLAN.org         | Opus (work) / Sonnet (MVP)         | AC traceability to PRD Success Criteria; drift = stop     |
+| 5. Story implementation| Superpowers TDD loop         | code + tests                    | Sonnet                             | hooks: post-edit format, test gate                        |
+| 6. Story close-out     | =/story-closeout= (mine)     | story LOGBOOK + checkbox states | Sonnet + verifier subagent         | evidence per item; STOP boundary (no PLAN/DESIGN edits)   |
+| 7. Doc consistency     | =/update-design= (mine)      | PLAN LOGBOOK, DESIGN Changelog  | Sonnet                             | changelog-requires-body-edit; PRD conflict = doorbell     |
+| 8. Phase close         | =/phase-close= (mine, new)   | Deferred → v2 candidates        | Sonnet                             | full suite green; docs match reality                      |
+
+* Stage-by-stage alignment notes
+
+** Stage 0 — Project init
+Weight-class block is the amplitude knob for everything downstream: it toggles the skeptic review on/off, selects the DoD variant, and sets PRD length expectations (ten lines for MVP, full for work-grade). Superpowers' "every project gets a design" opinion stays; the block keeps the design allowed-short.
+
+** Stage 1 — Brainstorm (Superpowers, unmodified)
+Its one-question-at-a-time flow, YAGNI pressure, and approval gate replace my hand-rolled requirements interview. Output format is its business — ephemeral scratch. Fable joins the session only when the ambiguity is real, then leaves.
+
+** Stage 2 — PRD promotion (new skill)
+Extracts exactly three things from the approved brainstorm: the problem, Success Criteria, Out of Scope. Writes PRD.org from template. After human approval, the prd-lock hook makes immutability physical, not requested. Amendment protocol: human-only edits, timestamped amendment entry (what outcome changed, why), and an amendment invalidates downstream — design re-reviewed against new criteria, open stories re-checked for traceability.
+
+** Stage 3 — Design promotion (new skill) + skeptic review (new agent)
+Promotes the approved spec into DESIGN.org against the template (pre-created =* Changelog= heading — skills that append to existing structure beat skills that invent it). Then, work-grade only: fresh-context reviewer subagent pinned to a stronger model, running the three questions (bites-in-first-two-weeks, expensive-to-reverse, what-to-cut) with the no-additions constraint. MVP weight class skips this; Superpowers' built-in editorial review suffices.
+
+** Stage 4 — Stories + plan (existing =user-stories= skill, updated)
+Keep the crown jewels untouched: embedded verbatim design excerpts (self-contained story contexts), copy-don't-paraphrase, AC drift guard with stop-and-surface. Changes: point traceability at PRD.org's Success Criteria section explicitly; add DoD variants selected by weight class; fold the thin =create-plan= snippet in as a final step emitting PLAN.org (org TODOs, links to DESIGN and each story). Retire =create-plan= as a standalone.
+
+** Stage 5 — Story implementation (Superpowers TDD, unmodified)
+Red/green discipline is the plugin's strongest offering; let it own the inner loop entirely. Hooks provide the guarantees the old prompt could only request.
+
+** Stage 6 — Story close-out (existing =implement-story= skill, split out)
+The wrapper survives as its own skill: verifier subagent audits Acceptance Criteria, fix-loop until satisfied, then =[X]=/=[ ]=/=[-]= with evidence-bearing LOGBOOK entries (test name, command, file:line), then the same pass for Definition of Done. STOP boundary intact: this skill never touches PLAN.org or DESIGN.org.
+
+** Stage 7 — Doc consistency (existing =update-design= skill, one edit)
+Rename the snippet (stale =update-prd-...= name → =update-design=). Add the doorbell to step 2: if a pivot conflicts with PRD Success Criteria rather than rewording the design, stop and surface for a human amendment decision — the immutable layer needs a doorbell, not just a lock. Everything else (changelog-requires-body-edit invariant, excerpt re-sync, tri-document consistency check) ships as-is.
+
+** Stage 8 — Phase close (new, small)
+Full suite + format/credo, diff behavior against DESIGN.org, promote the Deferred list to v2 candidates, confirm PLAN reads as an accurate record of what was built.
+
+* Shared infrastructure
+
+- =org-conventions= reference file :: single source for LOGBOOK drawer format, =date= timestamp capture, checkbox semantics, Changelog entry format. Referenced by all skills and templates; kills the duplication (and drift risk) between the old =implement-story= and =update-design= snippets.
+- Templates :: PRD.org (Problem / Success Criteria / Out of Scope / Amendments), DESIGN.org (body + empty =* Changelog=), PLAN.org (LOGBOOK convention stated at top). Org examples pull as hard as Superpowers' markdown examples.
+- Agents :: =skeptic-reviewer= (fresh context, model-pinned strong, three questions, no additions), =story-verifier= (AC/DoD auditor).
+- Hooks :: =prd-lock= (PreToolUse deny on Edit/Write targeting PRD.org), post-edit =mix format=, test gate on story completion.
+
+* Build plan
+
+** TODO Phase 0 — Chassis (~30 min)
+- [ ] Install Superpowers from the plugin marketplace
+- [ ] Throwaway session: confirm brainstorming triggers and the writing-plans handoff fires
+- [ ] Note where its outputs land (specs dir) for the promote skills to consume
+
+** TODO Phase 1 — Conventions and templates (~45 min)
+- [ ] Write =org-conventions= reference (extract verbatim from existing snippets — it is already written, just duplicated)
+- [ ] Create PRD.org / DESIGN.org / PLAN.org templates with pre-created scaffolding
+- [ ] Draft the CLAUDE.md weight-class block (MVP and work-grade variants)
+
+** TODO Phase 2 — Skill conversion (~1–2 h)
+- [ ] =/user-stories= : strip yasnippet headers, placeholders → arguments, point at PRD.org criteria, DoD variants, absorb =create-plan=
+- [ ] =/story-closeout= : split from =implement-story=; reference =org-conventions=
+- [ ] =/update-design= : rename, add PRD doorbell sentence, reference =org-conventions=
+- [ ] =/promote-prd= and =/promote-design= : new, small, template-driven
+- [ ] =/phase-close= : new, small
+
+** TODO Phase 3 — Enforcement layer (~45 min)
+- [ ] =prd-lock= PreToolUse hook
+- [ ] Post-edit format hook; test gate
+- [ ] Agent definitions: =skeptic-reviewer= (model-pinned), =story-verifier=
+
+** TODO Phase 4 — Shakedown (the chores app)
+- [ ] Run the full pipeline end to end at MVP weight class
+- [ ] Log every point of friction; each one becomes a CLAUDE.md line or a skill edit
+- [ ] After ship: review which stages earned their keep at this weight class and adjust the toggles
+
+* Operating rules (the part that lives in my head)
+
+- Escalate to Fable for decisions, not volume; return to Sonnet immediately after.
+- Cheap model generates, expensive model reviews.
+- Every prompt/skill states its stopping condition; unbounded containers get filled.
+- When reality contradicts a document, fix it at the right altitude: plan edits are cheap, design edits are changelogged, PRD edits are constitutional.
+- If a stage never gets consulted to make a decision across two or three projects, it is ceremony — cut it.

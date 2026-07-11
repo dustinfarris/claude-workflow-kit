@@ -1,0 +1,17 @@
+# <project name> — Claude Guidelines
+
+## Weight class
+
+personal-mvp. This is a personal project for my family / my own use. Bias toward shipping. No speculative abstractions, no scaling concerns, no multi-tenancy. If unsure whether to add something, leave it out and record it as a Deferred item. Skills read this section: it selects the lighter Definition of Done and skips the skeptic design review.
+
+## Stack & commands
+
+Phoenix LiveView, SQLite, single node. `mix test`, `mix format`, `mix credo`.
+
+## Document chain
+
+PRD.org, DESIGN.org, PLAN.org, and stories/ are org format, never markdown — conventions in the workflow-kit plugin's `org-conventions` skill. PRD.org is the invariant contract: never edit it (the prd-lock hook enforces this); conflicts with its Success Criteria are surfaced to the human as Amendment questions. DESIGN.org body edits are always paired with a Changelog entry.
+
+## Workflow
+
+Pipeline: brainstorm (Superpowers) → `/workflow-kit:promote-prd` → `/workflow-kit:promote-design` → `/workflow-kit:user-stories` → per story: TDD implementation then `/workflow-kit:story-closeout` then `/workflow-kit:update-design` → `/workflow-kit:phase-close`. One story per session, working from the story file's embedded Design excerpt as the source of truth. Out-of-scope discoveries are recorded as Deferred, never fixed inline. Planning artifacts are written in org per the conventions file, even where upstream skill examples show markdown.

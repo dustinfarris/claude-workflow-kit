@@ -1,0 +1,17 @@
+# <project name> — Claude Guidelines
+
+## Weight class
+
+work-grade. This is serious, multi-phase software with other stakeholders and a long lifespan. Full ceremony earns its keep here. Skills read this section: it selects the full Definition of Done (`mix check`, moduledocs, integration tests) and enables the skeptic design review in `/workflow-kit:promote-design`.
+
+## Stack & commands
+
+Phoenix LiveView, <database>. `mix check` is the verification gate (format, credo, dialyzer, tests). <project-specific commands here>.
+
+## Document chain
+
+PRD.org, DESIGN.org, PLAN.org, and stories/ are org format, never markdown — conventions in the workflow-kit plugin's `org-conventions` skill. PRD.org is the invariant contract: never edit it (the prd-lock hook enforces this); conflicts with its Success Criteria are surfaced to the human as Amendment questions, and Amendments invalidate downstream artifacts until re-reviewed. DESIGN.org body edits are always paired with a Changelog entry.
+
+## Workflow
+
+Pipeline: brainstorm (Superpowers) → `/workflow-kit:promote-prd` → `/workflow-kit:promote-design` (skeptic review runs at this weight class) → `/workflow-kit:user-stories` → per story: TDD implementation then `/workflow-kit:story-closeout` then `/workflow-kit:update-design` → `/workflow-kit:phase-close`. One story per session, working from the story file's embedded Design excerpt as the source of truth. Out-of-scope discoveries are recorded as Deferred, never fixed inline. Planning artifacts are written in org per the conventions file, even where upstream skill examples show markdown. Consider enabling the optional `stop-test-gate.sh` hook (instructions in the script header) so a red suite can never be left standing.

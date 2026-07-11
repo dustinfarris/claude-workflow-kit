@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Hook behavior, JSON validity, frontmatter lint
+        run: |
+          chmod +x hooks/*.sh test/hooks_test.sh
+          ./test/hooks_test.sh
+
+      - name: Plugin structure sanity
+        run: |
+          set -e
+          # Only plugin.json/marketplace.json belong inside .claude-plugin/
+          extra=$(ls .claude-plugin | grep -v -e '^plugin.json$' -e '^marketplace.json$' || true)
+          if [ -n "$extra" ]; then echo "Unexpected files in .claude-plugin/: $extra"; exit 1; fi
+          # Component dirs must exist at plugin root
+          for d in skills agents hooks templates; do
+            [ -d "$d" ] || { echo "Missing component dir: $d"; exit 1; }
+          done
+          # Every skill dir must contain a SKILL.md
+          for d in skills/*/; do
+            [ -f "${d}SKILL.md" ] || { echo "Missing SKILL.md in $d"; exit 1; }
+          done
+          # Plugin hooks must reference CLAUDE_PLUGIN_ROOT, never CLAUDE_PROJECT_DIR
+          if grep -q 'CLAUDE_PROJECT_DIR' hooks/hooks.json; then
+            echo "hooks.json must use CLAUDE_PLUGIN_ROOT for portability"; exit 1
+          fi
+          # Manifest name matches the namespace used in skills and docs
+          name=$(jq -r '.name' .claude-plugin/plugin.json)
+          [ "$name" = "workflow-kit" ] || { echo "plugin.json name changed — update /workflow-kit: references in skills/ and project-setup/"; exit 1; }
+          echo "structure OK"
