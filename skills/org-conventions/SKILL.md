@@ -1,11 +1,11 @@
 ---
 name: org-conventions
-description: The single source of truth for org-mode formatting in the document chain — LOGBOOK drawers, timestamps, checkbox semantics, Changelog entries, and per-document mutability. ALWAYS read this before writing any LOGBOOK entry, Changelog entry, or checkbox state in PRD.org, DESIGN.org, PLAN.org, or stories/ files, and before creating any of those files.
+description: The single source of truth for org-mode formatting in the document chain — LOGBOOK drawers, timestamps, checkbox semantics, Decision Log entries, Advisories, batches and gates, and per-document mutability. ALWAYS read this before writing any LOGBOOK entry, Decision Log entry, Advisory, or checkbox state in PRD.org, DESIGN.org, PLAN.org, or stories/ files, and before creating any of those files.
 ---
 
 # Org Conventions
 
-This skill is the single source of truth for org-mode formatting used across the document chain (PRD.org, DESIGN.org, PLAN.org, stories/). Any skill writing a LOGBOOK entry, Changelog entry, or checkbox state MUST follow these conventions exactly. Do not improvise variants. Formatting conventions change here and nowhere else.
+This skill is the single source of truth for org-mode formatting used across the document chain (PRD.org, DESIGN.org, PLAN.org, stories/). Any skill writing a LOGBOOK entry, Decision Log entry, Advisory, or checkbox state MUST follow these conventions exactly. Do not improvise variants. Formatting conventions change here and nowhere else.
 
 ## Document chain format rule
 
@@ -16,6 +16,16 @@ All durable planning artifacts are org format, never markdown: PRD.org, DESIGN.o
 The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase).
 
 Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
+
+## Batches and gates
+
+PLAN.org organizes stories under batch headings. A batch is the unit of work that ends at a gate; "Phase N" is an optional label on a batch heading — decoration, never load-bearing.
+
+Orientation is structural, not nominal: the gate record (a LOGBOOK entry on the batch heading, written by phase-close) doubles as the closed-marker. The open batch is the batch heading without a gate record. At most one batch is open at a time. A legacy PLAN with no batch headings is one open batch.
+
+The PRD may declare gate criteria (what must be verified at gates, e.g. on-device checks); the PLAN must carry the batch structure. A single-batch initiative satisfies this trivially and never thinks about phases.
+
+Gate record format: a standard single-note LOGBOOK drawer on the batch heading — timestamp, checks run, verdict, advisories withdrawn/promoted counts.
 
 ## Story file naming
 
@@ -32,7 +42,7 @@ Stories live in a `stories/` subdirectory adjacent to the PRD, saved with a numb
 Timestamps reflect the ACTUAL time of the entry, never an invented or reused time. Run the `date` shell command immediately before writing each entry:
 
 - For LOGBOOK inactive timestamps: `date '+%Y-%m-%d %a %H:%M'` — wrap the result in square brackets to form `[YYYY-MM-DD Day HH:MM]`
-- For Changelog timestamps: `date '+%Y-%m-%d %H:%M %Z'` — wrap the result in square brackets
+- For Advisory and gate-record timestamps: `date '+%Y-%m-%d %H:%M %Z'` — wrap the result in square brackets
 
 Run `date` per item, not once per session — entries written at different times carry different timestamps.
 
@@ -81,22 +91,58 @@ Plan-level LOGBOOK entries (status updates, implementation observations, decisio
 :END:
 ```
 
-## DESIGN Changelog entry format
+## Decision Log
+
+A decision entry is the permanent record of a judgment call: a fork where a competent person could have gone the other way, which way was chosen, and why — including the rejected alternative when one was seriously considered. Creation threshold: would a plausible future reader choose otherwise if the reasoning weren't recorded? If yes, record it. Renaming a variable is not a decision entry; choosing emoji icons over an asset pipeline is.
+
+Its referent is the system being built, never the document describing it.
+
+Format:
 
 ```org
-** [YYYY-MM-DD HH:MM TZ] <terse heading naming the change>
-
-/Sections affected: <Workstream N — <Workstream name>, "<subsection>"; ...>/
-
-<prose describing the correction; use a numbered list if multiple corrections, prose if single>
+- *Dn (YYYY-MM-DD) — terse title:* what was decided; compressed rationale; rejected alternative if one was live; what it settles (FR-x, PRD deferrals); → § pointers to where the body reflects it.
 ```
 
-The "Sections affected" line uses italic markup (forward slashes) per org convention. Entries are appended under the `* Changelog` heading, newest last.
+One monotonic sequence per initiative. The growing end is `* Decision Log` in DESIGN.org. In adopted repos where earlier entries live elsewhere (e.g. a PRD decision-log section), the next number is the highest existing number anywhere in the chain, plus one.
 
-**Invariant: a Changelog entry without a corresponding DESIGN body edit is never correct.** If an implementation decision clarifies something the design already says correctly, it belongs in the Plan LOGBOOK, not the Changelog.
+Created at three moments:
+
+- design-time (through canon approval) — minted freely, entry and body born together, no pairing machinery;
+- implementation-time (post-canon, via update-design) — the full three-step applies: mint the D-entry, make the body edit, issue the Advisory citing the D-number;
+- amendment-time — the design consequences a PRD Amendment forces get D-entries like any other pivot.
+
+Append-only, forever. A decision entry cannot become wrong; it records that a judgment happened. A reversed decision gets a new entry citing the old (`Dn — supersedes Dm: ...`); the old entry stays.
+
+Referenced by: document bodies inline as `(Dx)`; Advisories (the why behind a notice); CLAUDE.md invariants (curated distillations); fresh sessions and design reviews (rejected alternatives fence off relitigation); Amendment analysis (the → § trail shows what an amendment invalidates); initiative-close extraction (survived decisions become confirmed-approach lessons).
+
+## Advisories
+
+Purpose: active notices to future sessions reading this document cold — positions the document previously took that no longer hold. The primary consumer is the next agent session; git holds the permanent history, but a stateless reader will not run `git log`, so the working set of protective deltas lives in the document.
+
+Payload rule: Each advisory's payload is the SUPERSEDED position, stated explicitly — what this document used to say, and why it still looks attractive. The current position is already in the body; do not restate it as the entry's substance. Test before writing: could a reader reconstruct the old position from this entry alone? "§5 tap target adjusted" fails. "§5 tap target raised from 72 px to 88 px" passes. An entry that fails this test is a commit message, not an advisory, and protects no one. (FROM-first)
+
+Format: `** [YYYY-MM-DD HH:MM TZ] <heading naming what no longer holds>`, then an italic `/Sections affected: .../` line, then prose. Timestamp via `date '+%Y-%m-%d %H:%M %Z'`, wrapped in brackets. Appended under `* Advisories`, newest last.
+
+```org
+** [2026-07-10 16:40 PDT] §11 no longer permits async DB tests (D24)
+
+/Sections affected: §11 Testing strategy/
+
+Earlier versions of this document specified =async: true= on the ConnCase LiveView tests. Do not reintroduce it, even though it looks like an easy win: =ecto_sqlite3='s SQL.Sandbox collides under concurrent per-test write transactions ("Database busy"), and =busy_timeout=/WAL are not the fix — they're already adapter defaults. Rationale: D24.
+
+** [2026-07-13 09:12 PDT] §5 chore-row tap target raised from 72 px to 88 px
+
+/Sections affected: §5 Kiosk layout/
+
+This document previously specified ~72 px minimum tap height; on-device QA showed misses. If you're reading old excerpts, story fixtures, or CSS referencing 72, they're stale — 88 px is the floor. No D-entry: this is a corrected value, not a decision.
+```
+
+**An Advisory without a corresponding DESIGN body edit is never correct.** If an implementation decision clarifies something the design already says correctly, it belongs in the Plan LOGBOOK, not here. Decision-driven advisories cite their D-number; repair-class advisories (corrected errors, not judgments) mint no D-entry. Reciprocally: **a post-canon D-entry claiming a → § effect without a paired Advisory is equally suspect** — drift is detectable from both directions.
+
+Lifecycle: issued post-canon only (pre-canon edits have no prior readers to protect). Withdrawn — deleted, not annotated — at a gate, once no reader could plausibly reintroduce the superseded position. Withdrawal is also promotion review: a withdrawn advisory that generalizes beyond this project is a lesson candidate, reported at the gate. Git remains the permanent archive.
 
 ## Mutability policy per document
 
 - **PRD.org** — invariant contract. Human-only edits via the Amendment protocol (see the template). Agents NEVER edit this file; a PreToolUse hook enforces the lock. If work appears to conflict with PRD Success Criteria, stop and surface for a human decision.
-- **DESIGN.org** — adaptive mechanism. Body edits allowed when new information surfaces, always paired with a Changelog entry.
+- **DESIGN.org** — adaptive mechanism. Body edits allowed when new information surfaces, always paired per the Decision Log / Advisories rules above.
 - **PLAN.org and stories/** — execution state. Updated freely per the skills that own them, with LOGBOOK evidence.

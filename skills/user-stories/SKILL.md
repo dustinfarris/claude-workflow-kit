@@ -84,6 +84,10 @@ Scope each excerpt tightly to what the story implements. If a story covers two a
 
 ## Emit the plan
 
-After the story set is written, review the stories and observe any dependencies they may have on each other. Write PLAN.org alongside the PRD in the initiative directory (from the repo-local `templates/PLAN.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PLAN.org`) listing each story in the order you determine as org TODOs. The plan has a link to DESIGN.org, and each story listed is a link to the story file.
+After the story set is written, review the stories and observe any dependencies they may have on each other. PLAN.org lives alongside the PRD in the initiative directory; each story is listed in the order you determine as an org TODO linking to its story file, under a batch heading, and the plan links to DESIGN.org.
+
+If PLAN.org is absent, create it from the repo-local `templates/PLAN.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PLAN.org`, and place this run's stories as the first batch — label the batch from the given phase scope if any was passed, else "Batch 1".
+
+If PLAN.org already exists, first verify no batch is open — an open batch is a batch heading without a gate record (see org-conventions). If a batch is open, STOP and surface it: generating a new batch over an open one breaks gate orientation, and the open batch must be closed at a gate first. Otherwise append this run's stories as a new batch heading after the existing batches. Never modify prior batches or their gate records.
 
 STOP. You are done when the stories and PLAN.org exist. Do not begin implementing.

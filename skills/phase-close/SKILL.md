@@ -1,18 +1,28 @@
 ---
 name: phase-close
-description: Close out a completed phase — verify the suite, reconcile documents against actual behavior, and promote deferrals to v2 candidates. Use when all stories in PLAN.org are closed out, when the user says the phase or MVP is done, or when they ask to wrap up, ship, or review what was built before starting the next phase.
+description: Closes the open batch in PLAN.org — verification, document reconciliation, advisory pass, and the gate record. Use when a batch or phase is done, when the user says they are ready to gate, or as a pre-milestone check before starting the next batch.
 ---
 
 # Phase Close
 
-Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) for LOGBOOK and Changelog formats.
+Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) for LOGBOOK, Advisory, and gate-record formats, and for what marks a batch open.
 
-Preconditions: every story in PLAN.org is marked done or deferred, and `/update-design` has run after the final story. If either is false, say so and stop — this gate closes a finished phase, it does not finish one.
+This is the gate skill: it closes the open batch, and it audits rather than maintains. The per-story passes (story-closeout, update-design) already did the maintenance; the gate verifies that work landed and records the crossing.
 
-1. Run the full verification appropriate to the weight class in CLAUDE.md: work-grade runs `mix check`; personal-mvp runs `mix format --check-formatted` and `mix test`. All must pass; fix failures before continuing (test or format fixes only — behavior changes at this stage go through a story).
-2. Diff actual behavior against DESIGN.org: walk each Key Behaviors section and confirm the implementation matches. List any divergences found. For each deliberate divergence not yet recorded, make the DESIGN body edit and paired Changelog entry now (per the invariant in org-conventions.md). For each accidental divergence, surface it to the user — that is a bug or an unrecorded pivot, and the human decides which.
-3. Confirm PLAN.org reads as an accurate record of what was actually built: every story's status is truthful, and LOGBOOK entries capture the decisions worth carrying forward. Fill gaps with dated LOGBOOK entries.
-4. Promote the Plan's `* Deferred` section into a `* v2 Candidates` section: for each item, one line on what it is and why it was deferred. Do not design them.
-5. Report a short phase summary to the user: what shipped, notable pivots (from the Changelog), and the v2 candidate list. Note which workflow stages earned their keep at this weight class and which felt like ceremony — that feedback tunes the toggles.
+**Orientation.** Resolve the active initiative directory per org-conventions. The open batch is the batch heading without a gate record (a legacy PLAN with no batch headings is one open batch — the whole story list). If there are zero open batches, or more than one, stop and ask — orientation is ambiguous and closing the wrong batch corrupts the gate structure.
 
-STOP. Do not modify PRD.org. Do not begin v2.
+**Precondition.** Every story in the open batch is done or deferred, and update-design has run after the final story. Otherwise say so and stop — a gate closes a finished batch, it does not finish one.
+
+1. Run the full verification appropriate to the weight class in CLAUDE.md: work-grade runs `mix check`; personal-mvp runs `mix format --check-formatted` and `mix test`. All must pass; fix failures before continuing (test or format fixes only — behavior changes at this stage go through a story). If the PRD declares gate criteria (e.g. an on-device checklist), run them too — where a criterion is a manual check, present it to the human for sign-off; never fake a result.
+
+2. Diff actual behavior against DESIGN.org: walk each Key Behaviors section and confirm the implementation matches. List any divergences. A deliberate divergence with no record means a per-story update-design pass was missed — run update-design retroactively for the affected story so the pivot lands its D-entry, body edit, and Advisory the normal way, rather than patching DESIGN directly here. An accidental divergence is surfaced to the human — that is a bug or an unrecorded pivot, and the human decides which.
+
+3. PLAN reconciliation — audit, don't update. Read the whole open batch cold and verify the per-story record holds: every story's status is truthful and its LOGBOOK captures what was carried forward. A discrepancy means an update-design pass was skipped or failed; run it retroactively for that story so the repair leaves the normal evidence trail. The gate itself writes no PLAN content except the gate record in step 5.
+
+4. Advisory pass: read `* Advisories` in DESIGN.org and withdraw — delete, not annotate — any advisory that no longer protects anything, because no reader could plausibly reintroduce the superseded position now. A withdrawn advisory that generalizes beyond this project is a lesson candidate: note it in the report for later promotion. Git remains the permanent archive.
+
+5. Write the gate record on the batch heading per org-conventions: a single-note LOGBOOK drawer with the timestamp, checks run, verdict, and the count of advisories withdrawn/promoted. Its presence is what marks the batch closed.
+
+6. Report a short summary to the user: what shipped, notable pivots (from the Decision Log), and the advisories withdrawn/promoted.
+
+STOP. Do not modify PRD.org. Do not open the next batch — the next user-stories run opens it.

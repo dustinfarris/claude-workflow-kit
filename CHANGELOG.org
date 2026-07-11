@@ -1,5 +1,10 @@
 #+title: Changelog — workflow-kit
 
+* 0.3.0 — [2026-07-11]
+
+Two-log structure, batch/gate ontology, phase-close slimmed to gate mechanics. The single =* Changelog= is replaced by two headings with distinct referents: =* Decision Log= (append-only, Dn-numbered judgments about the system being built) and =* Advisories= (superseded positions preserved for cold readers of the document), cross-cited by D-number. org-conventions defines both, with the payload litmus (FROM-first) and the paired invariants — an Advisory without a body edit, and a post-canon D-entry without a paired Advisory, are both suspect. Phases are demoted to batches: a batch is the unit that ends at a gate, "Phase N" is an optional label, and the gate record (a LOGBOOK entry on the batch heading) doubles as the closed-marker — the open batch is the one without a gate record. PLAN.org carries batch headings; user-stories appends a new batch and refuses to open one over an unclosed batch. phase-close is rewritten to gate mechanics only — verification (plus PRD-declared gate criteria), behavior/PLAN audit that routes repairs back through update-design, advisory withdrawal/promotion, and the gate record; its old v2-candidate promotion and stages-earned-their-keep retrospective move to the (not-yet-built) initiative-close skill. update-design's pivot handling becomes a three-step (mint D-entry → body edit → Advisory). New CLAUDE.md invariant: conversation-born terms don't ship except as parenthetical mnemonics after the rule they compress. Stale =references/org-conventions.md= paths corrected to the skill. hooks_test.sh gains a Changelog-string tripwire over skills/templates/project-setup.
+
+
 * 0.2.1 — [2026-07-11]
 
 Initiative-directory convention. Document chain now lives in =docs/YYYY-MM-DD-<initiative>/= (convention defined in org-conventions; canonical uppercase filenames required — the prd-lock glob is case-sensitive). Skills resolve paths via the repo CLAUDE.md =Active initiative:= line, falling back to the newest dated directory, then repo root (legacy). promote-prd creates the directory and maintains the pointer. First friction.org entry closed.

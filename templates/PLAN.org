@@ -1,17 +1,17 @@
 #+title: PLAN — <project name>
 #+date: <creation date>
 
-# Mutability: execution state. Story status and implementation observations are recorded here as LOGBOOK entries per .claude/references/org-conventions.md. By phase close, this file should read as an accurate record of what was actually built.
+# Mutability: execution state. Story status and implementation observations are recorded here as LOGBOOK entries per the workflow-kit org-conventions skill. By phase close, this file should read as an accurate record of what was actually built.
 
 Design: [[file:DESIGN.org]]
 
-* Stories
+* Batch 1 — <optional label, e.g. Phase 1: walking skeleton>
 
-# Each story is an org TODO linking to its story file, listed in implementation order. Status updates get LOGBOOK entries under the story heading.
+# Stories in this batch nest below as org TODOs, listed in implementation order; status updates get LOGBOOK entries under the story heading. At phase-close the gate record for this batch lands here as a LOGBOOK entry on the batch heading — its presence marks the batch closed. At most one batch is open (has no gate record) at a time; new batches are appended by later user-stories runs, never over an open one.
 
 ** TODO [[file:stories/story-01-<slug>.org][Story 01 — <title>]]
 ** TODO [[file:stories/story-02-<slug>.org][Story 02 — <title>]]
 
 * Deferred
 
-# Out-of-scope discoveries land here during implementation instead of being fixed inline. Promoted to v2 candidates at phase close.
+# Out-of-scope discoveries land here during implementation instead of being fixed inline. Promoted to v2 candidates at initiative close.

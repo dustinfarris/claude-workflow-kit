@@ -1,7 +1,7 @@
 #+title: DESIGN — <project name>
 #+date: <promotion date>
 
-# Mutability: adaptive. Body edits are allowed when implementation surfaces new information, but every body edit is paired with a Changelog entry (format: .claude/references/org-conventions.md). A Changelog entry without a body edit is never correct.
+# Mutability: adaptive. Body edits are allowed when implementation surfaces new information, but every body edit is paired per the two-log rules in the workflow-kit org-conventions skill: a Decision Log entry when the edit records a judgment call, and an Advisory for every post-canon body edit. An Advisory without a body edit is never correct.
 
 PRD (invariant contract): [[file:PRD.org]]
 
@@ -25,6 +25,15 @@ PRD (invariant contract): [[file:PRD.org]]
 
 <Anything the PRD allows but this design deliberately defers.>
 
-* Changelog
+* Decision Log
 
-# Pivots discovered during implementation land here, newest last, each paired with a body edit above. Initial promotion needs no entry.
+# Judgments about the system being built, Dn-numbered, append-only — see the workflow-kit org-conventions skill. Design-time entries are minted freely during promotion; post-canon entries pair with a body edit and an Advisory.
+
+* Advisories
+
+# Active notices to future sessions: positions this document previously took
+# that no longer hold. Read before proposing changes. The payload is the
+# superseded position — the current position is in the body. Withdrawn
+# (deleted) at gates once no reader could plausibly reintroduce the old
+# position; git keeps the permanent record. Every advisory pairs with a body
+# edit; decision-driven advisories cite their D-number.

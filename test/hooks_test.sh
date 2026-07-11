@@ -75,6 +75,10 @@ for f in "$ROOT"/skills/*/SKILL.md "$ROOT"/agents/*.md; do
   fi
 done
 
+echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
+strays="$(grep -rl -e Changelog -e changelog "$ROOT/skills" "$ROOT/templates" "$ROOT/project-setup" 2>/dev/null | wc -l | tr -d ' ')"
+check "no Changelog/changelog strings" "$strays" 0
+
 echo
 echo "passed: $PASS  failed: $FAIL"
 [ "$FAIL" -eq 0 ] || exit 1
