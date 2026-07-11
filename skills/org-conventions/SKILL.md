@@ -39,10 +39,9 @@ Stories live in a `stories/` subdirectory adjacent to the PRD, saved with a numb
 
 ## Capturing timestamps
 
-Timestamps reflect the ACTUAL time of the entry, never an invented or reused time. Run the `date` shell command immediately before writing each entry:
+Timestamps reflect the ACTUAL time of the entry, never an invented or reused time. Run the `date` shell command immediately before writing each entry: every bracketed timestamp in chain documents (LOGBOOK notes, gate records, Advisory headings) is an org-native inactive timestamp, captured via `date '+%Y-%m-%d %a %H:%M'` and wrapped in brackets: `[2026-07-11 Sat 14:22]`.
 
-- For LOGBOOK inactive timestamps: `date '+%Y-%m-%d %a %H:%M'` — wrap the result in square brackets to form `[YYYY-MM-DD Day HH:MM]`
-- For Advisory and gate-record timestamps: `date '+%Y-%m-%d %H:%M %Z'` — wrap the result in square brackets
+D-entry dates like `(2026-07-10)` are inline notation, not org timestamps — this rule does not apply to them. Gate records are LOGBOOK notes and use the LOGBOOK entry format.
 
 Run `date` per item, not once per session — entries written at different times carry different timestamps.
 
@@ -121,16 +120,16 @@ Purpose: active notices to future sessions reading this document cold — positi
 
 Payload rule: Each advisory's payload is the SUPERSEDED position, stated explicitly — what this document used to say, and why it still looks attractive. The current position is already in the body; do not restate it as the entry's substance. Test before writing: could a reader reconstruct the old position from this entry alone? "§5 tap target adjusted" fails. "§5 tap target raised from 72 px to 88 px" passes. An entry that fails this test is a commit message, not an advisory, and protects no one. (FROM-first)
 
-Format: `** [YYYY-MM-DD HH:MM TZ] <heading naming what no longer holds>`, then an italic `/Sections affected: .../` line, then prose. Timestamp via `date '+%Y-%m-%d %H:%M %Z'`, wrapped in brackets. Appended under `* Advisories`, newest last.
+Format: `** [YYYY-MM-DD Day HH:MM] <heading naming what no longer holds>`, then an italic `/Sections affected: .../` line, then prose. Timestamp via `date '+%Y-%m-%d %a %H:%M'`, wrapped in brackets. Appended under `* Advisories`, newest last.
 
 ```org
-** [2026-07-10 16:40 PDT] §11 no longer permits async DB tests (D24)
+** [2026-07-10 Fri 16:40] §11 no longer permits async DB tests (D24)
 
 /Sections affected: §11 Testing strategy/
 
 Earlier versions of this document specified =async: true= on the ConnCase LiveView tests. Do not reintroduce it, even though it looks like an easy win: =ecto_sqlite3='s SQL.Sandbox collides under concurrent per-test write transactions ("Database busy"), and =busy_timeout=/WAL are not the fix — they're already adapter defaults. Rationale: D24.
 
-** [2026-07-13 09:12 PDT] §5 chore-row tap target raised from 72 px to 88 px
+** [2026-07-13 Mon 09:12] §5 chore-row tap target raised from 72 px to 88 px
 
 /Sections affected: §5 Kiosk layout/
 

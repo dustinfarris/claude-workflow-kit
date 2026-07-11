@@ -79,6 +79,10 @@ echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
 strays="$(grep -rl -e Changelog -e changelog "$ROOT/skills" "$ROOT/templates" "$ROOT/project-setup" 2>/dev/null | wc -l | tr -d ' ')"
 check "no Changelog/changelog strings" "$strays" 0
 
+echo "== no '%Z' timestamp stragglers in skills/templates =="
+strays="$(grep -rl -- '%Z' "$ROOT/skills" "$ROOT/templates" 2>/dev/null | wc -l | tr -d ' ')"
+check "no %Z strings" "$strays" 0
+
 echo
 echo "passed: $PASS  failed: $FAIL"
 [ "$FAIL" -eq 0 ] || exit 1

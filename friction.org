@@ -46,3 +46,21 @@ Mark =DONE= when the fix ships (cite the CHANGELOG version) or =CANCELLED= with 
 - Note taken on [2026-07-11 Sat 09:58] \\
   The Definition-of-Done blocks and phase-close step 1 hard-code `mix format`/`mix test`/`mix check`. bear-cub's real gate is `mix precommit`. The verification command should be declarable in CLAUDE.md (like weight class) so the kit stops assuming a fixed mix invocation. Candidate: a `Verify command:` line the DoD and phase-close read.
 :END:
+
+* DONE [bear-cub] gate-record timestamp format ambiguous (LOGBOOK note vs %Z rule)
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat 11:28] \\
+  The first real PLAN.org used the `%Z` gate-record format inside a LOGBOOK drawer — not org-parseable there. org-conventions had two competing timestamp formats (LOGBOOK inactive timestamps vs. Advisory/gate-record `%Z` timestamps) and gate records are LOGBOOK notes, so they need the LOGBOOK format, not the Advisory one. Fixed by unifying on org-native inactive timestamps (`date '+%Y-%m-%d %a %H:%M'`) everywhere in the chain, deleting the `%Z` bullet. Shipped 0.3.1.
+:END:
+
+* DONE [bear-cub] story generation quoted the §11 fixture list, then omitted midnight-spanning from the ACs
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat 11:28] \\
+  user-stories embedded the §11 fixture list verbatim in a story's Design excerpt, including the midnight-spanning fixture, but the Acceptance Criteria never covered it — the AC drift guard only traced outward (AC beyond the excerpt), not inward (excerpt content missing from the ACs). Fixed by adding inward tracing to the drift guard: every requirement the excerpt explicitly enumerates for the story's scope must be covered by an AC or surfaced as uncovered. Shipped 0.3.1.
+:END:
+
+* DONE [bear-cub] story generation resolved design silence on staleness glyph placement by inventing semantics
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat 11:28] \\
+  The design was silent on per-column placement of the staleness glyph; user-stories filled the gap by inventing per-column semantics rather than surfacing the silence, which is the same drift problem in a different shape. Fixed by adding a design-silence clause to the AC drift guard: write the AC at the design's level of specificity, or surface the gap as a `# GAP:` comment for human adjudication. Shipped 0.3.1.
+:END:

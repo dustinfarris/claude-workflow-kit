@@ -19,6 +19,10 @@ The Acceptance Criteria should be clear, verifiable, and center around the user 
 
 Acceptance Criteria must be consistent with both the embedded Design excerpt (see below) and the PRD's Success Criteria section in PRD.org. The intent of an AC should trace back to something the PRD's Success Criteria establish, even if the AC's wording is more specific than the PRD's. If you find yourself wanting to write an AC that goes beyond either the embedded Design excerpt or the PRD's intent — asking for more examples, more file scope, or behavior the spec does not cover — stop. Either narrow the AC to match what the spec says, or surface the gap as a comment for the human to resolve before the story is finalized. Acceptance criteria that drift past the embedded spec create the same problem the embedding was meant to prevent.
 
+Tracing runs both directions. Outward: no AC may exceed the excerpt or the PRD's intent. Inward: every requirement the embedded excerpt explicitly enumerates for this story's scope must be either covered by an AC or surfaced as uncovered — quoting a requirement in the excerpt and then omitting it from the ACs is the same drift in reverse.
+
+Where the design is silent on a detail an AC would need to state (a location, a threshold, a behavior), do not resolve the silence — write the AC at the design's level of specificity, or surface the gap as a "# GAP:" comment in the story for human adjudication. "# GAP:" is the greppable convention for surfaced gaps.
+
 Example Acceptance Criteria for documentation work:
 
 ```org
