@@ -7,7 +7,7 @@ description: Propagate a completed story's outcomes through the document chain �
 
 Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) before writing any LOGBOOK or Changelog entries — it defines the entry formats, timestamp capture, and the Changelog invariant referenced below.
 
-The user may pass paths when invoking (e.g. `/workflow-kit:update-design PLAN.org DESIGN.org`); otherwise use `PLAN.org` and `DESIGN.org` at the repo root. The story in scope is the one most recently closed out.
+The user may pass paths when invoking (e.g. `/workflow-kit:update-design PLAN.org DESIGN.org`); otherwise resolve the active initiative directory per org-conventions and use its `PLAN.org` and `DESIGN.org`. The story in scope is the one most recently closed out.
 
 1. Open PLAN.org and update it to reflect current progress based on the story file's checkbox states and LOGBOOK entries from the just-completed implementation. Add a Plan LOGBOOK entry per the LOGBOOK convention for any status updates and implementation notes — observations, decisions made during implementation, deferrals, or context that doesn't change the design but is worth carrying forward. Carry any "Deferred discovery" items from the story's Technical Notes into the Plan's `* Deferred` section.
 

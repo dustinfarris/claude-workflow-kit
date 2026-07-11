@@ -7,7 +7,7 @@ description: Break an approved design into implementation-ready user stories wit
 
 Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) before writing any files.
 
-The user may pass paths when invoking (e.g. `/workflow-kit:user-stories PRD.org DESIGN.org`); otherwise use `PRD.org` and `DESIGN.org` at the repo root. Read both fully before writing anything. Also read the `## Weight class` section of CLAUDE.md — it selects the Definition of Done variant below.
+The user may pass paths when invoking (e.g. `/workflow-kit:user-stories PRD.org DESIGN.org`); otherwise resolve the active initiative directory per org-conventions (CLAUDE.md `Active initiative:` line, else newest `docs/*/` dated directory, else repo root) and use its `PRD.org` and `DESIGN.org`. Read both fully before writing anything. Also read the `## Weight class` section of CLAUDE.md — it selects the Definition of Done variant below.
 
 Create user stories to implement the design in a `stories/` sub-directory adjacent to the PRD. The stories are written in org format and saved with numbered filenames for easy reference (e.g. `story-01-<slug>.org`).
 
@@ -84,6 +84,6 @@ Scope each excerpt tightly to what the story implements. If a story covers two a
 
 ## Emit the plan
 
-After the story set is written, review the stories and observe any dependencies they may have on each other. Write PLAN.org (from the repo-local `templates/PLAN.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PLAN.org`) listing each story in the order you determine as org TODOs. The plan has a link to DESIGN.org, and each story listed is a link to the story file.
+After the story set is written, review the stories and observe any dependencies they may have on each other. Write PLAN.org alongside the PRD in the initiative directory (from the repo-local `templates/PLAN.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PLAN.org`) listing each story in the order you determine as org TODOs. The plan has a link to DESIGN.org, and each story listed is a link to the story file.
 
 STOP. You are done when the stories and PLAN.org exist. Do not begin implementing.

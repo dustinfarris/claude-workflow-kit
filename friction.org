@@ -17,3 +17,8 @@ Mark =DONE= when the fix ships (cite the CHANGELOG version) or =CANCELLED= with 
 * Entries
 
 # (awaiting the chores-app shakedown)
+* DONE [bear-cub adoption] document chain assumed repo root; my convention is dated initiative directories
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat 13:05] \\
+  Adopting the kit for bear-cub Phase 3 surfaced that all skills hard-coded repo-root discovery, while my actual layout is docs/YYYY-MM-DD-<initiative>/prd.org. Fixed in 0.2.1: location convention added to org-conventions (dated dirs, uppercase canonical filenames — lowercase escapes the prd-lock glob), skills resolve via CLAUDE.md `Active initiative:` line → newest dated dir → repo root, promote-prd creates the dir and maintains the pointer. Initiative ≠ phase: phases share one chain.
+:END:

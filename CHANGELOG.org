@@ -1,5 +1,10 @@
 #+title: Changelog — workflow-kit
 
+* 0.2.1 — [2026-07-11]
+
+Initiative-directory convention. Document chain now lives in =docs/YYYY-MM-DD-<initiative>/= (convention defined in org-conventions; canonical uppercase filenames required — the prd-lock glob is case-sensitive). Skills resolve paths via the repo CLAUDE.md =Active initiative:= line, falling back to the newest dated directory, then repo root (legacy). promote-prd creates the directory and maintains the pointer. First friction.org entry closed.
+
+
 * 0.2.0 — [2026-07-11]
 
 Plugin conversion. Restructured from copy-in =.claude/= layout to Claude Code plugin layout: manifest at =.claude-plugin/plugin.json=, components at plugin root, hooks wired via =hooks/hooks.json= with =${CLAUDE_PLUGIN_ROOT}= paths. org-conventions reference promoted to a skill (auto-loads, solves cross-plugin pathing). Templates resolve repo-local first, plugin fallback second. Skill cross-references namespaced to =/workflow-kit:*=. Added =test/hooks_test.sh= (24 checks: hook behavior, JSON validity, frontmatter lint) and GitHub Actions CI with plugin-structure sanity checks. Copy-in fallback preserved under =project-setup/=. Marketplace manifest added (single-repo pattern; repo is both plugin and marketplace).

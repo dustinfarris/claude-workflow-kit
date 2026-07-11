@@ -10,7 +10,7 @@ Phoenix LiveView, SQLite, single node. `mix test`, `mix format`, `mix credo`.
 
 ## Document chain
 
-PRD.org, DESIGN.org, PLAN.org, and stories/ are org format, never markdown — conventions in the workflow-kit plugin's `org-conventions` skill. PRD.org is the invariant contract: never edit it (the prd-lock hook enforces this); conflicts with its Success Criteria are surfaced to the human as Amendment questions. DESIGN.org body edits are always paired with a Changelog entry.
+Active initiative: docs/YYYY-MM-DD-<initiative>/ (the document chain lives here; promote-prd maintains this line when a new initiative starts). PRD.org, DESIGN.org, PLAN.org, and stories/ are org format, never markdown — conventions in the workflow-kit plugin's `org-conventions` skill. PRD.org is the invariant contract: never edit it (the prd-lock hook enforces this); conflicts with its Success Criteria are surfaced to the human as Amendment questions. DESIGN.org body edits are always paired with a Changelog entry.
 
 ## Workflow
 

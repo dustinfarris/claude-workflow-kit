@@ -11,6 +11,12 @@ This skill is the single source of truth for org-mode formatting used across the
 
 All durable planning artifacts are org format, never markdown: PRD.org, DESIGN.org, PLAN.org, and every file under stories/. Ephemeral scratch output (brainstorm specs, subagent reports) may be any format. Do not hard-wrap lines in org documents; let lines flow naturally.
 
+## Document chain location
+
+The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase).
+
+Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
+
 ## Story file naming
 
 Stories live in a `stories/` subdirectory adjacent to the PRD, saved with a numbered filename for easy reference: `story-01-<slug>.org`, `story-02-<slug>.org`, ...
