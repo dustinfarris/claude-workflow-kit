@@ -1,5 +1,10 @@
 #+title: Changelog — workflow-kit
 
+* 0.3.3 — [2026-07-11]
+
+friction.org retired from the iteration loop. Its gate-and-cite format is replaced by a local, gitignored todo.org for personal backlog tracking — not a repo convention, so it isn't named in checked-in docs. CLAUDE.md's Iteration loop and Testing sections and README.org's Iteration loop bullet now read "kit edit (from real project use) → CHANGELOG.org entry → version bump," dropping the friction-entry gate; edits are justified by an explicit CHANGELOG rationale instead. friction.org's five DONE entries were already reflected in past CHANGELOG entries; its two open TODOs (initiative-close skill, CLAUDE.md-declarable verify command) carried forward into the local todo.org, not into the repo.
+
+
 * 0.3.2 — [2026-07-11]
 
 Advisories gain an Issuance rule, closing the gap left by the payload litmus: the litmus said what an advisory must contain, not when one should be written at all. An advisory is now issued only where a superseded position could trap a future reader — never as a mutation record; additive or neutral body edits get no entry, since git and the gate's reconciliation pass already own mutation completeness. A "Sections affected" line may name a section only if that section's superseded position is stated in the payload — naming an affected section without stating what it used to say is the litmus failure in disguise. Ratified by human ruling, added verbatim to org-conventions' Advisories section.

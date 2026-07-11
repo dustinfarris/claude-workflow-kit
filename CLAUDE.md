@@ -16,12 +16,12 @@ tooling. This repo IS the workflow: skills, agents, hooks, and templates consume
 
 ## Testing
 
-Hook changes require `test/hooks_test.sh` green before commit — both the existing 13 cases and a new case for any new block/allow pattern. Skill changes get at least a dry read-through in a consuming repo before a version bump; friction found there lands in friction.org first, then here.
+Hook changes require `test/hooks_test.sh` green before commit — both the existing 13 cases and a new case for any new block/allow pattern. Skill changes get at least a dry read-through in a consuming repo before a version bump; friction found there gets fixed here directly, with the rationale captured in the CHANGELOG entry.
 
 ## Iteration loop
 
-friction.org entry (from real project use) → kit edit → CHANGELOG.org entry → version bump. Edits without a friction entry or an explicit rationale are suspect — this kit should shrink over time, not grow. If a stage or rule has not been consulted to make a decision across two or three projects, propose cutting it rather than polishing it.
+kit edit (from real project use) → CHANGELOG.org entry → version bump. Edits without an explicit rationale in the CHANGELOG are suspect — this kit should shrink over time, not grow. If a stage or rule has not been consulted to make a decision across two or three projects, propose cutting it rather than polishing it.
 
 ## Conventions for this repo
 
-Org format for docs (README.org, CHANGELOG.org, friction.org, docs/); markdown for SKILL.md, agents, and references (Claude Code's native format). Do not hard-wrap lines. Skill descriptions stay "pushy" per skill-writing best practice — trigger conditions live in the description, not the body.
+Org format for docs (README.org, CHANGELOG.org, docs/); markdown for SKILL.md, agents, and references (Claude Code's native format). Do not hard-wrap lines. Skill descriptions stay "pushy" per skill-writing best practice — trigger conditions live in the description, not the body.

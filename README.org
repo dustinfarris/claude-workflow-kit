@@ -40,4 +40,4 @@ The weight-class section in each project's CLAUDE.md is the amplitude knob: it s
 - *Namespace*: the =name= field in =.claude-plugin/plugin.json= defines the =/workflow-kit:= prefix. Renaming the plugin means updating the namespaced references in =skills/= and =project-setup/= — CI checks for this.
 - *Model routing*: =agents/skeptic-reviewer.md= is pinned to =model: opus=; swap in a specific model identifier (e.g. a Fable model string) if your plan supports it. =story-verifier= inherits the session model deliberately — auditing is builder-class work.
 - *PRD lock, defense in depth*: the =prd-lock= hook covers file tools plus write-shaped Bash, and its block message teaches the Amendment protocol. A permissions deny rule on =PRD.org= can be added per-repo as belt-and-suspenders.
-- *Iteration loop*: friction.org entry → kit edit → CHANGELOG.org entry → version bump. The kit should shrink over time, not grow.
+- *Iteration loop*: kit edit (from real project use) → CHANGELOG.org entry → version bump. The kit should shrink over time, not grow.
