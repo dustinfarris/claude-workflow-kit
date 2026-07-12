@@ -8,6 +8,8 @@ personal-mvp. This is a personal project for my family / my own use. Bias toward
 
 Phoenix LiveView, SQLite, single node. `mix test`, `mix format`, `mix credo`.
 
+Verify command: `mix format --check-formatted && mix test` (declare a different command here if this repo's real gate differs — the Definition of Done and phase-close read this line; absent, they default to the command above).
+
 ## Document chain
 
 Active initiative: docs/YYYY-MM-DD-<initiative>/ (the document chain lives here; create-prd maintains this line when a new initiative starts). PRD.org, DESIGN.org, PLAN.org, and stories/ are org format, never markdown — conventions in the workflow-kit plugin's `org-conventions` skill. PRD.org is the invariant contract: never edit it (the prd-lock hook enforces this); conflicts with its Success Criteria are surfaced to the human as Amendment questions. DESIGN.org body edits are always paired per the org-conventions two-log rules (Decision Log entry for judgments, Advisory for every post-canon body edit).

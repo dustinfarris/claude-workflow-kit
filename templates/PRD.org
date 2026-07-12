@@ -11,8 +11,10 @@
 
 <The observable outcomes that define success. Acceptance criteria in every story must trace back to something established here. Keep these outcome-shaped, not mechanism-shaped.>
 
-- <criterion>
-- <criterion>
+# Numbers are stable handles (cited downstream as SC-1, SC-2, ...): never renumber. An amendment that removes a criterion retires its number rather than reassigning it.
+
+1. <criterion>
+2. <criterion>
 
 * Out of Scope
 

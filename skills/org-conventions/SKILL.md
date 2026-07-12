@@ -45,6 +45,10 @@ D-entry dates like `(2026-07-10)` are inline notation, not org timestamps — th
 
 Run `date` per item, not once per session — entries written at different times carry different timestamps.
 
+## Inline markup
+
+Inline markup: ~code~ for anything a language would parse — identifiers, module/function names (~BearCub.Chores~, ~list_extras/2~), expressions, shell commands (~mix precommit~), file paths. =verbatim= only for literal non-code strings quoted exactly — stored values (=morning=), config keys, log output. When unsure, prefer ~code~.
+
 ## LOGBOOK entry format
 
 LOGBOOK entries follow org-mode's native LOGBOOK drawer convention. Each item gets a single drawer with a single timestamped note. The entry describes _how_ the item was verified (for `[X]`), _what is missing_ (for `[ ]`), or _why it was deferred_ (for `[-]`).
@@ -129,7 +133,7 @@ Format: `** [YYYY-MM-DD Day HH:MM] <heading naming what no longer holds>`, then 
 
 /Sections affected: §11 Testing strategy/
 
-Earlier versions of this document specified =async: true= on the ConnCase LiveView tests. Do not reintroduce it, even though it looks like an easy win: =ecto_sqlite3='s SQL.Sandbox collides under concurrent per-test write transactions ("Database busy"), and =busy_timeout=/WAL are not the fix — they're already adapter defaults. Rationale: D24.
+Earlier versions of this document specified ~async: true~ on the ConnCase LiveView tests. Do not reintroduce it, even though it looks like an easy win: ~ecto_sqlite3~'s SQL.Sandbox collides under concurrent per-test write transactions ("Database busy"), and ~busy_timeout~/WAL are not the fix — they're already adapter defaults. Rationale: D24.
 
 ** [2026-07-13 Mon 09:12] §5 chore-row tap target raised from 72 px to 88 px
 

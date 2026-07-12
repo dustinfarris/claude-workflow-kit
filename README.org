@@ -35,6 +35,14 @@ Copy =skills/=, =agents/=, and =hooks/= into a repo's =.claude/= directory, add 
 
 The weight-class section in each project's CLAUDE.md is the amplitude knob: it selects the DoD variant, toggles the skeptic review, and sets PRD length expectations. Skills and plugins set the shape of the process; CLAUDE.md sets the amplitude.
 
+* Brainstorm kickoff fence
+
+Real brainstorms drift into design altitude — schemas, module names, test plans — before outcomes are settled. Superpowers owns the brainstorming skill itself, so the kit cannot edit it, but a human can paste this line at the start of a session to hold the main thread at outcome altitude:
+
+#+begin_quote
+Keep the main thread at outcome altitude — what a user observes, not how it's built. Park mechanism material in a "for the design doc" section as it comes up; it will feed promote-design, not the PRD.
+#+end_quote
+
 * Notes
 
 - *Namespace*: the =name= field in =.claude-plugin/plugin.json= defines the =/workflow-kit:= prefix. Renaming the plugin means updating the namespaced references in =skills/= and =project-setup/= — CI checks for this.

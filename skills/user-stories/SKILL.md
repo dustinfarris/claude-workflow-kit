@@ -17,7 +17,7 @@ The Acceptance Criteria should be clear, verifiable, and center around the user 
 
 ## AC drift guard
 
-Acceptance Criteria must be consistent with both the embedded Design excerpt (see below) and the PRD's Success Criteria section in PRD.org. The intent of an AC should trace back to something the PRD's Success Criteria establish, even if the AC's wording is more specific than the PRD's. If you find yourself wanting to write an AC that goes beyond either the embedded Design excerpt or the PRD's intent — asking for more examples, more file scope, or behavior the spec does not cover — stop. Either narrow the AC to match what the spec says, or surface the gap as a comment for the human to resolve before the story is finalized. Acceptance criteria that drift past the embedded spec create the same problem the embedding was meant to prevent.
+Acceptance Criteria must be consistent with both the embedded Design excerpt (see below) and the PRD's Success Criteria section in PRD.org. The intent of an AC should trace back to a specific PRD Success Criterion, cited as SC-n, even if the AC's wording is more specific than the PRD's. If you find yourself wanting to write an AC that goes beyond either the embedded Design excerpt or the PRD's intent — asking for more examples, more file scope, or behavior the spec does not cover — stop. Either narrow the AC to match what the spec says, or surface the gap as a comment for the human to resolve before the story is finalized. Acceptance criteria that drift past the embedded spec create the same problem the embedding was meant to prevent.
 
 Tracing runs both directions. Outward: no AC may exceed the excerpt or the PRD's intent. Inward: every requirement the embedded excerpt explicitly enumerates for this story's scope must be either covered by an AC or surfaced as uncovered — quoting a requirement in the excerpt and then omitting it from the ACs is the same drift in reverse.
 
@@ -60,7 +60,7 @@ Each user story includes, at a minimum:
 ** [ ] Integration tests written and passing for all user flows in this story
 ** [ ] moduledocs have been reviewed and updated if appropriate
 ** [ ] Code follows style guidelines in CLAUDE.md
-** [ ] ~mix check~ passes without errors
+** [ ] The repo's declared ~Verify command:~ (CLAUDE.md; default ~mix check~) passes without errors
 ```
 
 ## Definition of Done — personal-mvp weight class (verbatim)
@@ -71,7 +71,7 @@ Each user story includes, at a minimum:
 ** [ ] All acceptance criteria have been either met or have had a documented removal or deferral
 ** [ ] Tests written and passing for the acceptance criteria in this story
 ** [ ] Code follows style guidelines in CLAUDE.md
-** [ ] ~mix format --check-formatted~ and ~mix test~ pass without errors
+** [ ] The repo's declared ~Verify command:~ (CLAUDE.md; default ~mix format --check-formatted~ and ~mix test~) passes without errors
 ```
 
 ## DESIGN EXCERPT SCOPE
@@ -92,6 +92,8 @@ After the story set is written, review the stories and observe any dependencies 
 
 If PLAN.org is absent, create it from the repo-local `templates/PLAN.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PLAN.org`, and place this run's stories as the first batch — label the batch from the given phase scope if any was passed, else "Batch 1".
 
-If PLAN.org already exists, first verify no batch is open — an open batch is a batch heading without a gate record (see org-conventions). If a batch is open, STOP and surface it: generating a new batch over an open one breaks gate orientation, and the open batch must be closed at a gate first. Otherwise append this run's stories as a new batch heading after the existing batches. Never modify prior batches or their gate records.
+If PLAN.org already exists, first verify no batch is open — an open batch is a batch heading without a gate record (see org-conventions). An open batch may be inserted into only with explicit human authorization for this run: quote the authorization back to the human, then insert the new story or stories into the open batch instead of opening a new one, and write a LOGBOOK note on the batch heading (per org-conventions) recording (a) the insertion and a link to the inserted story/stories, (b) the evidence motivating it, (c) the authorization quoted back.
+
+Absent that authorization: if a batch is open, STOP and surface it: generating a new batch over an open one breaks gate orientation, and the open batch must be closed at a gate first. Otherwise append this run's stories as a new batch heading after the existing batches. Never modify prior batches or their gate records.
 
 STOP. You are done when the stories and PLAN.org exist. Do not begin implementing.

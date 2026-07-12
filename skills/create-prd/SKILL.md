@@ -7,12 +7,14 @@ description: Draft a PRD from an approved brainstorm document into PRD-draft.org
 
 Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) for the document chain rules.
 
-Input: the approved brainstorm document. The user may pass its path when invoking; otherwise look for the newest one under `docs/superpowers/specs/` or ask which document to promote. The brainstorm document predates the PRD: if the human pivoted at PRD review, divergence between it and PRD.org is expected and healthy, not lineage breakage to repair — PRD.org and DESIGN.org supersede it on contact.
+Input: the approved brainstorm document. The user may pass its path when invoking; otherwise list candidates under `docs/superpowers/specs/` and ask which document to promote — never guess. The brainstorm document predates the PRD: if the human pivoted at PRD review, divergence between it and PRD.org is expected and healthy, not lineage breakage to repair — PRD.org and DESIGN.org supersede it on contact.
 
 1. Read the brainstorm document and extract exactly three things — nothing more:
    - **The problem**: what hurts, for whom, why off-the-shelf doesn't fit.
-   - **Success Criteria**: the observable outcomes that define success. Keep these outcome-shaped ("a kid can see today's chores in one tap"), not mechanism-shaped ("the LiveView renders a chore list component"). Mechanisms belong in DESIGN.org.
+   - **Success Criteria**: the observable outcomes that define success. Number them (1, 2, 3, ...) — the numbers are stable handles, never renumbered, and downstream artifacts (DESIGN.org's alignment trace, story Acceptance Criteria) cite them as SC-n. Keep these outcome-shaped ("a kid can see today's chores in one tap"), not mechanism-shaped ("the LiveView renders a chore list component"). Mechanisms belong in DESIGN.org.
    - **Out of Scope**: explicit non-goals for this version.
+
+   A brainstorm document may carry a "for the design doc" section (mechanism material parked there per the README's brainstorm kickoff fence) — leave it alone. It is ordinary design feedstock for `/workflow-kit:promote-design`, not something this skill extracts.
 2. Create the initiative directory `docs/YYYY-MM-DD-<initiative-slug>/` (date = today, via `date '+%Y-%m-%d'`; slug from the initiative name), then set or update the `Active initiative:` line in the repo's CLAUDE.md to point at it. Write `PRD-draft.org` inside it using the repo-local `templates/PRD.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PRD.org`, filling those three sections and leaving the Amendments section with its protocol comment and "(no amendments)". Do NOT carry over personas, market context, competitive framing, or stakeholder matrices from the brainstorm document — for this document chain, those are ceremony.
 
    Write to `PRD-draft.org`, never `PRD.org`. The prd-lock hook blocks Write/Edit/MultiEdit on any path ending `PRD.org`, and blocks write-shaped Bash (redirects, `sed -i`, `tee`, `mv`/`cp` onto, `rm`, `truncate`) that targets `PRD.org` — writing `PRD.org` directly at this stage would be blocked by the kit's own hook before a human had approved anything. `PRD-draft.org` matches neither the hook's filename glob nor its Bash regex, so drafting and revision stay unrestricted.
