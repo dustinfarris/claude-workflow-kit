@@ -57,6 +57,18 @@ check "cat"           "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input"
 check "grep"          "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"grep -n Success PRD.org"}}')" 0
 check "unrelated cmd" "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"mix test"}}')" 0
 
+echo "== prd-lock: PRD-draft.org is unrestricted (create-prd's draft-then-rename flow) =="
+check "Edit PRD-draft.org allowed"  "$(hook_exit prd-lock.sh '{"tool_name":"Edit","tool_input":{"file_path":"docs/2026-07-11-x/PRD-draft.org"}}')" 0
+check "Write PRD-draft.org allowed" "$(hook_exit prd-lock.sh '{"tool_name":"Write","tool_input":{"file_path":"docs/2026-07-11-x/PRD-draft.org"}}')" 0
+check "MultiEdit PRD-draft.org allowed" "$(hook_exit prd-lock.sh '{"tool_name":"MultiEdit","tool_input":{"file_path":"docs/2026-07-11-x/PRD-draft.org"}}')" 0
+check "redirect > draft allowed"    "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"echo hi > docs/2026-07-11-x/PRD-draft.org"}}')" 0
+check "sed -i draft allowed"        "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"sed -i s/a/b/ docs/2026-07-11-x/PRD-draft.org"}}')" 0
+check "tee draft allowed"           "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"cat notes.txt | tee docs/2026-07-11-x/PRD-draft.org"}}')" 0
+
+echo "== prd-lock: rename/copy of a draft onto PRD.org still blocked =="
+check "mv draft onto PRD.org blocked" "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"mv docs/2026-07-11-x/PRD-draft.org docs/2026-07-11-x/PRD.org"}}')" 2
+check "cp draft onto PRD.org blocked" "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"cp docs/2026-07-11-x/PRD-draft.org docs/2026-07-11-x/PRD.org"}}')" 2
+
 echo "== post-edit-format =="
 check "no mix.exs no-op" "$(echo '{"tool_name":"Edit","tool_input":{"file_path":"lib/foo.ex"}}' | CLAUDE_PROJECT_DIR=/tmp "$ROOT/hooks/post-edit-format.sh" >/dev/null 2>&1; echo $?)" 0
 check "non-elixir no-op" "$(echo '{"tool_name":"Edit","tool_input":{"file_path":"README.md"}}' | CLAUDE_PROJECT_DIR=/tmp "$ROOT/hooks/post-edit-format.sh" >/dev/null 2>&1; echo $?)" 0

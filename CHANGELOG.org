@@ -1,5 +1,9 @@
 #+title: Changelog — workflow-kit
 
+* 0.4.0 — [2026-07-11]
+
+promote-prd renamed to create-prd. The prd-lock hook is approval-blind: it unconditionally blocks Write/Edit/MultiEdit on any =*PRD.org= path and write-shaped Bash (redirects, =sed -i=, =tee=, =mv=/=cp= onto, =rm=, =truncate=) targeting =PRD.org=, so the skill's own "write PRD.org" step would have been blocked by the kit's own hook on first live use, and the revision loop was impossible once the file existed. Fixed: the skill now writes only to =PRD-draft.org= — a filename that matches neither the hook's filename glob nor its Bash regex, confirmed against hooks/prd-lock.sh directly — and iterates on the draft with the human without restriction. Approval is now the human's own rename, =mv .../PRD-draft.org .../PRD.org=, run in their own shell; from that moment the file sits under prd-lock and is the locked contract (a draft-then-rename flow). promote-design gains a guard: if the initiative directory holds PRD-draft.org but no PRD.org, STOP rather than read the draft as if it were the approved contract. hooks/prd-lock.sh itself is unchanged; hooks_test.sh gains cases for drafts passing the hook and mv/cp onto PRD.org still blocking. Renamed repo-wide: skill directory, frontmatter, README pipeline table, both project-setup CLAUDE.md variants, plugin.json description.
+
 * 0.3.4 — [2026-07-11]
 
 The conversation-born-terms invariant in CLAUDE.md now explicitly covers provided wording — an item scoped for the 0.3.2 patch but missed when it shipped. A verbatim block handed in via a prompt can smuggle a coined handle into spec text just as easily as session-drafted prose, so provided wording gets the same term audit before it ships. Doc-only change; no hook or skill behavior touched.

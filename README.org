@@ -25,7 +25,7 @@ Copy =skills/=, =agents/=, and =hooks/= into a repo's =.claude/= directory, add 
 | Stage             | Invocation                                        | Owner                       |
 |-------------------+---------------------------------------------------+-----------------------------|
 | Brainstorm        | automatic (Superpowers)                           | Superpowers brainstorming   |
-| PRD               | =/workflow-kit:promote-prd=                       | this kit                    |
+| PRD               | =/workflow-kit:create-prd=                        | this kit                    |
 | Design            | =/workflow-kit:promote-design=                    | this kit (+ skeptic agent)  |
 | Stories + plan    | =/workflow-kit:user-stories PRD.org DESIGN.org=   | this kit                    |
 | Implementation    | normal session, Superpowers TDD                   | Superpowers                 |
