@@ -49,6 +49,10 @@ Run `date` per item, not once per session — entries written at different times
 
 Inline markup: ~code~ for anything a language would parse — identifiers, module/function names (~BearCub.Chores~, ~list_extras/2~), expressions, shell commands (~mix precommit~), file paths. =verbatim= only for literal non-code strings quoted exactly — stored values (=morning=), config keys, log output. When unsure, prefer ~code~.
 
+## Line-initial asterisks
+
+No line in body or LOGBOOK text may begin with an asterisk unless it is intentionally an org heading. Quoted code or error output that happens to start a line with `*` (e.g. Elixir error text) parses as an org level-2 heading and silently corrupts document structure — and LOGBOOK evidence quotes error text constantly. When quoting such text: reflow so the `*` lands mid-sentence, or wrap it in a `#+begin_src`/`#+begin_example` block. Self-check: run `grep '^\*\*'` on the file before finishing any org write.
+
 ## LOGBOOK entry format
 
 LOGBOOK entries follow org-mode's native LOGBOOK drawer convention. Each item gets a single drawer with a single timestamped note. The entry describes _how_ the item was verified (for `[X]`), _what is missing_ (for `[ ]`), or _why it was deferred_ (for `[-]`).
