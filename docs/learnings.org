@@ -1,0 +1,4 @@
+#+title: Learnings
+#+startup: showall
+
+Repo-level lessons file, cumulative across initiatives — things learned that are *not* recorded in commit messages, CLAUDE.md, the CHANGELOG, or the chain documents. One dated entry per learning, newest first; update an entry rather than duplicating it; delete entries that prove wrong. Every entry carries the date it was learned and its evidence pointer.
