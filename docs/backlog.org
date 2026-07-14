@@ -1,0 +1,241 @@
+#+title: Backlog
+#+startup: showall
+#+TAGS: oneshot(o) hand(h) promote(p)
+
+Repo-level backlog, cumulative across initiatives. Items land here from PLAN Deferred sections at initiative close, from ad-hoc discovery (org-capture or mid-session), and from work surfaced out of scope during execution. Items leave by being done, claimed by an initiative, or deliberately dropped.
+
+Size tags: oneshot (compiled single-session prompt), hand (inert edit, no session), promote (candidate for initiative-scale work). Untagged means untriaged — sizing happens at review or pull time, not capture time.
+* [2026-07-13 Mon]
+** TODO Registrar files vs. branches: stranding + divergence policy :promote:
+:PROPERTIES:
+:CREATED:  [2026-07-12 Sun 22:37]
+:END:
+[2026-07-12 Sun]
+Registrar files (backlog.org, learnings.org, design-language.org) are append-mostly and branch-agnostic, but writes land on whatever branch is checked out. Two failure modes: entries stranded on abandoned branches; divergent edits merging badly. Candidate mechanisms when this earns design: merge=union gitattribute for append traffic, default-branch guard on automated commits (capture hook has one as of today), session-side rule for which branch registrar writes belong on. One instance so far (theoretical, bear-cub capture hook) — design on second appearance.
+** TODO org-conventions: forbid line-initial asterisks in quoted code/error text
+:PROPERTIES:
+:CREATED:  [2026-07-12 Sun 17:56]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 17:56] \\
+  Retro-born (extras close, step 7 of the manual pass): quoted Elixir error text beginning ~** (~ at line-start parses as an org level-2 heading and silently corrupts document structure. Any session writing error output into org files is exposed — LOGBOOK evidence quotes error text constantly. Fix: org-conventions gains a rule — no line in body/LOGBOOK text may begin with asterisks unless it is a heading; reflow quoted code/error text so ~**~ lands mid-sentence, or wrap in a src/example block; self-check with ~grep '^\*\*'~ before finishing any org write. Acceptance: rule stated with the grep; CHANGELOG + bump (rides with any next patch).
+:END:
+
+** TODO document the expected-outcome-prediction prompt pattern
+:PROPERTIES:
+:CREATED:  [2026-07-12 Sun 17:56]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 17:56] \\
+  Retro-born: stating the expected outcome of a skill run in the invocation — before it runs — turns the run into a checkable prediction ("expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it"). Used twice on extras (update-design after story 01; the initiative-close brief) and deviations-from-prediction became signal instead of noise. This is a recommended human prompt pattern, not machinery: one short paragraph in README (near the brainstorm kickoff fence) naming the pattern with the update-design example. Do NOT encode it into any skill — it only works because the human states the expectation. Acceptance: README paragraph; CHANGELOG + bump (rides with any next patch).
+:END:
+
+** TODO codify repo-level lessons file in the kit (bear-cub's move already executed)
+:PROPERTIES:
+:CREATED:  [2026-07-12 Sun 11:44]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Status: bear-cub executed the move 2026-07-12 (~git mv docs/2026-07-09-mvp/learnings.org docs/learnings.org~ + CLAUDE.md Authoritative-docs tiering: live chain / repo-level lessons / historical chains). Remaining scope is kit-side codification only:
+  (1) grep skills/, templates/, project-setup/ for any per-initiative lessons-path assumption and restate as ~docs/learnings.org~, repo-level, cumulative across initiatives;
+  (2) project-setup seeds ~docs/learnings.org~ (empty, with the header rules: one dated entry per learning; update rather than duplicate; delete entries that prove wrong) so new repos get it from birth;
+  (3) coordinate with the initiative-close item below — its spec says "lessons store, one lesson per file", which contradicts the single-file convention bear-cub actually runs; the single cumulative file is the ratified shape.
+  Acceptance: no kit text implies lessons live inside an initiative directory; tests/tripwires green.
+:END:
+
+** TODO non-sequential initiatives: lift the Decision Log to a repo-level shared log
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 21:33]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Human ruling (2026-07-11), recorded for implementation — do not relitigate:
+  (1) single repo-wide monotonic D-sequence, lifted to a shared repo-level log file; old entries remain in situ in historical chains (no retroactive surgery); the shared log starts where they left off with a header pointing back;
+  (2) pointers become chain-qualified once the log serves multiple chains (e.g. "settles extras/SC-2", "→ extras/Key Behaviors") — bare "FR-13"/"§6" is ambiguous across initiatives;
+  (3) overrule protocol: eager notice, lazy repair, owner-only writes — the overruling session's whole obligation is a loud supersession entry (cite the old D-number + advisory-style payload if the dead position could trap); each open chain reconciles at its own gates; NO cross-chain writes by non-owning sessions;
+  (4) known accepted risk: two concurrent sessions can mint the same next number; rare solo, gate-fixable.
+  Interim state to migrate from: bear-cub already runs the single sequence but stores entries inside each initiative's DESIGN (extras DESIGN carries D27–D37 + a numbering comment; MVP DESIGN carries D1–D26). The lift moves the *location* convention, not the numbering.
+  Implementation surface: org-conventions Decision Log section (location + pointer qualification + overrule protocol), DESIGN template (Decision Log section becomes a pointer to the shared log or a local-entries-plus-shared-log rule — decide and state), update-design + phase-close (where entries/reconciliation land), project-setup (seed the shared log). Coordinate with the headings/links item below — same section, do them together.
+  Open horizon question (human, not Sonnet): does the DESIGN *body* eventually lift to a repo-level living system description too? Park, don't answer.
+:END:
+
+** TODO make decision records headings and link to them when referenced
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 12:47]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Problem: D-entries are list items, so advisories, body text, and stories cite them as bare "(D25)" with no link target; readers grep. As headings (e.g. ~*** D27 — Extras are chore rows with routine = nil~) each entry gets a ~:CUSTOM_ID:~ (~#+name~ equivalent for org heading links) and references become real org links.
+  Scope: org-conventions Decision Log format (heading shape, CUSTOM_ID convention ~d27~, link syntax for citations), DESIGN template, and a one-line note that HISTORICAL logs stay list-format (no retroactive conversion — the format change applies from adoption forward).
+  Sequencing: do this WITH the shared-log lift above — the location and the format of the same section should change once, not twice.
+  Acceptance: org-conventions + template updated; an example entry shows heading + CUSTOM_ID + an advisory citing it as a link; CHANGELOG + bump.
+:END:
+
+** TODO [doctrine] initiative-close skill designed but not built
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 13:04]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat 13:04] \\
+  Carried forward from friction.org (retired). Chain-retirement extraction
+  pass, distinct from the per-batch gate: harvest confirmations from
+  surviving Decision Log entries and corrections from withdrawn advisories +
+  prior friction notes into a lessons store (one lesson per file, one-line
+  summary at top; record corrections and confirmed approaches with why they
+  mattered; don't duplicate what the repo or git already records; update
+  rather than duplicate; delete notes that prove wrong). Also owns Deferred
+  -> v2-candidate promotion and the stages-earned-their-keep retrospective --
+  both pulled out of phase-close in 0.3.0. Blocked on a real initiative
+  actually closing; do not build speculatively.
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Spec corrections accumulated since the note above — when this is built, build to CURRENT doctrine, not the 0.3.0-era note:
+  (1) "one lesson per file" is superseded: lessons live in the single cumulative repo-level ~docs/learnings.org~ (one dated entry per learning);
+  (2) "Deferred → v2-candidate promotion" is superseded by the non-sequential-initiatives ruling: the step is "sweep PLAN's Deferred into the repo-level backlog" (a per-repo todo/backlog file) — no versioning language anywhere; ALSO fix the PLAN template's Deferred comment, which still says "Promoted to v2 candidates at initiative close";
+  (3) advisory withdrawal at close doubles as promotion review to lessons (unchanged);
+  (4) still blocked on a real initiative actually closing — bear-cub MVP close is on hold (Phase 5 unresolved) and extras is mid-batch; do not build speculatively. When one closes, the manual run is the spec shakedown.
+- Note taken on [2026-07-12 Sun 17:15] \\
+  UNBLOCKED 2026-07-12: extras initiative closed via a manual pass (bear-cub
+  86d9bf6) — this 11-step observed sequence is the empirical spec; build the
+  skill from it, not from the 0.3.0-era note above:
+  (1) load org-conventions before writing anything; (2) read learnings.org,
+  the chain's PLAN (gate record + Deferred), and confirm/locate the repo
+  backlog file (create docs/backlog.org with the standard header if absent);
+  (3) verify lesson citations against the DESIGN's actual Decision Log text,
+  never the gate summary; (4) read repo CLAUDE.md in full to enumerate
+  retirement edits; (5) append lessons to learnings.org, house format,
+  newest-first, harvesting selectively (gate-flagged candidates + surviving
+  D-entries that generalize — most don't); (6) sweep every PLAN Deferred item
+  to the backlog: condensed, file pointers and act-only-if conditions kept,
+  provenance-tagged; COPY forward — never edit the chain's Deferred section;
+  (7) self-check all written org for line-initial asterisks from quoted code
+  or error text (grep '^\*\*') — also a candidate rule for org-conventions
+  itself; (8) CLAUDE.md retirement edits: Active initiative → none-marker,
+  chain to historical tier with its D-range, backlog/learnings in the
+  repo-level tier, next-D pointer bumped; (9) one document-level LOGBOOK
+  drawer under the PLAN title recording the closure — gate record and story
+  entries untouched; (10) repo verify command before staging; (11) stage the
+  doc files explicitly by name and commit marking the initiative closed.
+  Skill boundaries when built: audits-not-maintains posture inherited from
+  phase-close; refuses to run on a chain whose last batch has no gate
+  record; the retrospective (stages-earned-their-keep) stays HUMAN — the
+  skill may prompt for it but never writes it.
+:END:
+
+** KILL the ~create-prd~ skill must handle a pre-existing initiative directory
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 21:38]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  CANCELLED 2026-07-11 by human ruling, superseding this item's original fix direction (the body previously said "prefer in-directory specs as the convention going forward" — the ruling went the opposite way): brainstorm outputs stay OUT of initiative directories entirely; they live in ~docs/superpowers/specs/~ and initiative directories contain only chain documents. create-prd creates the directory itself, per its own spec, and needs no reuse logic. Already recorded as CANCELLED in the 0.4.1 CHANGELOG; a repo-CLAUDE.md convention line (shipped in bear-cub) owns the placement rule, not skill logic. Kept here per the declined-ideas convention.
+:END:
+
+** DONE 0.4.1 precedence clause produced an unverifiable compliance claim on first live use
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 23:16]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Occurrence: extras promote-design run asserted brainstorm/PRD alignment via provenance phrasing ("the PRD was created from it, so no divergence") — whether per-criterion checking happened is indistinguishable from the output; a human had to re-derive the comparison to clear the artifact. A rule whose compliance is indistinguishable from its violation isn't doing its job.
+  Fix: in ~skills/promote-design/SKILL.md~, the closing/approval step MUST present (a) a criterion-by-criterion trace — each PRD Success Criterion → the DESIGN section(s) satisfying it — and (b) a disposition line for every brainstorm position the PRD overrode (faithful copy / rejected-alternative D-entry / dropped). Alignment claims carry their demonstration; absence of the trace is treated as the check not having happened (story-verifier posture: absence of evidence is NOT MET). At personal-mvp scale this is ~6 lines, so no weight-class exemption.
+  Depends on: PRD success criteria being numbered (see that item) so the trace has stable handles.
+  Acceptance: skill text requires the trace; example output added; CHANGELOG + bump.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 16:03] \\
+  Shipped in 0.5.0. ~skills/promote-design/SKILL.md~ step 5 now requires the criterion-by-criterion SC-n → DESIGN section(s) trace plus a disposition line (faithful copy / rejected-alternative D-entry / dropped) for every overridden brainstorm position, with an example block, before DESIGN.org is presented for approval — absence of the trace is stated as equivalent to the check not having happened, at every weight class. Depended on the SC-numbering item below, done first.
+:END:
+
+** DONE promote-design resolves its input by newest-mtime under the specs dir
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 23:03]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Problem: "newest under ~docs/superpowers/specs/~" is a serial-workflow assumption — concurrent initiatives or brainstorming the next idea before promoting the current one makes it silently grab the wrong document (mtime is also perturbed by unrelated moves; tonight's relocation ~mv~ alone could reshuffle "newest"). create-prd's input line already says "or ask which document to promote"; promote-design lacks the ask.
+  Fix: in ~skills/promote-design/SKILL.md~, replace the newest-mtime fallback with: no explicit path → list candidates under ~docs/superpowers/specs/~ and ASK; never guess. Mirror create-prd's wording so both skills share the posture.
+  Acceptance: no "newest" language remains in either skill's input resolution; CHANGELOG + bump.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 16:03] \\
+  Shipped in 0.5.0. Both ~skills/promote-design/SKILL.md~ and ~skills/create-prd/SKILL.md~ input lines now read "list candidates under ~docs/superpowers/specs/~ and ask which document to promote — never guess"; create-prd's prior "look for the newest one ... or ask" fallback is gone too, so both skills share identical posture. Verified no "newest" string remains in either skill.
+:END:
+
+** DONE success criteria should be numbered
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 22:48]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Context: the extras PRD numbered its Success Criteria 1–6 (session's own initiative) and it immediately paid off — story ACs and the traceability summary cite "SC 2", "SC 5". Codify so it isn't luck:
+  (1) ~templates/~ PRD template: Success Criteria section becomes a numbered list, with a comment that numbers are stable handles (never renumber; an amendment that removes a criterion retires its number);
+  (2) ~skills/create-prd/SKILL.md~: state that criteria are numbered and downstream artifacts cite them as SC-n;
+  (3) ~skills/user-stories/SKILL.md~: AC traceability cites SC-n where it currently says "trace to PRD Success Criteria".
+  Acceptance: template + both skills consistent; CHANGELOG + bump. Prereq for the per-criterion trace item above.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 16:03] \\
+  Shipped in 0.5.0. ~templates/PRD.org~ Success Criteria is now a numbered list with a stable-handle comment; ~skills/create-prd/SKILL.md~ states criteria are numbered and cited downstream as SC-n; ~skills/user-stories/SKILL.md~'s AC drift guard now says an AC's intent traces to a specific PRD Success Criterion cited as SC-n. Done first — the per-criterion trace item above and the promote-design closing step both consume SC-n handles.
+:END:
+
+** DONE brainstorm sessions drift into design altitude; ship a standard altitude fence
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 20:51]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Occurrence: the extras brainstorm produced a 250-line document with schema, module names, and test plans before any PRD existed. Downstream this was survivable (promote-design consumes it; the PRD filter held) but it front-loads mechanism before outcomes are settled and gives pre-contract material confident gravity.
+  Constraint: the brainstorm itself is superpowers-owned — the kit cannot edit that skill. The kit CAN ship the fence for humans to paste:
+  (1) add to README (or a new ~project-setup/brainstorm-kickoff.md~ snippet) a standard kickoff line, roughly: "Keep the main thread at outcome altitude — what a user observes, not how it's built. Park mechanism material in a 'for the design doc' section as it comes up; it will feed promote-design, not the PRD.";
+  (2) org-conventions or create-prd gains one sentence normalizing the parked section: promote-design treats a "for the design doc" section as ordinary design feedstock.
+  Acceptance: the fence text exists in one kit-shipped place a human can copy; CHANGELOG + bump.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 16:03] \\
+  Shipped in 0.5.0. README.org gains a "Brainstorm kickoff fence" section with the kickoff line as a quotable block. ~skills/create-prd/SKILL.md~ step 1 gains a sentence: a brainstorm document's "for the design doc" section is ordinary design feedstock for promote-design, not something create-prd extracts.
+:END:
+
+** DONE [bear-cub] single-open-batch rule blocks evidence-driven mid-batch story insertion
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 12:27]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat] \\
+  Story-01's real-feed evidence invalidated a deferral (7 MONTHLY/YEARLY events
+  parser-dropped, FR-19 violation) requiring a story-05 in the OPEN batch.
+  user-stories' append semantics only add new batches and STOP on an open one.
+  Fix candidate: with explicit human authorization in the invocation,
+  user-stories may insert stories into the open batch, recording the insertion
+  and its evidence in a PLAN LOGBOOK note on the batch heading.
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Evidence correction for the record: the "7 events" count was later found inflated (VTIMEZONE DST-transition RRULEs counted as events; 1 real MONTHLY VEVENT existed). The friction item survives unchanged — the insertion was still warranted under corrected evidence, and the workflow gap is real regardless of the count.
+  Implementation spec: in ~skills/user-stories/SKILL.md~, the STOP-on-open-batch rule gains one exception: if the human invocation explicitly authorizes mid-batch insertion (the skill must quote the authorization back), the skill may insert stories into the open batch, and MUST write a LOGBOOK note on the batch heading recording (a) the insertion + story link, (b) the evidence motivating it, (c) the authorization. Without explicit authorization the STOP stands verbatim (protective-only scope, per CLAUDE.md invariants). Precedent to mirror: the MVP chain's manual story-05 insertion note on its Batch 2 heading.
+  Acceptance: skill text updated; STOP boundary preserved for the unauthorized case; CHANGELOG + bump.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 16:03] \\
+  Shipped in 0.5.0. ~skills/user-stories/SKILL.md~'s "Emit the plan" section now leads with the authorized path (quote the authorization back, insert into the open batch, write a LOGBOOK note on the batch heading covering insertion+link, evidence, and the authorization); the original unauthorized-case sentence — "If a batch is open, STOP and surface it: generating a new batch over an open one breaks gate orientation, and the open batch must be closed at a gate first." — is preserved verbatim, now reached only absent that authorization.
+:END:
+
+** DONE [bear-cub adoption] DoD verification command is hard-coded to mix; should be CLAUDE.md-declarable
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 13:04]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-11 Sat 13:04] \\
+  Carried forward from friction.org (retired). The Definition-of-Done blocks
+  and phase-close step 1 hard-code `mix format`/`mix test`/`mix check`.
+  bear-cub's real gate is `mix precommit`. The verification command should be
+  declarable in CLAUDE.md (like weight class) so the kit stops assuming a
+  fixed mix invocation. Candidate: a `Verify command:` line the DoD and
+  phase-close read.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Implementation spec: (1) project-setup / repo-CLAUDE.md convention gains an optional ~Verify command:~ line (default when absent: the current mix trio, so existing repos are unaffected); (2) the DoD template's final item and ~skills/phase-close/SKILL.md~ step 1 say "run the repo's declared Verify command" and name the default; (3) story-closeout's DoD-evidence expectations reference the same line. Note bear-cub currently papers over this with a CLAUDE.md sentence ("mix precommit is the verification gate wherever the DoD names format/test commands") — that sentence becomes the ~Verify command:~ line once shipped. Keep DoD wording changes minimal; the crown-jewel/verbatim-preservation invariant does not cover DoD templates but the terms invariant applies.
+  Acceptance: declarable + default behavior; templates and both skills consistent; CHANGELOG + bump.
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-12 Sun 16:03] \\
+  Shipped in 0.5.0. Both ~project-setup/CLAUDE.md.workgrade~ and ~project-setup/CLAUDE.md.mvp~ gain an optional ~Verify command:~ line under Stack & commands, defaulted to what each weight class already ran (~mix check~ for work-grade; ~mix format --check-formatted && mix test~ for personal-mvp) so existing repos without the line are unaffected. Both DoD blocks in ~skills/user-stories/SKILL.md~, ~skills/phase-close/SKILL.md~ step 1, and ~skills/story-closeout/SKILL.md~ step 4 now say "the repo's declared ~Verify command:~" and name the same per-weight-class default.
+:END:

@@ -20,7 +20,7 @@ to execution sessions with rulings. In practice the role has four functions:
 3. /Prompt compilation/ — consult rounds end in paste-ready session prompts
    carrying rulings and expected outcomes.
 4. /Doctrine registrar/ — rulings written down where they persist (kit
-   ~todo.org~, this charter), in do-not-relitigate form.
+   ~docs/backlog.org~, this charter), in do-not-relitigate form.
 
 * Hard boundaries
 
