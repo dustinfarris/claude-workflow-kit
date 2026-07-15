@@ -19,10 +19,11 @@ Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipp
 :END:
 [2026-07-12 Sun]
 Registrar files (backlog.org, learnings.org, design-language.org) are append-mostly and branch-agnostic, but writes land on whatever branch is checked out. Two failure modes: entries stranded on abandoned branches; divergent edits merging badly. Candidate mechanisms when this earns design: merge=union gitattribute for append traffic, default-branch guard on automated commits (capture hook has one as of today), session-side rule for which branch registrar writes belong on. One instance so far (theoretical, bear-cub capture hook) — design on second appearance.
-** TODO [#A] org-conventions: forbid line-initial asterisks in quoted code/error text :oneshot:
+** DONE [#A] org-conventions: forbid line-initial asterisks in quoted code/error text :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-12 Sun 17:56]
 :END:
+- State "DONE"       from "TODO"       [2026-07-13 Mon 23:21]
 :LOGBOOK:
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: KEPT, [#A], tagged oneshot. Verified unshipped at 0.5.0 — no line-initial-asterisk rule in skills/org-conventions/SKILL.md. Highest priority of the open set: every org-writing session is exposed, and the initiative-close promotion's step 7 cites the same grep self-check.
