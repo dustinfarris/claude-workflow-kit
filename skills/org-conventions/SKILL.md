@@ -17,6 +17,12 @@ The document chain for an initiative lives in a date-stamped initiative director
 
 Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
 
+## Document chain & version control
+
+- Chain documents are committed in doc-only commits, never mixed with code changes. Code commits carry code; doc commits carry chain documents.
+- Chain documents enter version control at their canonical moments only: the PRD at lock (the human rename is the approval act; the lock commit follows it), the DESIGN at canon approval, and thereafter each update-design pass (D-entry + body edit + Advisory) as its own doc commit. Working drafts and intermediates are never committed.
+- The brainstorm spec is never committed. It is scratch material supporting PRD and DESIGN drafting; the DESIGN supersedes it. `docs/superpowers/specs/` is permanently gitignored. Nothing that survives to a document's first commit may reference the brainstorm spec by section number — rejected alternatives drawn from the brainstorm are restated in words so the entry is self-contained.
+
 ## Batches and gates
 
 PLAN.org organizes stories under batch headings. A batch is the unit of work that ends at a gate; "Phase N" is an optional label on a batch heading — decoration, never load-bearing.
@@ -109,6 +115,8 @@ Format:
 ```org
 - *Dn (YYYY-MM-DD) — terse title:* what was decided; compressed rationale; rejected alternative if one was live; what it settles (FR-x, PRD deferrals); → § pointers to where the body reflects it.
 ```
+
+- → § pointers target PRD or DESIGN sections only. Pre-chain working documents (the brainstorm spec) are never pointer targets: a rejected alternative that originated in the brainstorm is restated in words within the entry, never cited by spec section.
 
 One monotonic sequence per initiative. The growing end is `* Decision Log` in DESIGN.org. In adopted repos where earlier entries live elsewhere (e.g. a PRD decision-log section), the next number is the highest existing number anywhere in the chain, plus one.
 

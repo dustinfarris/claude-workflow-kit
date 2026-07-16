@@ -1,5 +1,5 @@
 {
-  "name": "dustin-plugins",
+  "name": "dustin",
   "owner": {
     "name": "Dustin"
   },
@@ -7,7 +7,7 @@
     {
       "name": "workflow-kit",
       "source": "./",
-      "description": "Org-native artifact layer for spec-driven development, layered on obra/superpowers."
+      "description": "Org-native artifact layer for spec-driven development."
     }
   ]
 }
