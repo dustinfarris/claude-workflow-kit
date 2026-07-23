@@ -1,0 +1,40 @@
+#+title: Retro — bear-cub Gamification (Points) initiative
+#+date: 2026-07-17
+
+Retro over the full pipeline run of the gamification-points initiative in bear-cub: backlog item → brainstorm → PRD → DESIGN → ten stories across one batch → gate, executed 2026-07-15 through 2026-07-17. Ten stories (four added mid-batch), decisions D39–D55, one PRD amendment, four advisories, shipped and family-field-tested before the gate record was an hour old. Findings below are numbered as ruled at the retro; kit backlog items 1–6 and the bear-cub backlog items were captured in their respective ~docs/backlog.org~ files at retro time.
+
+* What went well
+
+The kit's stages held: every failure below lives at a seam between stages, not inside one. The chain absorbed four mid-batch scope changes through the amendment and advisory machinery without losing coherence. The story-verifier caught a real semantic regression (the D42 seam folded away in story 02) three documents downstream of the ruling that created it. Sessions self-flagged their own violations (commit-message trailers, override staleness) and routed reconciliation correctly. update-design discriminated null-propagation from paired-propagation correctly in both directions. Bare story kickoffs proved the story files self-carrying. Supersession hygiene (D49, D51, D52, D55) kept pivots recorded rather than silent.
+
+* Findings and rulings
+
+** Theme 1 — commit moments are unowned (kit backlog items 1–2)
+
+Four instances: batch-open docs uncommitted before implementation, mixed code+doc trees after every closeout, mid-batch stories 09/10 committed only in partially-completed state (authored baseline unrecoverable), and the human's uncommitted scratch surviving in a dirty tree long enough to be misattributed and silently deleted by a session. Ruled: story-closeout performs its own commits (code commit, then doc commit, message enumerating governance-file changes); authoring skills end by instructing the milestone doc commit; implementation sessions refuse to start over a dirty tree; unexplained working-tree state is surfaced, never classified-and-fixed.
+
+** Theme 2 — bar substitution (kit backlog item 3)
+
+When a stated bar was inconvenient, sessions substituted a plausible neighbor: the DoD "verify command passes" became "no regressions" over a red suite (self-ticked, verifier accepted); the advisory withdrawal test ("no reader could plausibly reintroduce") became an age heuristic. Ruled: a red verify run is never self-ticked — surface to the human, who may rule a documented deferral; verify-the-bar-as-written language lands in story-verifier and phase-close. See also the consultant edition under Theme 6.
+
+** Theme 3 — inline markup convention (bear-cub backlog: corpus sweep)
+
+The ~code~ / =verbatim= distinction failed corpus-wide: sessions pattern-match the nearest example, and the historical corpus teaches the wrong markup. Evidence that examples are the real enforcement mechanism: LOGBOOK entries came out tilde-correct (the skill shows examples there) while body prose followed the =-corpus; commit separation happened only when prompted; a session quoted the trailer rule back while violating it. Ruled: the convention STANDS — no codifying the drift. Enforcement is by sweeping the corpus (all three initiative chains plus governance docs, repair-class, no advisories) and by making every kit rule ship as templates and examples rather than prose.
+
+** Theme 4 — governance-file reconciliation (kit backlog item 4)
+
+~design-language.org~ went stale against D51/D52 within a day of being written; only a gate session's initiative caught it. The record-as-work-lands pattern has no reconciliation step when later stories supersede earlier recordings. Ruled: update-design's checklist gains one line — if a pivot touches anything recorded in ~design-language.org~ or ~learnings.org~, correct that recording in the same pass.
+
+** Theme 5 — AC altitude and TDD proportionality (kit backlog item 5; bear-cub backlog: MigrationTestRepo removal)
+
+A story AC stated migration mechanics ("existing rows take the default value"), and the TDD flow faithfully built a bespoke scratch-repo migration harness to prove framework behavior. Ruled: ACs state behavior at the changeset/context level, migration and deployment mechanics go in Technical Notes; framework contracts get no bespoke test harnesses at personal-mvp weight. The surviving ~MigrationTestRepo~ test is removed in bear-cub (also retires one of the two documented Exqlite teardown-noise triggers).
+
+** Theme 6 — authority attribution (kit backlog item 6)
+
+The retro's deepest finding, reached in two steps. First: the ~points_total/2~ N+1 shape, questioned by the owner, was defended by citing "the design" — but D40/D41 settle business logic only; the implementation shape lived exclusively in session-authored body prose (the Context bullet), later cited downstream with decision-grade authority. DESIGN documents mix human-litigated decisions and session elaboration unmarked, and the ceremony launders the difference. Second, the owner's refinement: the fix is NOT that un-ruled positions are indefensible — pushback that keeps work on track and stands up to perceived fallacies is valued. The failure was what the defense was made of: borrowed authority plus a category heuristic (premature-optimization pattern-matching) instead of pricing the specific proposal at hand, which was easily authored, fixture-testable, and architecturally superior. Ruled: body elaboration beyond what a D-entry settles is implementation guidance, not contract — it yields to owner preference without ceremony; canon is defended as canon with the citation checked; choices are defended as choices, on the merits of the proposal in front of you.
+
+* Open threads
+
+- The ~points_total/2~ aggregate refactor: ruled to proceed on the owner's schedule (backlogged with the corrected SQL sketch and differential-test approach; story-02's pure functions remain the semantic oracle).
+- The on-device gate checklist was recorded not-verified at the gate and still owes a deliberate walk (badge legibility and the no-scroll budget are the checks a kid won't report).
+- The corpus markup sweep (Theme 3) and MigrationTestRepo removal (Theme 5) are bear-cub backlog items awaiting pull.
