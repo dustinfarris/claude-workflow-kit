@@ -35,11 +35,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born (extras close, step 7 of the manual pass): quoted Elixir error text beginning ~** (~ at line-start parses as an org level-2 heading and silently corrupts document structure. Any session writing error output into org files is exposed — LOGBOOK evidence quotes error text constantly. Fix: org-conventions gains a rule — no line in body/LOGBOOK text may begin with asterisks unless it is a heading; reflow quoted code/error text so ~**~ lands mid-sentence, or wrap in a src/example block; self-check with ~grep '^\*\*'~ before finishing any org write. Acceptance: rule stated with the grep; CHANGELOG + bump (rides with any next patch).
 :END:
 
-** TODO [#C] document the expected-outcome-prediction prompt pattern :hand:
+** DONE [#C] document the expected-outcome-prediction prompt pattern :hand:
 :PROPERTIES:
 :CREATED:  [2026-07-12 Sun 17:56]
 :END:
+- State "DONE"       from "TODO"       [2026-07-22 Wed 21:28]
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:28] \\
+  Shipped in 0.6.1 (b115ac9): README.org paragraph after the brainstorm-kickoff quote block, carrying the update-design example and the human-practice-only caveat per the capture note's do-NOT-encode rule. Drafted by a Sonnet subagent, reviewed before commit.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#C] hand, unchanged — verified still absent from README.org at 0.6.0.
 - Note taken on [2026-07-13 Mon 22:53] \\
@@ -147,11 +150,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ performs the commits itself as its final step — code commit, then doc commit; the doc-commit message template enumerates any governance-file changes it touches (e.g. ~design-language.org~/~learnings.org~). Authoring skills (~user-stories~, ~chain-authoring~) end by instructing the human to make the milestone doc commit, not by making it themselves. Three instances this batch of doc-commit moments being missed because no step owned them.
 :END:
 
-** TODO [#B] dirty-tree guard: implementation sessions refuse to start over a dirty tree :hand:
+** DONE [#B] dirty-tree guard: implementation sessions refuse to start over a dirty tree :hand:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
+- State "DONE"       from "TODO"       [2026-07-22 Wed 21:28]
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:28] \\
+  Shipped in 0.6.1 (b115ac9): both project-setup CLAUDE.md templates gain the rule at the end of their Workflow sections — refuse to start over a dirty tree, surface unexplained state rather than classify-and-fix, with the scratch-code-deletion incident as recorded provenance. Registrar-specific preflight handling stays with the backlog-grooming entry's shakedown note.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#B], tagged hand. No dirty-tree language anywhere in skills/ or project-setup/ at 0.6.0. Highest-severity retro incident (human scratch code silently deleted after misattribution). This groom's own preflight hit the adjacent case — registrar captures sitting uncommitted — a second live instance of the theme; the grooming-skill entry's shakedown note carries the registrar-specific handling.
 - Note taken on [2026-07-18 Sat 23:33] \\
@@ -191,11 +197,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born (bear-cub gamification retro, 2026-07-17): ~user-stories~ guidance that ACs state behavior at the changeset/context level (migration/deployment mechanics go in Technical Notes instead); TDD guidance that framework contracts get no bespoke test harnesses at personal-mvp weight. Cross-cutting note for all five items captured from this retro: rulings ship as templates and examples in the skills, not prose rules — this batch proved sessions follow the nearest example over the stated rule.
 :END:
 
-** TODO [#C] authority marking in DESIGN docs: D-entries vs session-authored elaboration :hand:
+** DONE [#C] authority marking in DESIGN docs: D-entries vs session-authored elaboration :hand:
 :PROPERTIES:
 :CREATED:  [2026-07-19 Sun 00:07]
 :END:
+- State "DONE"       from "TODO"       [2026-07-22 Wed 21:28]
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:28] \\
+  Shipped in 0.6.1 (b115ac9): org-conventions' Decision Log section closes with the yields-to-owner rule; promote-design carries the same rule plus the attribution discipline and the human-ruled pendulum counterweight, placed above its steps where it governs skeptic-review pushback in step 4.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#C], tagged hand. No elaboration or authority language in org-conventions or promote-design at 0.6.0. The capture note below already carries the sentences to add, pendulum note included — an inert edit.
 - Note taken on [2026-07-19 Sun 00:07] \\
