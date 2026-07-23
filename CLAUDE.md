@@ -16,7 +16,7 @@ tooling. This repo IS the workflow: skills, agents, hooks, and templates consume
 
 ## Testing
 
-Hook changes require `test/hooks_test.sh` green before commit — both the existing 13 cases and a new case for any new block/allow pattern. Skill changes get at least a dry read-through in a consuming repo before a version bump; friction found there gets fixed here directly, with the rationale captured in the CHANGELOG entry.
+Hook changes require `test/hooks_test.sh` green before commit — both the existing cases and a new case for any new block/allow pattern. Skill changes get at least a dry read-through in a consuming repo before a version bump; friction found there gets fixed here directly, with the rationale captured in the CHANGELOG entry.
 
 ## Iteration loop
 
