@@ -51,11 +51,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born: stating the expected outcome of a skill run in the invocation — before it runs — turns the run into a checkable prediction ("expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it"). Used twice on extras (update-design after story 01; the initiative-close brief) and deviations-from-prediction became signal instead of noise. This is a recommended human prompt pattern, not machinery: one short paragraph in README (near the brainstorm kickoff fence) naming the pattern with the update-design example. Do NOT encode it into any skill — it only works because the human states the expectation. Acceptance: README paragraph; CHANGELOG + bump (rides with any next patch).
 :END:
 
-** TODO [#B] codify repo-level lessons file in the kit (bear-cub's move already executed)
+** DONE [#B] codify repo-level lessons file in the kit (bear-cub's move already executed)
 :PROPERTIES:
 :CREATED:  [2026-07-12 Sun 11:44]
 :END:
+- State "DONE"       from "TODO"       [2026-07-23 Thu 16:26]
 :LOGBOOK:
+- Note taken on [2026-07-23 Thu 16:26] \\
+  Shipped in 0.6.2 (3207d88), pulled alone by explicit human request — the initiative-close bundle coupling is unblocked, not dissolved; the governance-file reconciliation entry below still rides with that promotion. What shipped: org-conventions gains a Lessons file section (new section after Document chain location; the two jewel-internal "lesson candidate" mentions stand verbatim); phase-close step 4 names ~docs/learnings.org~ as the promotion destination; project-setup seeds ~learnings.org~ with the header rules (one dated entry per learning; update rather than duplicate; delete entries that prove wrong); both README install paths copy it to ~docs/learnings.org~; both CLAUDE.md templates name the repo-level tier. Scope (3) needed no edit: the superseded "one lesson per file" wording lives only in the initiative-close entry's own LOGBOOK, where the 2026-07-12 note already records the supersession — no kit text carried it. Acceptance verified: grep shows no kit text implying per-initiative lessons; ~test/hooks_test.sh~ green (45/45).
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#B], unchanged — zero ~learnings~ references in skills/, templates/, project-setup/, agents/ at 0.6.0. The bundle this rides with grows: the governance-file reconciliation entry (2026-07-18) is coupled in per this groom's ruling, since it presumes governance files the kit does not yet codify.
 - Note taken on [2026-07-13 Mon 22:53] \\
