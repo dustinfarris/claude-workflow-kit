@@ -1,0 +1,4 @@
+#+title: Learnings
+#+startup: showall
+
+Repo-level lessons, cumulative across initiatives — lessons never live inside an initiative directory. Record what the repo does not already record elsewhere (commit messages, CLAUDE.md, the document chains). One dated entry per learning, newest first: a heading of the shape ~[YYYY-MM-DD Day] <one-line summary>~ with the body stating the lesson and why it mattered. Update rather than duplicate; delete entries that prove wrong.

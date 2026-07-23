@@ -17,6 +17,10 @@ The document chain for an initiative lives in a date-stamped initiative director
 
 Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
 
+## Lessons file
+
+Lessons live at the repo level, never inside an initiative directory: `docs/learnings.org` is a single cumulative file across initiatives (project-setup seeds it). One dated entry per learning, newest first; update rather than duplicate; delete entries that prove wrong. Wherever this skill or another names a "lesson candidate," this file is the destination.
+
 ## Document chain & version control
 
 - Chain documents are committed in doc-only commits, never mixed with code changes. Code commits carry code; doc commits carry chain documents.

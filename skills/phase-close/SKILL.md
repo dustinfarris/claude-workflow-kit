@@ -19,7 +19,7 @@ This is the gate skill: it closes the open batch, and it audits rather than main
 
 3. PLAN reconciliation — audit, don't update. Read the whole open batch cold and verify the per-story record holds: every story's status is truthful and its LOGBOOK captures what was carried forward. A discrepancy means an update-design pass was skipped or failed; run it retroactively for that story so the repair leaves the normal evidence trail. The gate itself writes no PLAN content except the gate record in step 5.
 
-4. Advisory pass: read `* Advisories` in DESIGN.org and withdraw — delete, not annotate — any advisory that no longer protects anything, because no reader could plausibly reintroduce the superseded position now. A withdrawn advisory that generalizes beyond this project is a lesson candidate: note it in the report for later promotion. Git remains the permanent archive.
+4. Advisory pass: read `* Advisories` in DESIGN.org and withdraw — delete, not annotate — any advisory that no longer protects anything, because no reader could plausibly reintroduce the superseded position now. A withdrawn advisory that generalizes beyond this project is a lesson candidate: note it in the report for later promotion to the repo-level `docs/learnings.org` (see org-conventions' Lessons file section). Git remains the permanent archive.
 
 5. Write the gate record on the batch heading per org-conventions: a single-note LOGBOOK drawer with the timestamp, checks run, verdict, and the count of advisories withdrawn/promoted. Its presence is what marks the batch closed.
 

@@ -6,7 +6,7 @@ A Claude Code plugin that layers on obra/superpowers: Superpowers owns the proce
 
 1. =/plugin marketplace add <github-user>/claude-workflow-kit=
 2. =/plugin install workflow-kit@dustin=
-3. In each project repo: copy the matching =project-setup/CLAUDE.md.{mvp,workgrade}= to =CLAUDE.md= and fill in project name, stack, commands, and append =project-setup/.gitignore='s contents to the repo's =.gitignore=. That is the entire per-repo setup — skills, agents, hooks, and templates all travel with the plugin.
+3. In each project repo: copy the matching =project-setup/CLAUDE.md.{mvp,workgrade}= to =CLAUDE.md= and fill in project name, stack, commands, copy =project-setup/learnings.org= to =docs/learnings.org=, and append =project-setup/.gitignore='s contents to the repo's =.gitignore=. That is the entire per-repo setup — skills, agents, hooks, and templates all travel with the plugin.
 4. Optional per-repo override: create a local =templates/= directory to shadow the plugin's templates for that project.
 5. Optional, work-grade repos: wire =stop-test-gate.sh= into the repo's =.claude/settings.json= per the script header. It stays out of the plugin's hooks.json deliberately — plugin hooks fire in every repo where the plugin is enabled, and a mandatory test gate is a work-grade opinion, not a universal one. (prd-lock and post-edit-format are safe globally: both self-gate on file patterns.)
 
@@ -18,7 +18,7 @@ A Claude Code plugin that layers on obra/superpowers: Superpowers owns the proce
 
 * Install (copy-in fallback, no plugin)
 
-Copy =skills/=, =agents/=, and =hooks/= into a repo's =.claude/= directory, add =project-setup/copy-in-settings.json= as =.claude/settings.json= (it wires hooks via =$CLAUDE_PROJECT_DIR=), copy =templates/= to the repo root, append =project-setup/.gitignore='s contents to the repo's =.gitignore=, and =chmod +x .claude/hooks/*.sh=. Note the skills lose their =/workflow-kit:= namespace in this mode — invoke them bare (=/user-stories=).
+Copy =skills/=, =agents/=, and =hooks/= into a repo's =.claude/= directory, add =project-setup/copy-in-settings.json= as =.claude/settings.json= (it wires hooks via =$CLAUDE_PROJECT_DIR=), copy =templates/= to the repo root, copy =project-setup/learnings.org= to =docs/learnings.org=, append =project-setup/.gitignore='s contents to the repo's =.gitignore=, and =chmod +x .claude/hooks/*.sh=. Note the skills lose their =/workflow-kit:= namespace in this mode — invoke them bare (=/user-stories=).
 
 * The pipeline
 
