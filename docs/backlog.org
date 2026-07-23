@@ -119,6 +119,60 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   CANCELLED 2026-07-11 by human ruling, superseding this item's original fix direction (the body previously said "prefer in-directory specs as the convention going forward" — the ruling went the opposite way): brainstorm outputs stay OUT of initiative directories entirely; they live in ~docs/superpowers/specs/~ and initiative directories contain only chain documents. create-prd creates the directory itself, per its own spec, and needs no reuse logic. Already recorded as CANCELLED in the 0.4.1 CHANGELOG; a repo-CLAUDE.md convention line (shipped in bear-cub) owns the placement rule, not skill logic. Kept here per the declined-ideas convention.
 :END:
 
+** TODO story-closeout owns doc-commit moments (three misses this batch)
+:PROPERTIES:
+:CREATED:  [2026-07-18 Sat 23:33]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-18 Sat 23:33] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ performs the commits itself as its final step — code commit, then doc commit; the doc-commit message template enumerates any governance-file changes it touches (e.g. ~design-language.org~/~learnings.org~). Authoring skills (~user-stories~, ~chain-authoring~) end by instructing the human to make the milestone doc commit, not by making it themselves. Three instances this batch of doc-commit moments being missed because no step owned them.
+:END:
+
+** TODO dirty-tree guard: implementation sessions refuse to start over a dirty tree
+:PROPERTIES:
+:CREATED:  [2026-07-18 Sat 23:33]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-18 Sat 23:33] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): implementation sessions refuse to start over a dirty working tree, and unexplained working-tree state is surfaced to the human, never classified-and-fixed by the session itself. A session this batch silently deleted the human's uncommitted scratch code after misattributing it.
+:END:
+
+** TODO bar substitution guard: a red verify run is never self-ticked
+:PROPERTIES:
+:CREATED:  [2026-07-18 Sat 23:33]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-18 Sat 23:33] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ — a red verify run is never self-ticked; surface to the human, who may rule a documented deferral. Matching verify-the-bar-as-written language belongs in ~story-verifier~ and ~phase-close~ too. This batch, advisory withdrawal used an age heuristic instead of the reintroduction test.
+:END:
+
+** TODO governance-file reconciliation: update-design corrects design-language.org/learnings.org in the same pass
+:PROPERTIES:
+:CREATED:  [2026-07-18 Sat 23:33]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-18 Sat 23:33] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): ~update-design~'s checklist gains — if the pivot touches anything recorded in ~design-language.org~ or ~learnings.org~, correct that recording in the same pass. ~design-language.org~ went stale against D51/D52 within a day this batch.
+:END:
+
+** TODO AC altitude + TDD proportionality guidance in user-stories
+:PROPERTIES:
+:CREATED:  [2026-07-18 Sat 23:33]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-18 Sat 23:33] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): ~user-stories~ guidance that ACs state behavior at the changeset/context level (migration/deployment mechanics go in Technical Notes instead); TDD guidance that framework contracts get no bespoke test harnesses at personal-mvp weight. Cross-cutting note for all five items captured from this retro: rulings ship as templates and examples in the skills, not prose rules — this batch proved sessions follow the nearest example over the stated rule.
+:END:
+
+** TODO authority marking in DESIGN docs: D-entries vs session-authored elaboration
+:PROPERTIES:
+:CREATED:  [2026-07-19 Sun 00:07]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-19 Sun 00:07] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): human-litigated decisions (D-entries) and session-authored body elaboration are currently unmarked, and downstream layers defend session choices with decision-grade authority ("the design specifies…" when no decision does). Observed this batch: the derivation's implementation shape lived only in session-authored Context-bullet prose, but was cited downstream as if the human had ruled it. Fix: an elaboration-yields-to-owner sentence in ~org-conventions~ and ~promote-design~ (body prose beyond what a D-entry settles is implementation guidance, not contract — it yields to owner preference without ceremony), plus an honest-attribution discipline for sessions: canon is defended as canon with the citation checked; session choices are defended as choices, on the merits of the specific proposal at hand, not the category it resembles. Pendulum note, human-ruled: un-ruled positions are NOT thereby indefensible — pushback that keeps work on track is valued; the discipline governs what the defense is made of, not whether to defend.
+:END:
+
 ** Promotion candidates
 
 *** TODO [#B] [doctrine] initiative-close skill designed but not built :promote:
