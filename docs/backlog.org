@@ -7,6 +7,8 @@ Repo-level backlog, cumulative across initiatives. Items land here from PLAN Def
 Size tags: oneshot (compiled single-session prompt), hand (inert edit, no session), promote (candidate for initiative-scale work). Untagged means untriaged — sizing happens at review or pull time, not capture time.
 * [2026-07-13 Mon]
 
+Groomed [2026-07-22 Wed 21:20]: second manual groom (spec shakedown for the backlog-grooming entry). No prunes; all open entries verified against kit source at 0.6.0 — never from recollection — and kept per ruling. Six retro-born captures (2026-07-18/19, bear-cub gamification retro) triaged with priorities and size tags per ruling; governance-file reconciliation coupled into the initiative-close bundle. Rulings this groom: retro docs are committed (b07fccf); capture and groom land as separate commits. The shipped asterisk-rule DONE entry (a8797cf) was omitted from this groom's proposal batch and stays unpruned — prune-eligible next groom.
+
 Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipped in 0.5.0 (commit 2969141), each verified against the kit source at groom time; full entry text remains in this file's git history at d0599f2 and in CHANGELOG.org. Dispositions below carry their evidence in per-entry LOGBOOK notes.
 
 ** TODO [#C] Registrar files vs. branches: stranding + divergence policy :promote:
@@ -14,6 +16,8 @@ Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipp
 :CREATED:  [2026-07-12 Sun 22:37]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#C], unchanged — still a single theoretical instance; design-on-second-appearance stands.
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: KEPT, [#C]. Dormant by its own terms — one theoretical instance (bear-cub capture hook); design on second appearance. Tag unchanged.
 :END:
@@ -36,6 +40,8 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-12 Sun 17:56]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#C] hand, unchanged — verified still absent from README.org at 0.6.0.
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: KEPT, [#C], tagged hand. Verified absent from README.org. The pattern is written down in docs/fable-charter.org, but the charter is unversioned doctrine, not the kit's shipped surface — the entry stands. Can ride in the same patch as the asterisk rule above.
 - Note taken on [2026-07-12 Sun 17:56] \\
@@ -47,6 +53,8 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-12 Sun 11:44]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B], unchanged — zero ~learnings~ references in skills/, templates/, project-setup/, agents/ at 0.6.0. The bundle this rides with grows: the governance-file reconciliation entry (2026-07-18) is coupled in per this groom's ruling, since it presumes governance files the kit does not yet codify.
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: KEPT, [#B], coupled — rides with the initiative-close promotion (see Promotion candidates below), not alone. Verified open: zero ~learnings~ references anywhere in skills/, templates/, project-setup/, agents/; project-setup seeds no learnings file; the three ~lesson~ mentions (phase-close step 4, org-conventions ×2) name no path.
 - Note taken on [2026-07-12 Sun 12:26] \\
@@ -62,6 +70,8 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-11 Sat 21:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B] oneshot, unchanged — no shared-log or repo-level-log language in skills/org-conventions/SKILL.md at 0.6.0. Pairing with the headings item below stands.
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: KEPT, [#B], tagged oneshot as a pair with the headings item below — one compiled session prompt, both changes to the Decision Log section land at once. Verified open: no shared-log or repo-level-log language in skills/org-conventions/SKILL.md. The human ruling recorded below stands — do not relitigate.
 - Note taken on [2026-07-12 Sun 12:26] \\
@@ -80,6 +90,8 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-11 Sat 12:47]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B] oneshot, unchanged — no ~CUSTOM_ID~ convention in skills/org-conventions/SKILL.md at 0.6.0. Pairing with the shared-log lift above stands.
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: KEPT, [#B], tagged oneshot as a pair with the shared-log lift above — same section changes once, not twice. Verified open: no CUSTOM_ID convention in skills/org-conventions/SKILL.md.
 - Note taken on [2026-07-12 Sun 12:26] \\
@@ -94,6 +106,11 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-13 Mon 22:57]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#C], untagged — and the act-condition is now SATISFIED: this groom is the second manual run. BUILD-ELIGIBLE; size at pull time. Shakedown findings for the build, from this run: \\
+  (1) the step-1 STOP-on-dirty rule collides with the normal capture-then-groom flow — this run's dirt was exactly the registrar's own uncommitted captures plus the retro doc that birthed them; the built skill should distinguish registrar-capture dirt (proceed read-only, propose committing captures separately before the groom write, per this groom's ruling) from unrelated dirt (hard stop, surface to human); \\
+  (2) step 2 wants an explicit check-recent-commits-for-partial-overlap instruction — 0.6.0's Document chain & version control section (920ddcc) partially overlaps the doc-commit-ownership capture, the exact shape a groom could miscall as shipped; \\
+  (3) the proposal pass must enumerate EVERY entry including DONE ones — this run's proposal batch omitted the shipped asterisk-rule entry, leaving it unpruned until next groom.
 - Note taken on [2026-07-13 Mon 23:02] \\
   Groom [2026-07-13 Mon]: KEPT, [#C], untagged (size at pull time). Act-condition: build after the NEXT manual groom shakes down the spec below — one observed run isn't a pattern, and the spec was drafted by the same session it describes, so a second run under different backlog conditions is the cheap independent check (the initiative-close precedent, applied consistently with the registrar-branches item's design-on-second-appearance standard). Human-ruled.
 - Note taken on [2026-07-13 Mon 22:57] \\
@@ -119,56 +136,68 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   CANCELLED 2026-07-11 by human ruling, superseding this item's original fix direction (the body previously said "prefer in-directory specs as the convention going forward" — the ruling went the opposite way): brainstorm outputs stay OUT of initiative directories entirely; they live in ~docs/superpowers/specs/~ and initiative directories contain only chain documents. create-prd creates the directory itself, per its own spec, and needs no reuse logic. Already recorded as CANCELLED in the 0.4.1 CHANGELOG; a repo-CLAUDE.md convention line (shipped in bear-cub) owns the placement rule, not skill logic. Kept here per the declined-ideas convention.
 :END:
 
-** TODO story-closeout owns doc-commit moments (three misses this batch)
+** TODO [#B] story-closeout owns doc-commit moments (three misses this batch) :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B], tagged oneshot. Verified open — zero commit steps in skills/story-closeout/SKILL.md at 0.6.0. Interaction found at groom: 0.6.0's Document chain & version control section (920ddcc) defines the canonical commit moments but assigns no owner — this entry complements it, no duplication. Pairs with the bar-substitution entry below: both edit story-closeout; one compiled session prompt can carry both.
 - Note taken on [2026-07-18 Sat 23:33] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ performs the commits itself as its final step — code commit, then doc commit; the doc-commit message template enumerates any governance-file changes it touches (e.g. ~design-language.org~/~learnings.org~). Authoring skills (~user-stories~, ~chain-authoring~) end by instructing the human to make the milestone doc commit, not by making it themselves. Three instances this batch of doc-commit moments being missed because no step owned them.
 :END:
 
-** TODO dirty-tree guard: implementation sessions refuse to start over a dirty tree
+** TODO [#B] dirty-tree guard: implementation sessions refuse to start over a dirty tree :hand:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B], tagged hand. No dirty-tree language anywhere in skills/ or project-setup/ at 0.6.0. Highest-severity retro incident (human scratch code silently deleted after misattribution). This groom's own preflight hit the adjacent case — registrar captures sitting uncommitted — a second live instance of the theme; the grooming-skill entry's shakedown note carries the registrar-specific handling.
 - Note taken on [2026-07-18 Sat 23:33] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): implementation sessions refuse to start over a dirty working tree, and unexplained working-tree state is surfaced to the human, never classified-and-fixed by the session itself. A session this batch silently deleted the human's uncommitted scratch code after misattributing it.
 :END:
 
-** TODO bar substitution guard: a red verify run is never self-ticked
+** TODO [#B] bar substitution guard: a red verify run is never self-ticked :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B], tagged oneshot. Verified open — phase-close has "never fake a result" for manual gate criteria, but no never-self-tick-a-red-run rule exists in story-closeout, story-verifier, or phase-close at 0.6.0. One pass, three files; pairs with the doc-commit entry above (both edit story-closeout).
 - Note taken on [2026-07-18 Sat 23:33] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ — a red verify run is never self-ticked; surface to the human, who may rule a documented deferral. Matching verify-the-bar-as-written language belongs in ~story-verifier~ and ~phase-close~ too. This batch, advisory withdrawal used an age heuristic instead of the reintroduction test.
 :END:
 
-** TODO governance-file reconciliation: update-design corrects design-language.org/learnings.org in the same pass
+** TODO [#C] governance-file reconciliation: update-design corrects design-language.org/learnings.org in the same pass
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#C], coupled — rides with the initiative-close/lessons-codification bundle, not alone. update-design has zero mentions of ~design-language.org~ or ~learnings.org~ at 0.6.0, but neither does the rest of the kit: this cannot ship before kit-side lessons codification lands. Deliberately untagged for size — the bundle sizes it.
 - Note taken on [2026-07-18 Sat 23:33] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): ~update-design~'s checklist gains — if the pivot touches anything recorded in ~design-language.org~ or ~learnings.org~, correct that recording in the same pass. ~design-language.org~ went stale against D51/D52 within a day this batch.
 :END:
 
-** TODO AC altitude + TDD proportionality guidance in user-stories
+** TODO [#C] AC altitude + TDD proportionality guidance in user-stories :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#C], tagged oneshot. user-stories carries the Technical Notes section but no altitude guidance at 0.6.0. Per the retro's cross-cutting ruling, this ships as template examples, not prose rules — crafting work, hence oneshot rather than hand.
 - Note taken on [2026-07-18 Sat 23:33] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): ~user-stories~ guidance that ACs state behavior at the changeset/context level (migration/deployment mechanics go in Technical Notes instead); TDD guidance that framework contracts get no bespoke test harnesses at personal-mvp weight. Cross-cutting note for all five items captured from this retro: rulings ship as templates and examples in the skills, not prose rules — this batch proved sessions follow the nearest example over the stated rule.
 :END:
 
-** TODO authority marking in DESIGN docs: D-entries vs session-authored elaboration
+** TODO [#C] authority marking in DESIGN docs: D-entries vs session-authored elaboration :hand:
 :PROPERTIES:
 :CREATED:  [2026-07-19 Sun 00:07]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#C], tagged hand. No elaboration or authority language in org-conventions or promote-design at 0.6.0. The capture note below already carries the sentences to add, pendulum note included — an inert edit.
 - Note taken on [2026-07-19 Sun 00:07] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): human-litigated decisions (D-entries) and session-authored body elaboration are currently unmarked, and downstream layers defend session choices with decision-grade authority ("the design specifies…" when no decision does). Observed this batch: the derivation's implementation shape lived only in session-authored Context-bullet prose, but was cited downstream as if the human had ruled it. Fix: an elaboration-yields-to-owner sentence in ~org-conventions~ and ~promote-design~ (body prose beyond what a D-entry settles is implementation guidance, not contract — it yields to owner preference without ceremony), plus an honest-attribution discipline for sessions: canon is defended as canon with the citation checked; session choices are defended as choices, on the merits of the specific proposal at hand, not the category it resembles. Pendulum note, human-ruled: un-ruled positions are NOT thereby indefensible — pushback that keeps work on track is valued; the discipline governs what the defense is made of, not whether to defend.
 :END:
@@ -180,6 +209,8 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-11 Sat 13:04]
 :END:
 :LOGBOOK:
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B] promote, still the top promotion candidate — no ~skills/initiative-close/~ at 0.6.0; ~templates/PLAN.org~ line 17 still carries the stale "Promoted to v2 candidates" comment. Bundle grows: the governance-file reconciliation entry (2026-07-18) is coupled in per this groom's ruling, alongside the kit-side lessons codification already bundled.
 - Note taken on [2026-07-13 Mon 22:53] \\
   Groom [2026-07-13 Mon]: PROMOTION CANDIDATE, [#B] — flagged only; the promotion runs in a fresh session. Verified not built (no ~skills/initiative-close/~ at 0.5.0); corroborated open by ~templates/PLAN.org~ line 17 still carrying the stale "Promoted to v2 candidates at initiative close" comment that note (2) below orders fixed. Bundles the kit-side lessons codification item above per groom ruling.
 - Note taken on [2026-07-11 Sat 13:04] \\
