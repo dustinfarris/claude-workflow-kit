@@ -71,11 +71,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Acceptance: no kit text implies lessons live inside an initiative directory; tests/tripwires green.
 :END:
 
-** TODO [#B] non-sequential initiatives: lift the Decision Log to a repo-level shared log :oneshot:
+** DONE [#B] non-sequential initiatives: lift the Decision Log to a repo-level shared log :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-11 Sat 21:33]
 :END:
+- State "DONE"       from "TODO"       [2026-07-23 Thu 16:40]
 :LOGBOOK:
+- Note taken on [2026-07-23 Thu 16:40] \\
+  Shipped in 0.7.0 (1d03600), paired with the headings item below per the groom ruling — one session, both Decision Log section changes at once. All four ruling points implemented as recorded: shared ~docs/decisions.org~ (project-setup seeds it; both README install paths copy it), historical entries in situ with a pointing-back header, chain-qualified pointers once the log serves multiple chains, overrule protocol (eager notice, lazy repair, owner-only writes) and the accepted collision risk in org-conventions with the gate repair in phase-close's new step 5. The decide-and-state fork: DESIGN's Decision Log section is pointer-only, no local entries — single source of truth settles it; rationale in the CHANGELOG. The horizon question (DESIGN body lifting repo-level) stays parked, untouched.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#B] oneshot, unchanged — no shared-log or repo-level-log language in skills/org-conventions/SKILL.md at 0.6.0. Pairing with the headings item below stands.
 - Note taken on [2026-07-13 Mon 22:53] \\
@@ -91,11 +94,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Open horizon question (human, not Sonnet): does the DESIGN *body* eventually lift to a repo-level living system description too? Park, don't answer.
 :END:
 
-** TODO [#B] make decision records headings and link to them when referenced :oneshot:
+** DONE [#B] make decision records headings and link to them when referenced :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-11 Sat 12:47]
 :END:
+- State "DONE"       from "TODO"       [2026-07-23 Thu 16:40]
 :LOGBOOK:
+- Note taken on [2026-07-23 Thu 16:40] \\
+  Shipped in 0.7.0 (1d03600) with the shared-log lift above — same section, changed once. Acceptance met: org-conventions' Decision Log format is now a heading with ~:CUSTOM_ID:~ (lowercase D-number, e.g. =d27=), citation link syntax stated for both in-log and cross-file references, and the worked example shows heading + CUSTOM_ID + an Advisory line citing it as a link; the DESIGN template's Decision Log comment demonstrates the link form. Historical logs stay list-format — the no-retroactive-conversion line rides in the citation-form bullet; CHANGELOG + bump to 0.7.0.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#B] oneshot, unchanged — no ~CUSTOM_ID~ convention in skills/org-conventions/SKILL.md at 0.6.0. Pairing with the shared-log lift above stands.
 - Note taken on [2026-07-13 Mon 22:53] \\
