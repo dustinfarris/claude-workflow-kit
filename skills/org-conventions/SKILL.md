@@ -24,7 +24,7 @@ Lessons live at the repo level, never inside an initiative directory: `docs/lear
 ## Document chain & version control
 
 - Chain documents are committed in doc-only commits, never mixed with code changes. Code commits carry code; doc commits carry chain documents.
-- Chain documents enter version control at their canonical moments only: the PRD at lock (the human rename is the approval act; the lock commit follows it), the DESIGN at canon approval, and thereafter each update-design pass (D-entry + body edit + Advisory) as its own doc commit. Working drafts and intermediates are never committed.
+- Chain documents enter version control at their canonical moments only: the PRD at lock (the human rename is the approval act; the lock commit follows it), the DESIGN at canon approval, and thereafter each update-design pass (D-entry + body edit + Advisory) as its own doc commit. Working drafts and intermediates are never committed. The shared decision log `docs/decisions.org` rides in the doc commit of the pass that minted its entry.
 - The brainstorm spec is never committed. It is scratch material supporting PRD and DESIGN drafting; the DESIGN supersedes it. `docs/superpowers/specs/` is permanently gitignored. Nothing that survives to a document's first commit may reference the brainstorm spec by section number — rejected alternatives drawn from the brainstorm are restated in words so the entry is self-contained.
 
 ## Batches and gates
@@ -114,15 +114,35 @@ A decision entry is the permanent record of a judgment call: a fork where a comp
 
 Its referent is the system being built, never the document describing it.
 
-Format:
+Location: the repo-level shared log `docs/decisions.org` (project-setup seeds it) — one monotonic D-sequence per repo, across all initiatives, appended newest last, never inside an initiative directory. DESIGN.org's `* Decision Log` section holds no entries — only a pointer to the shared log. In repos adopted mid-stream, earlier entries remain in situ in their historical chains, in the older list format — no retroactive surgery; the shared log starts at the next number (the highest existing number anywhere in the repo, plus one), with a header noting where the historical ranges live.
+
+Format: each entry is a heading in the shared log with a `:CUSTOM_ID:` (the lowercase D-number), so citations are real org links rather than grep targets:
 
 ```org
-- *Dn (YYYY-MM-DD) — terse title:* what was decided; compressed rationale; rejected alternative if one was live; what it settles (FR-x, PRD deferrals); → § pointers to where the body reflects it.
+* Dn (YYYY-MM-DD) — terse title
+:PROPERTIES:
+:CUSTOM_ID: dn
+:END:
+
+What was decided; compressed rationale; rejected alternative if one was live; what it settles (FR-x, PRD deferrals); → § pointers to where the body reflects it.
 ```
 
 - → § pointers target PRD or DESIGN sections only. Pre-chain working documents (the brainstorm spec) are never pointer targets: a rejected alternative that originated in the brainstorm is restated in words within the entry, never cited by spec section.
+- Once the log serves more than one chain, "settles" targets and → § pointers are chain-qualified with the initiative slug (e.g. "settles extras/SC-2", "→ extras/Key Behaviors") — bare "FR-13"/"§6" is ambiguous across initiatives.
+- Citation form: from a chain document, `[[file:../decisions.org::#d27][D27]]` (path relative to the citing file); within the shared log, `[[#d27][D27]]`. Historical list-format entries keep their bare `(Dx)` citations — the link convention applies from adoption forward, no retroactive conversion.
 
-One monotonic sequence per initiative. The growing end is `* Decision Log` in DESIGN.org. In adopted repos where earlier entries live elsewhere (e.g. a PRD decision-log section), the next number is the highest existing number anywhere in the chain, plus one.
+Example — an entry, and an Advisory line citing it as a link:
+
+```org
+* D27 (2026-07-12) — Extras are chore rows with routine = nil
+:PROPERTIES:
+:CUSTOM_ID: d27
+:END:
+
+Extras reuse the chore table with ~routine = nil~ rather than a parallel ~extras~ table; one query path and one component tree serve both. Rejected: a separate extras schema — two shapes of the same concept drift apart. Settles extras/SC-2. → extras/Key Behaviors.
+```
+
+and, in that initiative's DESIGN Advisories: `Rationale: [[file:../decisions.org::#d27][D27]].`
 
 Created at three moments:
 
@@ -132,7 +152,11 @@ Created at three moments:
 
 Append-only, forever. A decision entry cannot become wrong; it records that a judgment happened. A reversed decision gets a new entry citing the old (`Dn — supersedes Dm: ...`); the old entry stays.
 
-Referenced by: document bodies inline as `(Dx)`; Advisories (the why behind a notice); CLAUDE.md invariants (curated distillations); fresh sessions and design reviews (rejected alternatives fence off relitigation); Amendment analysis (the → § trail shows what an amendment invalidates); initiative-close extraction (survived decisions become confirmed-approach lessons).
+Overrule protocol — eager notice, lazy repair, owner-only writes. When a session's pivot overrules a decision another chain relies on, that session's whole obligation is a loud supersession entry in the shared log: cite the old D-number as a link, and state the superseded position explicitly (advisory-style payload) wherever the dead position could trap a later reader. Each open chain reconciles with supersessions that touch it at its own gates — never earlier, and never by the overruling session. A session NEVER writes into another chain's documents.
+
+Accepted risk: two concurrent sessions can mint the same next number. Rare while working solo; the gate repairs it — renumber the later-committed entry and fix its citations. A numbering repair is not a decision and mints nothing.
+
+Referenced by: document bodies inline as citation links (see the citation form above); Advisories (the why behind a notice); CLAUDE.md invariants (curated distillations); fresh sessions and design reviews (rejected alternatives fence off relitigation); Amendment analysis (the → § trail shows what an amendment invalidates); initiative-close extraction (survived decisions become confirmed-approach lessons).
 
 Only what a D-entry records carries decision authority. Body prose that goes beyond what a D-entry settles is session-authored implementation guidance, not contract — it yields to owner preference without ceremony.
 
@@ -168,4 +192,5 @@ Lifecycle: issued post-canon only (pre-canon edits have no prior readers to prot
 
 - **PRD.org** — invariant contract. Human-only edits via the Amendment protocol (see the template). Agents NEVER edit this file; a PreToolUse hook enforces the lock. If work appears to conflict with PRD Success Criteria, stop and surface for a human decision.
 - **DESIGN.org** — adaptive mechanism. Body edits allowed when new information surfaces, always paired per the Decision Log / Advisories rules above.
+- **docs/decisions.org** — append-only shared log across initiatives. Entries are never edited or deleted; a reversal or overrule is a new entry citing the old. The only sanctioned repair is the gate's duplicate-number fix.
 - **PLAN.org and stories/** — execution state. Updated freely per the skills that own them, with LOGBOOK evidence.

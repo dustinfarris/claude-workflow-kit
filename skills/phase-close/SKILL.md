@@ -21,8 +21,10 @@ This is the gate skill: it closes the open batch, and it audits rather than main
 
 4. Advisory pass: read `* Advisories` in DESIGN.org and withdraw — delete, not annotate — any advisory that no longer protects anything, because no reader could plausibly reintroduce the superseded position now. A withdrawn advisory that generalizes beyond this project is a lesson candidate: note it in the report for later promotion to the repo-level `docs/learnings.org` (see org-conventions' Lessons file section). Git remains the permanent archive.
 
-5. Write the gate record on the batch heading per org-conventions: a single-note LOGBOOK drawer with the timestamp, checks run, verdict, and the count of advisories withdrawn/promoted. Its presence is what marks the batch closed.
+5. Shared decision log pass: read the repo-level `docs/decisions.org`. This is where lazy repair lands — reconciliation with other chains happens here, at this chain's own gate, never earlier. For any supersession entry minted by another chain that overrules a decision this chain relies on, treat the affected DESIGN text as a divergence per step 2: route the repair through a retroactive update-design pass, never a direct patch. Then audit the sequence: a duplicate D-number (two concurrent sessions minting the same next number — the accepted risk) is repaired here by renumbering the later-committed entry and fixing its citations; a numbering repair is not a decision and mints nothing.
 
-6. Report a short summary to the user: what shipped, notable pivots (from the Decision Log), and the advisories withdrawn/promoted.
+6. Write the gate record on the batch heading per org-conventions: a single-note LOGBOOK drawer with the timestamp, checks run, verdict, and the count of advisories withdrawn/promoted. Its presence is what marks the batch closed.
+
+7. Report a short summary to the user: what shipped, notable pivots (from the Decision Log), and the advisories withdrawn/promoted.
 
 STOP. Do not modify PRD.org. Do not open the next batch — the next user-stories run opens it.

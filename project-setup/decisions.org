@@ -1,0 +1,9 @@
+#+title: Decision Log
+#+startup: showall
+
+Repo-level decision log: one monotonic D-sequence across all initiatives, appended newest last — decision entries never live inside an initiative directory. Entry format (heading + CUSTOM_ID), citation links, chain-qualified pointers, the overrule protocol, and the append-only rule live in the workflow-kit org-conventions skill's Decision Log section. Entries are never edited or deleted; a reversal or overrule is a new entry citing the old.
+
+# Adopted mid-stream? Historical entries stay in situ in their chains' DESIGN documents, list-format; record their ranges here and start at the next number, e.g.:
+#   D1–D26  docs/2026-05-01-mvp/DESIGN.org
+#   D27–D37 docs/2026-06-10-extras/DESIGN.org
+# Fresh repo: delete this comment; the log starts at D1.
