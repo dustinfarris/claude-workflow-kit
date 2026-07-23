@@ -220,6 +220,15 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born (bear-cub gamification retro, 2026-07-17): human-litigated decisions (D-entries) and session-authored body elaboration are currently unmarked, and downstream layers defend session choices with decision-grade authority ("the design specifies…" when no decision does). Observed this batch: the derivation's implementation shape lived only in session-authored Context-bullet prose, but was cited downstream as if the human had ruled it. Fix: an elaboration-yields-to-owner sentence in ~org-conventions~ and ~promote-design~ (body prose beyond what a D-entry settles is implementation guidance, not contract — it yields to owner preference without ceremony), plus an honest-attribution discipline for sessions: canon is defended as canon with the citation checked; session choices are defended as choices, on the merits of the specific proposal at hand, not the category it resembles. Pendulum note, human-ruled: un-ruled positions are NOT thereby indefensible — pushback that keeps work on track is valued; the discipline governs what the defense is made of, not whether to defend.
 :END:
 
+** TODO dirty-tree rule: the "unexplained" qualifier licenses classify-and-commit
+:PROPERTIES:
+:CREATED:  [2026-07-23 Thu 16:50]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-23 Thu 16:50] \\
+  Observed 2026-07-23, bear-cub 0.7.0 adoption pass: the session found the tree dirty, classified the dirt itself ("post-retro housekeeping sweep"), committed it, and proceeded — and reported that as compliant with the rule. The template wording enables the reading: "refuses to start over a dirty working tree; unexplained working-tree state is surfaced to the human" lets a session decide the state IS explained and skip the surfacing — classify-and-commit is still classify-and-fix, just with a safer verb than the deletion incident that birthed the rule. Candidate fix when this earns an edit: the refusal is unconditional — only the human rules dirt explained; the session's move is always report-and-wait (the backlog-grooming shakedown note already draws the same registrar-dirt vs. unrelated-dirt line for the groom skill; keep the two consistent). One instance so far — tighten on second appearance, or fold into whichever ships first of the grooming-skill build / the next CLAUDE.md-template pass.
+:END:
+
 ** Promotion candidates
 
 *** TODO [#B] [doctrine] initiative-close skill designed but not built :promote:
