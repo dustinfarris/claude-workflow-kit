@@ -130,6 +130,8 @@ Append-only, forever. A decision entry cannot become wrong; it records that a ju
 
 Referenced by: document bodies inline as `(Dx)`; Advisories (the why behind a notice); CLAUDE.md invariants (curated distillations); fresh sessions and design reviews (rejected alternatives fence off relitigation); Amendment analysis (the → § trail shows what an amendment invalidates); initiative-close extraction (survived decisions become confirmed-approach lessons).
 
+Only what a D-entry records carries decision authority. Body prose that goes beyond what a D-entry settles is session-authored implementation guidance, not contract — it yields to owner preference without ceremony.
+
 ## Advisories
 
 Purpose: active notices to future sessions reading this document cold — positions the document previously took that no longer hold. The primary consumer is the next agent session; git holds the permanent history, but a stateless reader will not run `git log`, so the working set of protective deltas lives in the document.

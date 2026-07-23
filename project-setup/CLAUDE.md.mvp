@@ -17,3 +17,5 @@ Active initiative: docs/YYYY-MM-DD-<initiative>/ (the document chain lives here;
 ## Workflow
 
 Pipeline: brainstorm (Superpowers) → `/workflow-kit:create-prd` → `/workflow-kit:promote-design` → `/workflow-kit:user-stories` → per story: TDD implementation then `/workflow-kit:story-closeout` then `/workflow-kit:update-design` → `/workflow-kit:phase-close`. One story per session, working from the story file's embedded Design excerpt as the source of truth. Out-of-scope discoveries are recorded as Deferred, never fixed inline. Planning artifacts are written in org per the conventions file, even where upstream skill examples show markdown.
+
+An implementation session refuses to start work over a dirty working tree; unexplained working-tree state is surfaced to the human, never classified-and-fixed by the session itself. (A session once misattributed and silently deleted the human's uncommitted scratch code — the incident this rule exists to prevent.)

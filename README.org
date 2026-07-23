@@ -43,6 +43,8 @@ Real brainstorms drift into design altitude — schemas, module names, test plan
 Keep the main thread at outcome altitude — what a user observes, not how it's built. Park mechanism material in a "for the design doc" section as it comes up; it will feed promote-design, not the PRD.
 #+end_quote
 
+A related human prompt pattern, proven twice in live use: state the expected outcome of a skill run in the invocation itself, before it runs. That turns the run into a checkable prediction, and any deviation from the prediction becomes signal instead of noise. For example, invoking =/workflow-kit:update-design= with "expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it" gives the session a stated bar to run against, and the human a one-line check when it finishes. This is deliberately a human practice, not kit machinery — no skill encodes or checks the prediction, because the pattern only works when the human is the one stating the expectation.
+
 * Notes
 
 - *Namespace*: the =name= field in =.claude-plugin/plugin.json= defines the =/workflow-kit:= prefix. Renaming the plugin means updating the namespaced references in =skills/= and =project-setup/= — CI checks for this.
