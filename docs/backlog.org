@@ -173,11 +173,14 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born (bear-cub gamification retro, 2026-07-17): implementation sessions refuse to start over a dirty working tree, and unexplained working-tree state is surfaced to the human, never classified-and-fixed by the session itself. A session this batch silently deleted the human's uncommitted scratch code after misattributing it.
 :END:
 
-** TODO [#B] bar substitution guard: a red verify run is never self-ticked :oneshot:
+** DONE [#B] bar substitution guard: a red verify run is never self-ticked :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
+- State "DONE"       from "TODO"       [2026-07-23 Thu 21:54]
 :LOGBOOK:
+- Note taken on [2026-07-23 Thu 21:54] \\
+  Shipped in 0.7.1 (ce4e929), one pass, three files as groomed. story-closeout carries the primary rule with its single sanctioned exit: a failing backing check (declared ~Verify command:~, test run, or the check the item itself states) never yields =[X]= under a reinterpreted, narrowed, or substituted bar — surface to the human, who may rule a documented deferral; only that ruling makes =[-]= legitimate for a red-run item, recorded in the LOGBOOK alongside the failing evidence. story-verifier's hard rules gain the matching verify-the-bar-as-written posture (a failing run is NOT MET however near the miss); phase-close step 1 extends "never fake a result" — jewel sentence untouched — to the automated checks, with unfixable failures routed to a human deferral ruling in the gate record. Dry read-through against bear-cub gamification stories confirmed the phrasing fits real AC items; ~test/hooks_test.sh~ green (45/45). The retro's third observation (advisory withdrawal by age heuristic instead of the reintroduction test) was not part of this item's scope and ships nothing here.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#B], tagged oneshot. Verified open — phase-close has "never fake a result" for manual gate criteria, but no never-self-tick-a-red-run rule exists in story-closeout, story-verifier, or phase-close at 0.6.0. One pass, three files; pairs with the doc-commit entry above (both edit story-closeout).
 - Note taken on [2026-07-18 Sat 23:33] \\
