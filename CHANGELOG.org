@@ -1,5 +1,9 @@
 #+title: Changelog — workflow-kit
 
+* 0.7.3 — [2026-09-05]
+
+update-design does not run tests, stated. Measured on bear-cub's first two chore-lifecycle stories (session transcripts): the Opus session's update-design pass ran the suite six times during a documentation-only stage, fifteen active minutes for a pass whose evidence was already in the story's close-out LOGBOOK; the Sonnet session's pass ran it zero times in two minutes. Nothing in the skill asked for a run either way — the habit is the model's, and update-design is now pinned to Opus (0.7.2), so it would return. One sentence in the skill's preamble, outside the five-step flow (crown jewel, untouched): this pass reads and writes documents only, does not run tests or the declared ~Verify command:~, and works from the close-out LOGBOOK evidence. A prohibition, not ceremony — applies uniformly at every weight class. No hook changes; ~test/hooks_test.sh~ green (54/54).
+
 * 0.7.2 — [2026-09-05]
 
 Model routing and verifier cost, real-use born: an hour-long story implementation plus close-out session on Opus for a diff of roughly thirty lines of production code. Nothing in the kit routed a model except the skeptic-reviewer's =model: opus= pin; story-verifier declared =model: inherit= (README's justification: "auditing is builder-class work"), which held when the builder was Sonnet and silently made the auditor an Opus session once the human's default moved. story-closeout dispatches that verifier at least twice per story, and the verifier's hard rule that a test not run is not evidence read, per item, as a full suite run per item — on work-grade that is ~mix check~, dialyzer included, repeated for every AC and DoD line, then again after any fix. docs/fable-charter.org already stated the routing (Opus for architect altitude, Sonnet for builder altitude, escalate context before model); no shipped file carried it.
