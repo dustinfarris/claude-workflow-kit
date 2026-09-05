@@ -13,7 +13,7 @@ All durable planning artifacts are org format, never markdown: PRD.org, DESIGN.o
 
 ## Document chain location
 
-The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase).
+The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase). `retro.org` lives alongside them: phase-close appends one batch section per gate crossed, holding the per-story metrics table, session observations, and a human-only Retro subheading.
 
 Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
 
@@ -194,3 +194,4 @@ Lifecycle: issued post-canon only (pre-canon edits have no prior readers to prot
 - **DESIGN.org** — adaptive mechanism. Body edits allowed when new information surfaces, always paired per the Decision Log / Advisories rules above.
 - **docs/decisions.org** — append-only shared log across initiatives. Entries are never edited or deleted; a reversal or overrule is a new entry citing the old. The only sanctioned repair is the gate's duplicate-number fix.
 - **PLAN.org and stories/** — execution state. Updated freely per the skills that own them, with LOGBOOK evidence.
+- **retro.org** — append-only per batch. phase-close writes a batch section once, at gate close; Metrics tables are never edited afterward (a wrong number is a script bug, fixed in the kit, and the corrected table is a new note beneath the old, not a replacement); the Retro subheading is human-only.

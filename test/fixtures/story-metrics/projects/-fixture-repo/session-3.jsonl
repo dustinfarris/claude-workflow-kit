@@ -1,0 +1,2 @@
+{"type": "user", "timestamp": "2026-09-05T16:00:00.000Z", "cwd": "/fixture/repo", "message": {"role": "user", "content": "create the stories"}}
+{"type": "assistant", "timestamp": "2026-09-05T16:01:00.000Z", "cwd": "/fixture/repo", "message": {"role": "assistant", "usage": {"output_tokens": 50000}, "content": [{"type": "tool_use", "id": "w1", "name": "Write", "input": {"file_path": "/fixture/repo/docs/x/stories/story-01-widget.org", "content": "..."}}]}}

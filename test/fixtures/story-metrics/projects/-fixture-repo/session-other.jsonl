@@ -1,0 +1,2 @@
+{"type": "user", "timestamp": "2026-09-05T17:00:00.000Z", "cwd": "/other/repo", "message": {"role": "user", "content": "implement @docs/x/stories/story-01-widget.org"}}
+{"type": "assistant", "timestamp": "2026-09-05T17:01:00.000Z", "cwd": "/other/repo", "message": {"role": "assistant", "usage": {"output_tokens": 9999}, "content": [{"type": "tool_use", "id": "z", "name": "Skill", "input": {"skill": "superpowers:test-driven-development"}}]}}

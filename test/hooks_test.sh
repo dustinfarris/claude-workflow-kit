@@ -103,6 +103,21 @@ for pair in \
 done
 check "copy-in settings default model is sonnet" "$(jq -r '.model' "$ROOT/project-setup/copy-in-settings.json")" sonnet
 
+echo "== story-metrics script =="
+FIX="$ROOT/test/fixtures/story-metrics"
+OUT="$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-widget 2>/dev/null)"
+check "story-metrics exits 0"        "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-widget >/dev/null 2>&1; echo $?)" 0
+check "story-metrics row present"    "$(echo "$OUT" | grep -c '^| story-01 ')" 1
+check "story-metrics phase minutes"  "$(echo "$OUT" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$3); gsub(/ /,"",$4); gsub(/ /,"",$5); print $3"/"$4"/"$5}')" "5/3/1"
+check "story-metrics test runs"      "$(echo "$OUT" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$6); print $6}')" 2
+check "story-metrics verifier"       "$(echo "$OUT" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$7); print $7}')" "1(2.0m)"
+check "story-metrics output tokens"  "$(echo "$OUT" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "1.0k"
+check "story-metrics ignores other cwd" "$(echo "$OUT" | grep -c '9999\|10.0k')" 0
+check "story-metrics timeline has question" "$(echo "$OUT" | grep -c 'Defer AC-3')" 1
+check "story-metrics prompt wins over tool refs" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-02-gadget 2>/dev/null | grep '^| story-02 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "10.0k"
+check "story-metrics story-01 unpolluted" "$(echo "$OUT" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "1.0k"
+check "story-metrics missing story flagged" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-09-none 2>/dev/null | grep -c '^| story-09 .*no transcript')" 1
+
 echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
 strays="$(grep -rl -e Changelog -e changelog "$ROOT/skills" "$ROOT/templates" "$ROOT/project-setup" 2>/dev/null | wc -l | tr -d ' ')"
 check "no Changelog/changelog strings" "$strays" 0
