@@ -101,6 +101,33 @@ def stories_in(e):
     return prompt, tool
 
 
+SLASH_RE = re.compile(r"Base directory for this skill: \S*/skills/([\w-]+)")
+CMD_RE = re.compile(r"<command-name>/(?:[\w-]+:)?([\w-]+)</command-name>")
+
+
+def slash_skill(e):
+    """Skill name when the user invoked a skill directly, else None."""
+    m = e.get("message") or {}
+    if e["type"] != "user":
+        return None
+    c = m.get("content")
+    if isinstance(c, list):
+        for blk in c:
+            if isinstance(blk, dict) and blk.get("type") == "text":
+                hit = SLASH_RE.match(blk.get("text", ""))
+                if hit:
+                    return hit.group(1)
+    elif isinstance(c, str):
+        hit = CMD_RE.search(c)
+        if hit:
+            return hit.group(1)
+    return None
+
+
+def phase_of(skill):
+    return PHASE_SKILLS.get(skill) or PHASE_SKILLS.get((skill or "").split(":")[-1])
+
+
 def tool_uses(e):
     m = e.get("message") or {}
     if e["type"] != "assistant":
@@ -124,10 +151,22 @@ def analyse(events, key):
     for e in events:
         t = e["_t"]
         m = e.get("message") or {}
+        sk = slash_skill(e)
+        if sk:
+            p = phase_of(sk)
+            if p and p not in starts:
+                phase = p
+                starts[p] = t
+            # the skill text also follows a model-invoked Skill call, and a
+            # slash command yields both a <command-name> marker and the text:
+            # record one timeline entry per skill per two minutes
+            recent = [l for tt, l in timeline if l.startswith("skill ") and sk in l and (t - tt).total_seconds() < 120]
+            if not recent:
+                timeline.append((t, f"skill {sk} (slash)"))
         for tu in tool_uses(e):
             name, inp = tu["name"], tu.get("input", {})
             if name == "Skill":
-                p = PHASE_SKILLS.get(inp.get("skill"))
+                p = phase_of(inp.get("skill"))
                 if p and p not in starts:
                     phase = p
                     starts[p] = t
@@ -238,19 +277,28 @@ def main():
 
     by_story = defaultdict(list)   # key -> events
     flagged = defaultdict(set)     # key -> other stories seen in the same session
+    orphan_updates = []            # (start, events) of update-design-only sessions
     for path in sessions:
         events = load_session(path)
         prompt_refs, tool_refs = [], []
-        ran_phase = False
+        phases_run = set()
         for e in events:
             pr, tr = stories_in(e)
             prompt_refs += [k for k in pr if k not in prompt_refs]
             tool_refs += [k for k in tr if k not in tool_refs]
+            sk = slash_skill(e)
+            if sk and phase_of(sk):
+                phases_run.add(phase_of(sk))
             for tu in tool_uses(e):
-                if tu["name"] == "Skill" and PHASE_SKILLS.get(tu.get("input", {}).get("skill")) in ("implement", "closeout"):
-                    ran_phase = True
-        refs = prompt_refs or (tool_refs if ran_phase else [])
+                if tu["name"] == "Skill" and phase_of(tu.get("input", {}).get("skill")):
+                    phases_run.add(phase_of(tu.get("input", {}).get("skill")))
+        anchored = bool(phases_run & {"implement", "closeout"})
+        refs = prompt_refs or (tool_refs if anchored else [])
         if not refs:
+            if "update-design" in phases_run:
+                # standalone update-design pass: scope is the most recently
+                # closed-out story, per the skill's own definition
+                orphan_updates.append((events[0]["_t"], events))
             continue
         owner = refs[0]
         if args.list_sessions:
@@ -260,6 +308,20 @@ def main():
             if other != owner:
                 flagged[owner].add(other)
 
+    closeouts = {}  # key -> time of the latest closeout invocation
+    for k, evs in by_story.items():
+        for e in evs:
+            sk = slash_skill(e)
+            names = [sk] if sk else [tu.get("input", {}).get("skill") for tu in tool_uses(e) if tu["name"] == "Skill"]
+            if any(phase_of(n) == "closeout" for n in names):
+                closeouts[k] = max(closeouts.get(k, e["_t"]), e["_t"])
+    for start, evs in orphan_updates:
+        prior = [(t, k) for k, t in closeouts.items() if t <= start]
+        if prior:
+            k = max(prior)[1]
+            by_story[k].extend(evs)
+            if args.list_sessions:
+                print(f"{'':8}  standalone update-design {start:%m-%d %H:%M} attributed to {k} (most recent close-out)")
     if args.list_sessions:
         return 0
     rows = []

@@ -1,0 +1,3 @@
+{"type": "user", "timestamp": "2026-09-05T17:20:00.000Z", "cwd": "/fixture/repo", "message": {"role": "user", "content": [{"type": "text", "text": "Base directory for this skill: /plugins/workflow-kit/skills/update-design\n\n# Update Design and Plan after Implementation\n..."}]}}
+{"type": "assistant", "timestamp": "2026-09-05T17:21:00.000Z", "cwd": "/fixture/repo", "message": {"role": "assistant", "usage": {"output_tokens": 4000}, "content": [{"type": "tool_use", "id": "u1", "name": "Read", "input": {"file_path": "/fixture/repo/docs/x/PLAN.org"}}]}}
+{"type": "user", "timestamp": "2026-09-05T17:22:00.000Z", "cwd": "/fixture/repo", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "u1", "content": "..."}]}}
