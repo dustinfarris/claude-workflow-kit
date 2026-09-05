@@ -1,6 +1,7 @@
 ---
 name: promote-design
 description: Promote an approved brainstorm document into DESIGN.org with Decision Log and Advisories scaffolding, running the skeptic design review for work-grade projects. Use after PRD.org exists and before user stories are written — whenever the user asks to create the design doc, promote the design, or run a design review. This is the boundary where the durable org document chain begins.
+model: opus
 ---
 
 # Promote Design

@@ -1,6 +1,7 @@
 ---
 name: story-closeout
 description: Verify and close out an implemented story with subagent audits and evidence-bearing LOGBOOK entries. Use IMMEDIATELY after finishing the implementation of any story from stories/ — whenever implementation work for a story appears complete, whenever the user says a story is done, or whenever they ask to verify, close out, or mark up a story. Never mark story checkboxes without this skill.
+model: sonnet
 ---
 
 # Story Close-out

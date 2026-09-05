@@ -1,6 +1,7 @@
 ---
 name: phase-close
 description: Closes the open batch in PLAN.org — verification, document reconciliation, advisory pass, and the gate record. Use when a batch or phase is done, when the user says they are ready to gate, or as a pre-milestone check before starting the next batch.
+model: opus
 ---
 
 # Phase Close

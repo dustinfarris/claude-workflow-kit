@@ -1,6 +1,7 @@
 ---
 name: update-design
 description: Propagate a completed story's outcomes through the document chain — Plan LOGBOOK, DESIGN body + Decision Log + Advisories, and embedded excerpts in unimplemented stories. Use after every story close-out, whenever the user asks to update the plan or design from implementation, sync documents, or record implementation decisions. This is the document-truthfulness pass; without it the chain rots.
+model: opus
 ---
 
 # Update Design and Plan after Implementation

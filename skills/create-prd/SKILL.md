@@ -1,6 +1,7 @@
 ---
 name: create-prd
 description: Draft a PRD from an approved brainstorm document into PRD-draft.org, then hand the human the rename that locks it in as the invariant contract. Use after a Superpowers brainstorming session produces an approved brainstorm document and before any stories are written — whenever the user asks to create the PRD, draft the PRD, or lock in success criteria. Also use when starting the document chain for any new project.
+model: opus
 ---
 
 # Create PRD

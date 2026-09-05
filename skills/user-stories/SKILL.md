@@ -1,6 +1,7 @@
 ---
 name: user-stories
 description: Break an approved design into implementation-ready user stories with embedded design excerpts, then emit PLAN.org. Use whenever the user asks to create stories, break down a design, generate a story set, or plan implementation from PRD.org and DESIGN.org — and use this INSTEAD of any generic plan-writing skill when the repo has a PRD.org/DESIGN.org document chain.
+model: opus
 ---
 
 # User Stories from PRD + Design

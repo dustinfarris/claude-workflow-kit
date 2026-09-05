@@ -87,6 +87,22 @@ for f in "$ROOT"/skills/*/SKILL.md "$ROOT"/agents/*.md; do
   fi
 done
 
+echo "== model routing pins =="
+for pair in \
+  "skills/story-closeout/SKILL.md=sonnet" \
+  "skills/create-prd/SKILL.md=opus" \
+  "skills/promote-design/SKILL.md=opus" \
+  "skills/user-stories/SKILL.md=opus" \
+  "skills/update-design/SKILL.md=opus" \
+  "skills/phase-close/SKILL.md=opus" \
+  "agents/story-verifier.md=sonnet" \
+  "agents/skeptic-reviewer.md=opus"; do
+  rel="${pair%%=*}"; want="${pair##*=}"
+  got="$(sed -n '2,/^---$/p' "$ROOT/$rel" | sed -n 's/^model: *//p')"
+  check "model pin $rel is $want" "$got" "$want"
+done
+check "copy-in settings default model is sonnet" "$(jq -r '.model' "$ROOT/project-setup/copy-in-settings.json")" sonnet
+
 echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
 strays="$(grep -rl -e Changelog -e changelog "$ROOT/skills" "$ROOT/templates" "$ROOT/project-setup" 2>/dev/null | wc -l | tr -d ' ')"
 check "no Changelog/changelog strings" "$strays" 0
