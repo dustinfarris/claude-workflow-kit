@@ -336,7 +336,7 @@ def main():
         delta = None if args.no_git else git_delta(args.repo, [r["window"]])
         code, test = (delta if delta else ("-", "-"))
         v = r["verifier"]
-        note = f"also touched {', '.join(sorted(flagged[k]))}" if flagged.get(k) else ""
+        note = f"also read {', '.join(sorted(flagged[k]))}" if flagged.get(k) else ""
         rows.append(
             f"| {k} | {r['active']['implement']:.0f} | {r['active']['closeout']:.0f} | {r['active']['update-design']:.0f}"
             f" | {r['tests']} | {v['count']}({v['ms']/60000:.1f}m) | {fmt_k(r['out_tokens'])} | {code} | {test} | {note} |")
@@ -359,7 +359,7 @@ def main():
           f" | {totals['vcount']:.0f}({totals['vms']/60000:.1f}m) | {fmt_k(totals['tok'])}"
           f" | {'-' if args.no_git else int(totals['code'])} | {'-' if args.no_git else int(totals['test'])} | |")
     print()
-    print("Minutes are active time (idle gaps over 10 min excluded). Verifier is dispatch count (total minutes). Δ is net lines in commits inside the session window, docs/ excluded.")
+    print("Minutes are active time (idle gaps over 10 min excluded). Verifier is dispatch count (total minutes). Δ is net lines in commits inside the session window, docs/ excluded. Note lists other story files the sessions referenced — reads count, so it is not evidence of edits.")
     print()
     print("Timeline (for writing observations — not for pasting into retro.org):")
     for k in keys:
