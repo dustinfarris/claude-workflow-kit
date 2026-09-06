@@ -13,7 +13,7 @@ All durable planning artifacts are org format, never markdown: PRD.org, DESIGN.o
 
 ## Document chain location
 
-The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase). `retro.org` lives alongside them: phase-close appends one batch section per gate crossed, holding the per-story metrics table, session observations, and a human-only Retro subheading.
+The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase). `retro.org` lives alongside them: phase-close appends one batch section per gate crossed, holding the per-story metrics table, session observations, and a human-only Retro subheading. `SKETCH.org`, when present, sits beside PRD.org: scratch parked during the PRD conversation, the starting material for the design brainstorm, org like the rest, and never a chain document.
 
 Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
 
@@ -21,11 +21,16 @@ Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUD
 
 Lessons live at the repo level, never inside an initiative directory: `docs/learnings.org` is a single cumulative file across initiatives (project-setup seeds it). One dated entry per learning, newest first; update rather than duplicate; delete entries that prove wrong. Wherever this skill or another names a "lesson candidate," this file is the destination.
 
+## Set-aside ideas
+
+Ideas the PRD conversation sets aside are recorded at the repo level in `docs/backlog.org`, never inside an initiative directory: one dated heading per idea carrying the verdict, the reason in the human's words, and any lines parked in SKETCH.org. create-prd creates the file with a `#+title:` line if absent. An entry is reopened by starting a new PRD conversation from it.
+
 ## Document chain & version control
 
 - Chain documents are committed in doc-only commits, never mixed with code changes. Code commits carry code; doc commits carry chain documents.
 - Chain documents enter version control at their canonical moments only: the PRD at lock (the human rename is the approval act; the lock commit follows it), the DESIGN at canon approval, and thereafter each update-design pass (D-entry + body edit + Advisory) as its own doc commit. Working drafts and intermediates are never committed. The shared decision log `docs/decisions.org` rides in the doc commit of the pass that minted its entry.
-- The brainstorm spec is never committed. It is scratch material supporting PRD and DESIGN drafting; the DESIGN supersedes it. `docs/superpowers/specs/` is permanently gitignored. Nothing that survives to a document's first commit may reference the brainstorm spec by section number — rejected alternatives drawn from the brainstorm are restated in words so the entry is self-contained.
+- The brainstorm spec is never committed. It is scratch material supporting PRD and DESIGN drafting; the DESIGN supersedes it. `docs/superpowers/specs/` is permanently gitignored. Nothing that survives to a document's first commit may reference the brainstorm spec or SKETCH.org by section number or line — rejected alternatives drawn from either are restated in words so the entry is self-contained.
+- `SKETCH.org` rides in the PRD lock commit — it records what the human was thinking when the contract was set — and is edited freely afterward, with no commit discipline, until DESIGN.org exists.
 
 ## Batches and gates
 
@@ -191,6 +196,7 @@ Lifecycle: issued post-canon only (pre-canon edits have no prior readers to prot
 ## Mutability policy per document
 
 - **PRD.org** — invariant contract. Human-only edits via the Amendment protocol (see the template). Agents NEVER edit this file; a PreToolUse hook enforces the lock. If work appears to conflict with PRD Success Criteria, stop and surface for a human decision.
+- **SKETCH.org** — scratch. Freely editable by anyone until DESIGN.org exists; never cited by any chain document; superseded by DESIGN.org on contact.
 - **DESIGN.org** — adaptive mechanism. Body edits allowed when new information surfaces, always paired per the Decision Log / Advisories rules above.
 - **docs/decisions.org** — append-only shared log across initiatives. Entries are never edited or deleted; a reversal or overrule is a new entry citing the old. The only sanctioned repair is the gate's duplicate-number fix.
 - **PLAN.org and stories/** — execution state. Updated freely per the skills that own them, with LOGBOOK evidence.

@@ -1,0 +1,6 @@
+#+title: SKETCH — <initiative name>
+#+date: <creation date>
+
+# Scratch: mechanism material parked during the PRD conversation, one thought per line in the order it came up, and the starting material for the design brainstorm. No authority — no chain document cites this file, anyone may edit it, and DESIGN.org supersedes it on contact.
+
+- <parked thought>
