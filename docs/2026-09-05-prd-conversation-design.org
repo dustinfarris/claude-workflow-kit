@@ -1,0 +1,132 @@
+#+title: Design — the PRD conversation: an idea becomes PRD.org before any brainstorm
+#+date: [2026-09-05 Sat]
+
+Status: approved in session 2026-09-05, ahead of implementation. Ships as workflow-kit 0.8.0.
+
+* Problem
+
+The kit's document chain begins at ~/workflow-kit:create-prd~, which extracts three sections from an approved Superpowers brainstorm document. In practice the brainstorm fires the moment a feature idea is mentioned, asks a few good questions, and is discussing design before the human has settled what the feature is, whether it is the right feature, or whether it should exist at all. By the time it stops it is proposing an implementation plan. For a one-shot change to an existing thing (a dotfiles edit, a bounded fix) that is the right shape. For a product feature it is the cart ahead of the horse: the outcome conversation never happens, and the PRD is extracted after the fact from a design document.
+
+The adversarial review of 2026-09-01 measured the cost of everything downstream of that seam and never named this gap. It is fixed first, on its own, because every later decision about the kit's shape depends on there being a settled outcome document before design starts.
+
+* What ships
+
+One stage changes behavior; nothing new is added to the pipeline. ~/workflow-kit:create-prd~ becomes the conversation that turns an idea into PRD.org, held at outcome altitude, ending in one of four verdicts, with mechanism material parked in a new scratch file, SKETCH.org, that the design brainstorm later starts from. The Superpowers brainstorm keeps its job, narrowed to design, and runs only once PRD.org exists.
+
+The artifact keeps its name. PRD.org is a misnomer for a problem statement, numbered outcomes, and non-goals, but the name is wired into the lock hook and its tests, three templates, every downstream skill that cites SC-n, both CLAUDE.md templates, the README, and the live chains in bear-cub. A rename is a mechanical follow-up release if wanted; mixing it into this behavior change would obscure both.
+
+Term audit, per this repo's conversation-born-terms rule: the stage was discussed as "intent" (borrowed from a blog post) during design. The word does not appear in any shipped text. The stage is described by what it does: the conversation that turns an idea into the PRD.
+
+* The conversation
+
+The skill fires on the idea as the human brings it, in whatever state. Its first move is to reflect the idea back in two or three sentences (what it heard, what kind of thing it seems to be) and ask one question. There is no path classification: routing has already happened by the time the skill runs.
+
+** Altitude rule
+
+Every question passes one test before it is asked: could the answer change the outcomes? Who hurts, why now, what a user would observe if it worked, what it deliberately is not, whether there is a cheaper way to reach the same outcome. A question whose answer can only change the mechanism is a design question and is not asked. One question per message; multiple choice where it helps.
+
+** Parking
+
+When either party drifts into mechanism, the session writes one line to SKETCH.org, says so in a clause, and returns to the outcome question. Material the human volunteers "for the design" goes there the same way, without comment. Nothing parked is argued during this stage.
+
+** The existence question
+
+Asked out loud at least once, not left implicit: is the pain real enough to build for, could an existing thing cover it, could this be nothing. Offering "set aside" only when the human raises it would defeat the purpose of the stage.
+
+** Exit
+
+When the session believes it can state the problem, the success criteria, and the non-goals, it says so and proposes one of four verdicts. The human rules.
+
+- *Write the PRD.* Draft ~PRD-draft.org~ per the template and the weight class, iterate freely, then the existing hand-off: the human's rename to ~PRD.org~ is the approval act.
+- *Set aside.* A dated note goes to the repo backlog with the idea and the reason in the human's words. No initiative directory survives.
+- *Different idea.* The conversation restarts on the idea that actually emerged. The original gets a one-line note in the same backlog entry as context.
+- *Bounded, no chain.* Too small for a document chain. The skill stops and hands the human to Superpowers directly, stating what was settled in a few lines so the brainstorm does not re-ask it.
+
+** Soft bound
+
+No turn count. If the conversation circles, the session says so, states what is settled and what is not, and asks which unsettled item to take next. This is the stopping-condition discipline the kit requires without a mechanical cap.
+
+** What it never does
+
+Invoke ~superpowers:brainstorming~, write DESIGN.org, write to a file named ~PRD.org~ directly, or edit an approved PRD.org. The lock hook blocks every write path onto that filename; the skill drafts under ~PRD-draft.org~ and the human's rename is the approval, exactly as today. The skill keeps its =model: opus= pin.
+
+* Artifacts
+
+** PRD-draft.org → PRD.org
+
+Unchanged: same template, same three sections, same weight-class length expectation (about ten lines of content at personal-mvp), same rename-as-approval, same lock. The only change is the input: the draft is written from the conversation, not from a brainstorm document.
+
+** SKETCH.org
+
+Lives in the initiative directory beside PRD.org, created from ~templates/SKETCH.org~ (repo-local override honored like the other templates). Its header states in two sentences what it is: mechanism material parked during the PRD conversation, starting material for the design brainstorm, no authority, freely editable, superseded by DESIGN.org on contact. Below the header, a flat list, one parked thought per line, in the order they came up. No LOGBOOK, no timestamps, no sections.
+
+It is committed in the same doc commit as the PRD lock: it records what the human was thinking when the contract was set, and git is cheap. Two rules keep it from becoming a fourth chain document: nothing downstream may cite it (it joins the brainstorm spec as a forbidden pointer target, and promote-design's reference scrub greps for it), and it is scratch in the mutability policy, editable by anyone until DESIGN.org exists.
+
+** Directory timing
+
+The initiative directory is created at the first parked line or the first draft, whichever comes first, and the =Active initiative:= line in CLAUDE.md is set at the same moment as today. On a set-aside or different-idea verdict, the parked lines move into the backlog note and the skill removes the directory it created, which by then holds only SKETCH.org, and restores the =Active initiative:= line. On the bounded verdict, the same: nothing survives except the settled points stated in chat.
+
+** Backlog note
+
+Set-aside and different-idea verdicts append a dated heading to ~docs/backlog.org~, created with a title line if absent: the idea in a sentence, the verdict, the reason, and the parked lines if any. A set-aside idea is reopened by starting a new conversation from that entry. This is the one new file the kit asks a repo to hold; bear-cub already keeps it by hand.
+
+* Routing
+
+The kit cannot edit the brainstorming skill. It has two levers, and uses both.
+
+** CLAUDE.md templates (binding lever)
+
+Both weight-class templates gain one Workflow paragraph, and the pipeline line changes to match. The paragraph: a request for a new feature, capability, or initiative goes to ~/workflow-kit:create-prd~ first, whether or not the request names it, and a session does not invoke brainstorming for such a request. Brainstorming is the design conversation: it runs once PRD.org exists, treats the Success Criteria as settled, and starts from SKETCH.org. Bugs, bounded changes to existing behavior, and refactors go straight to Superpowers as before. Superpowers' own priority rule places project instructions above skills, which is what makes this binding. Repos without the kit's CLAUDE.md (dotfiles) see no change.
+
+** Skill description (second lever)
+
+The description claims the phrasings a feature idea arrives in ("I have an idea", "I've been thinking about", "what if it could", "should we build"), says to use it before any brainstorming even when the request sounds like a build request, and excludes bugs and bounded changes. The body repeats the rule once, in its first paragraph, so a session that has already loaded the skill does not hand off mid-conversation.
+
+** Explicit invocation
+
+~/workflow-kit:create-prd~, optionally with the idea inline. Unchanged.
+
+** README
+
+The pipeline table's single "Brainstorm: automatic (Superpowers)" row becomes two: the PRD conversation, then the design brainstorm from PRD.org and SKETCH.org. The "Brainstorm kickoff fence" section is retired: the stage now does what the paste-in line asked for. The expected-outcome-prediction paragraph beside it stays; it is a separate practice.
+
+** Proof and fallback
+
+Routing cannot be unit-tested. The acceptance test is a fresh bear-cub session opened with a raw feature idea: create-prd fires, holds altitude, parks to SKETCH.org, offers the four verdicts. If brainstorming still fires first, the fallback is to fork the brainstorming skill into the kit with an initiative path ahead of design. The fork was considered and rejected for this release because it carries a 4,000-word copy against an upstream that still moves, and because the two cheaper levers are Superpowers' own declared mechanism. The CHANGELOG entry names the fallback.
+
+* Handoff and conventions
+
+** Handoff
+
+At the PRD verdict the skill ends as create-prd does today: presents the draft, gives the rename, names the next step. The next step changes from promote-design to the design brainstorm, stated as a one-sentence contract: PRD.org is the fixed contract, SKETCH.org is the starting material, run it on Opus. The human starts it in a fresh session by saying "let's design this"; the CLAUDE.md paragraph tells the brainstorm to read both files.
+
+promote-design is unchanged except that its reference scrub also greps for "SKETCH" and its input line notes that SKETCH.org was the brainstorm's starting material. DESIGN.org is still copied from the brainstorm's spec, never from the sketch. This is the whole seam contract; the follow-up seam design (below) can replace what happens after the brainstorm without touching anything here.
+
+** org-conventions
+
+Three additions, none inside a crown-jewel block:
+
+- Document chain location names SKETCH.org beside PRD.org, and names ~docs/backlog.org~ as the repo-level home for set-aside ideas, parallel to the Lessons file line.
+- Document chain & version control says SKETCH.org rides in the PRD lock commit, and extends its existing "never referenced by section number" sentence to cover it. The pointer rule inside the Decision Log spec stays verbatim; the rule for pre-chain documents already lives in this section.
+- Mutability policy gains a SKETCH.org bullet: scratch, freely editable by anyone until DESIGN.org exists, never cited downstream.
+
+* Files, tests, release
+
+- ~skills/create-prd/SKILL.md~: rewritten body and description. Opus pin unchanged.
+- ~templates/SKETCH.org~: new.
+- ~skills/org-conventions/SKILL.md~: the three additions above.
+- ~skills/promote-design/SKILL.md~: scrub grep gains "SKETCH"; input line notes SKETCH.org.
+- ~project-setup/CLAUDE.md.mvp~ and ~.workgrade~: pipeline line plus the routing paragraph.
+- ~README.org~: pipeline table split; kickoff fence section retired.
+- ~CHANGELOG.org~ and ~.claude-plugin/plugin.json~: 0.8.0 entry and bump. Minor version: a stage changes behavior and a README section goes away.
+
+No hook changes, so no new cases in ~test/hooks_test.sh~; it runs anyway and must stay green (its routing lint checks the create-prd pin). Skill text has no unit test in this kit; the acceptance test is the live bear-cub run described under Routing, and its findings come back as the next CHANGELOG entry.
+
+* Out of scope, named so it is not lost
+
+Each of these is a follow-up design, not part of this release:
+
+- The brainstorm-to-DESIGN seam: the brainstorm writes a spec that promote-design reformats into DESIGN.org. The 2026-09-01 review's largest proposed cut. This design's handoff contract (PRD.org fixed, SKETCH.org starting material) holds under either resolution.
+- The four rulings the review left open: the PRD lock hook, per-checkbox LOGBOOK notes, the tilde/equals markup convention, weight class.
+- The close-out cost the bear-cub chore-lifecycle retro exposed: 97 close-out minutes and 59 update-design minutes against 44 implementation minutes across five stories, with 80 verifier minutes over 14 dispatches.
+- Renaming PRD.org.
