@@ -176,7 +176,7 @@ When you believe you can state the problem, the success criteria, and the non-go
 
 1. **Write the PRD.** Continue with Drafting the PRD below.
 2. **Set aside.** Append a dated heading to `docs/backlog.org` (create the file with a `#+title:` line if absent): the idea in a sentence, the verdict, the reason in the human's words, and the parked lines from SKETCH.org if any. Then remove the initiative directory this conversation created — it holds only SKETCH.org — and restore the `Active initiative:` line to its previous value. A set-aside idea is reopened by starting a new conversation from its backlog entry. STOP.
-3. **Different idea.** Write the same backlog entry for the original idea, with one line naming the idea that emerged, then restart the conversation on that idea from the top of this skill.
+3. **Different idea.** Write the same backlog entry for the original idea, with one line naming the idea that emerged, remove the initiative directory if one was created and restore the `Active initiative:` line (as in verdict 2), then restart the conversation on the new idea from the top of this skill.
 4. **Bounded, no chain.** Too small for a document chain. State what was settled in a few lines so the brainstorm does not re-ask it, remove the initiative directory if one was created and restore the `Active initiative:` line (as in verdict 2), and hand the human to Superpowers directly. STOP.
 
 ## Drafting the PRD
@@ -187,7 +187,7 @@ When you believe you can state the problem, the success criteria, and the non-go
    - **Out of Scope**: explicit non-goals for this version.
 2. Create the initiative directory if the conversation has not already (see SKETCH.org above), then write `PRD-draft.org` inside it using the repo-local `templates/PRD.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PRD.org`, filling those three sections and leaving the Amendments section with its protocol comment and "(no amendments)". Do NOT carry over personas, market context, competitive framing, or stakeholder matrices — for this document chain, those are ceremony.
 
-   Write to `PRD-draft.org`, never `PRD.org`. The prd-lock hook blocks Write/Edit/MultiEdit on any path ending `PRD.org`, and blocks write-shaped Bash (redirects, `sed -i`, `tee`, `mv`/`cp` onto, `rm`, `truncate`) that targets `PRD.org` — writing `PRD.org` directly at this stage would be blocked by the kit's own hook before a human had approved anything. `PRD-draft.org` matches neither the hook's filename glob nor its Bash regex, so drafting and revision stay unrestricted.
+   Write to `PRD-draft.org`, never `PRD.org`. The prd-lock hook blocks Write/Edit/MultiEdit/NotebookEdit on any path ending `PRD.org`, and blocks write-shaped Bash (redirects, `sed -i`, `tee`, `mv`/`cp` onto, `rm`, `truncate`) that targets `PRD.org` — writing `PRD.org` directly at this stage would be blocked by the kit's own hook before a human had approved anything. `PRD-draft.org` matches neither the hook's filename glob nor its Bash regex, so drafting and revision stay unrestricted.
 3. For a personal-mvp weight class (check CLAUDE.md), the whole PRD should be around ten lines of content. For work-grade, be as complete as the conversation supports, but every Success Criterion must still be an observable outcome.
 4. Iterate on `PRD-draft.org` with the human without restriction — it is a draft, not yet a contract, so edit it as many times as the conversation needs.
 5. Before presenting the draft for approval, scrub it for references to scratch material: grep `PRD-draft.org` for "SKETCH", "spec §", and "brainstorm". Report every hit, then rewrite each to self-contained wording per org-conventions' Document chain & version control section (the rule lives there, not here). This is a report-then-fix step — list what was found and how each was reworded, never a silent rewrite.
@@ -196,7 +196,7 @@ When you believe you can state the problem, the success criteria, and the non-go
 
 Never write, edit, rename, or copy anything onto `PRD.org` — the prd-lock hook blocks every such path by design, and that is not a workaround problem to solve; it is the point. The human's own rename, run in their own shell, is the only approval act. If asked to change an already-approved PRD.org, explain the Amendment protocol in the file's header instead. Never write DESIGN.org.
 
-STOP. You are done when the rename instruction and the hand-off have been given, or when a set-aside, different-idea, or bounded verdict has been recorded as described above.
+STOP. You are done when the rename instruction and the hand-off have been given, or when a set-aside or bounded verdict has been recorded as described above. A different-idea verdict does not end the skill: it restarts the conversation, which ends at whichever of the other three verdicts the restart reaches.
 #+end_example
 
 - [ ] *Step 2: verify*
