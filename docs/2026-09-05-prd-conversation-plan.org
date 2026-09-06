@@ -412,14 +412,14 @@ Replace the whole table under =* The pipeline= (from the header row through the 
 #+begin_example
 | Stage             | Invocation                                                      | Owner                       |
 |-------------------+-----------------------------------------------------------------+-----------------------------|
-| Idea → PRD        | ~/workflow-kit:create-prd~ (fires on a new-feature request)     | this kit                    |
+| Idea → PRD        | =/workflow-kit:create-prd= (fires on a new-feature request)     | this kit                    |
 | Design brainstorm | automatic (Superpowers), from PRD.org and SKETCH.org            | Superpowers brainstorming   |
-| Design            | ~/workflow-kit:promote-design~                                  | this kit (+ skeptic agent)  |
+| Design            | =/workflow-kit:promote-design=                                  | this kit (+ skeptic agent)  |
 | Stories + plan    | =/workflow-kit:user-stories PRD.org DESIGN.org=                 | this kit                    |
 | Implementation    | normal session, Superpowers TDD                                 | Superpowers                 |
 | Story close-out   | =/workflow-kit:story-closeout stories/story-NN-*.org=           | this kit (+ verifier agent) |
-| Doc consistency   | ~/workflow-kit:update-design~                                   | this kit                    |
-| Phase close       | ~/workflow-kit:phase-close~                                     | this kit                    |
+| Doc consistency   | =/workflow-kit:update-design=                                   | this kit                    |
+| Phase close       | =/workflow-kit:phase-close=                                     | this kit                    |
 #+end_example
 
 - [ ] *Step 3: retire the fence section*
@@ -429,7 +429,7 @@ Replace everything from the line =* Brainstorm kickoff fence= through the end of
 #+begin_example
 * Stating the expected outcome of a skill run
 
-A human prompt pattern, proven twice in live use: state the expected outcome of a skill run in the invocation itself, before it runs. That turns the run into a checkable prediction, and any deviation from the prediction becomes signal instead of noise. For example, invoking ~/workflow-kit:update-design~ with "expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it" gives the session a stated bar to run against, and the human a one-line check when it finishes. This is deliberately a human practice, not kit machinery — no skill encodes or checks the prediction, because the pattern only works when the human is the one stating the expectation.
+A human prompt pattern, proven twice in live use: state the expected outcome of a skill run in the invocation itself, before it runs. That turns the run into a checkable prediction, and any deviation from the prediction becomes signal instead of noise. For example, invoking =/workflow-kit:update-design= with "expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it" gives the session a stated bar to run against, and the human a one-line check when it finishes. This is deliberately a human practice, not kit machinery — no skill encodes or checks the prediction, because the pattern only works when the human is the one stating the expectation.
 #+end_example
 
 The paste-in fence line and its rationale paragraph are gone: create-prd now holds the outcome altitude and parks mechanism material in SKETCH.org, which is what the fence asked the human to do by hand.
