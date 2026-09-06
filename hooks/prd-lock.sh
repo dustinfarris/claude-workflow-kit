@@ -21,7 +21,10 @@ case "$TOOL" in
     CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
     if echo "$CMD" | grep -q 'PRD\.org'; then
       # Allow read-only access; block write-shaped commands targeting PRD.org.
-      if echo "$CMD" | grep -qE '(>|>>)[[:space:]]*[^[:space:]]*PRD\.org|sed[[:space:]].*-i[^[:space:]]*[[:space:]].*PRD\.org|tee[[:space:]].*PRD\.org|(mv|cp)[[:space:]].*[[:space:]][^[:space:]]*PRD\.org|rm[[:space:]].*PRD\.org|truncate[[:space:]].*PRD\.org'; then
+      # Each command word must start a command (line start, whitespace, ; | & (, or a
+      # path slash) — otherwise prose such as "from PRD.org" matches the rm pattern.
+      B='(^|[[:space:];|&(/])'
+      if echo "$CMD" | grep -qE "(>|>>)[[:space:]]*[^[:space:]]*PRD\.org|${B}sed[[:space:]].*-i[^[:space:]]*[[:space:]].*PRD\.org|${B}tee[[:space:]].*PRD\.org|${B}(mv|cp)[[:space:]].*[[:space:]][^[:space:]]*PRD\.org|${B}rm[[:space:]].*PRD\.org|${B}truncate[[:space:]].*PRD\.org"; then
         echo "$BLOCK_MSG" >&2
         exit 2
       fi

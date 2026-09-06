@@ -51,6 +51,12 @@ check "tee"           "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input"
 check "rm"            "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"rm PRD.org"}}')" 2
 check "mv onto"       "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"mv draft.org PRD.org"}}')" 2
 check "truncate"      "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"truncate -s0 PRD.org"}}')" 2
+check "rm by path"    "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"/bin/rm -f docs/x/PRD.org"}}')" 2
+check "rm after &&"   "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"cd docs/x && rm PRD.org"}}')" 2
+
+echo "== prd-lock: prose containing a command word is not a command =="
+check "\"from PRD.org\" allowed"  "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"echo \"the brainstorm starts from PRD.org and SKETCH.org\""}}')" 0
+check "\"used -i PRD.org\" allowed" "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"echo \"notes: I used -i on PRD.org once\""}}')" 0
 
 echo "== prd-lock: bash reads allowed =="
 check "cat"           "$(hook_exit prd-lock.sh '{"tool_name":"Bash","tool_input":{"command":"cat PRD.org"}}')" 0
