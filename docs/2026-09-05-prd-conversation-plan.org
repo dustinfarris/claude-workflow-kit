@@ -1,0 +1,531 @@
+#+title: Plan — the PRD conversation (workflow-kit 0.8.0)
+#+date: [2026-09-05 Sat]
+
+For agentic workers: REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task by task. Steps use checkbox syntax for tracking.
+
+Goal: ~/workflow-kit:create-prd~ becomes the conversation that turns an idea into PRD.org before any brainstorm, parking mechanism material in SKETCH.org, and both CLAUDE.md templates route new-feature requests to it.
+
+Architecture: every change is text in an existing skill, template, or doc, plus one five-line template. No hook changes. The routing lever is Superpowers' own priority rule (project instructions outrank skills), applied through the CLAUDE.md templates, with the skill description as the second lever.
+
+Tech stack: Claude Code plugin (markdown SKILL.md with YAML frontmatter, org templates and docs), bash test suite ~test/hooks_test.sh~, =jq=.
+
+Spec: [[file:2026-09-05-prd-conversation-design.org]] — the plan argues from it; read both.
+
+* Global constraints
+
+- No "intent" anywhere in shipped text (skills, templates, project-setup, README, CHANGELOG). The spec's term audit forbids it. Verify with grep before each commit.
+- Crown-jewel blocks stay verbatim: the Decision Log and Advisories sections of org-conventions, the LOGBOOK format, every STOP boundary. The org-conventions edits in this plan touch only the Document chain location, Lessons file, Document chain & version control, and Mutability policy sections, and add one new section.
+- ~skills/create-prd/SKILL.md~ keeps =model: opus= in its frontmatter; the routing lint in ~test/hooks_test.sh~ checks it.
+- The prd-lock hook is untouched. create-prd still writes only ~PRD-draft.org~; the human's rename is the approval act.
+- Do not hard-wrap prose in any file. One long line per paragraph and per list item.
+- Org inline markup in org files: ~code~ for identifiers, commands, and file paths; =verbatim= only for literal non-code strings. SKILL.md files are markdown and use backticks.
+- Commit messages follow the repo's rules: type from the allowed list (=feat=, =tweak=, =docs=, =bump= ...), subject 11 to 80 characters, body wrapped at 72, ADR-style, trailers in the footer. The commit-msg hook lints every commit.
+- ~test/hooks_test.sh~ must be green (66/66) at every commit.
+- SKETCH.org lives in the initiative directory. The 2026-07-11 ruling recorded in ~docs/backlog.org~ (initiative directories hold only chain documents; brainstorm outputs stay in ~docs/superpowers/specs/~) is not reversed: SKETCH.org is kit-authored by create-prd and committed with the PRD lock, not a brainstorm output. The CHANGELOG entry states this.
+
+* Task 1: SKETCH.org template and org-conventions additions
+
+Files:
+- Create: ~templates/SKETCH.org~
+- Modify: ~skills/org-conventions/SKILL.md~ (Document chain location, after Lessons file, Document chain & version control, Mutability policy)
+
+Interfaces:
+- Produces: the template path ~templates/SKETCH.org~ that Task 2's skill text names, and the convention sentences Tasks 2 and 3 rely on (SKETCH.org is scratch, never cited, rides in the PRD lock commit; ~docs/backlog.org~ is the set-aside home).
+
+- [ ] *Step 1: create the template*
+
+Write ~templates/SKETCH.org~ with exactly this content:
+
+#+begin_example
+#+title: SKETCH — <initiative name>
+#+date: <creation date>
+
+# Scratch: mechanism material parked during the PRD conversation, one thought per line in the order it came up, and the starting material for the design brainstorm. No authority — no chain document cites this file, anyone may edit it, and DESIGN.org supersedes it on contact.
+
+- <parked thought>
+#+end_example
+
+- [ ] *Step 2: extend Document chain location*
+
+In ~skills/org-conventions/SKILL.md~, the section =## Document chain location= has a first paragraph ending with the sentence about retro.org ("...session observations, and a human-only Retro subheading."). Append this sentence to that paragraph, on the same line:
+
+#+begin_example
+`SKETCH.org`, when present, sits beside PRD.org: scratch parked during the PRD conversation, the starting material for the design brainstorm, org like the rest, and never a chain document.
+#+end_example
+
+- [ ] *Step 3: add the set-aside section*
+
+Immediately after the =## Lessons file= section (its single paragraph ends "...this file is the destination."), insert a new section:
+
+#+begin_example
+## Set-aside ideas
+
+Ideas the PRD conversation sets aside are recorded at the repo level in `docs/backlog.org`, never inside an initiative directory: one dated heading per idea carrying the verdict, the reason in the human's words, and any lines parked in SKETCH.org. create-prd creates the file with a `#+title:` line if absent. An entry is reopened by starting a new PRD conversation from it.
+#+end_example
+
+- [ ] *Step 4: extend Document chain & version control*
+
+In the =## Document chain & version control= section, the third bullet begins "The brainstorm spec is never committed." Its last sentence currently reads:
+
+#+begin_example
+Nothing that survives to a document's first commit may reference the brainstorm spec by section number — rejected alternatives drawn from the brainstorm are restated in words so the entry is self-contained.
+#+end_example
+
+Replace that sentence with:
+
+#+begin_example
+Nothing that survives to a document's first commit may reference the brainstorm spec or SKETCH.org by section number or line — rejected alternatives drawn from either are restated in words so the entry is self-contained.
+#+end_example
+
+Then add a fourth bullet after it:
+
+#+begin_example
+- `SKETCH.org` rides in the PRD lock commit — it records what the human was thinking when the contract was set — and is edited freely afterward, with no commit discipline, until DESIGN.org exists.
+#+end_example
+
+- [ ] *Step 5: extend the Mutability policy*
+
+In =## Mutability policy per document=, insert this bullet between the ~PRD.org~ bullet and the ~DESIGN.org~ bullet:
+
+#+begin_example
+- **SKETCH.org** — scratch. Freely editable by anyone until DESIGN.org exists; never cited by any chain document; superseded by DESIGN.org on contact.
+#+end_example
+
+- [ ] *Step 6: verify*
+
+Run from the repo root:
+
+#+begin_src bash
+test/hooks_test.sh | tail -3
+grep -c 'SKETCH' skills/org-conventions/SKILL.md
+grep -ci 'intent' templates/SKETCH.org skills/org-conventions/SKILL.md
+awk '/^## Decision Log/,/^## Mutability/' skills/org-conventions/SKILL.md | grep -c SKETCH
+#+end_src
+
+Expected: the test suite reports 66 passed, 0 failed; the SKETCH count is 5 or more; the intent count is 0 for both files; the last command prints 0 (no SKETCH mention landed inside the Decision Log or Advisories sections).
+
+- [ ] *Step 7: commit*
+
+#+begin_src bash
+git add templates/SKETCH.org skills/org-conventions/SKILL.md
+git commit -F - <<'EOF'
+feat: SKETCH.org template and its conventions
+
+The PRD conversation (next commit) parks mechanism material in a
+scratch file beside PRD.org so the outcome conversation can stay at
+outcome altitude. The file needs a template, because skills that fill
+pre-created structure beat skills that invent it, and a place in the
+conventions.
+
+org-conventions names SKETCH.org in the chain location, adds it to
+the never-cited rule beside the brainstorm spec, says it rides in the
+PRD lock commit and is edited freely afterward, and gives it a scratch
+entry in the mutability policy. A new Set-aside ideas section names
+docs/backlog.org as the repo-level home for ideas the conversation
+sets aside. No crown-jewel block is touched.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+EOF
+#+end_src
+
+* Task 2: rewrite create-prd
+
+Files:
+- Modify: ~skills/create-prd/SKILL.md~ (whole file)
+
+Interfaces:
+- Consumes: ~templates/SKETCH.org~ (Task 1); org-conventions' Set-aside ideas section (Task 1).
+- Produces: the skill text that the CLAUDE.md templates (Task 4) and README (Task 5) describe; the closing hand-off sentence promote-design's input line (Task 3) matches.
+
+- [ ] *Step 1: replace the file*
+
+Write ~skills/create-prd/SKILL.md~ with exactly this content:
+
+#+begin_example
+---
+name: create-prd
+description: Turn an idea into PRD.org through a conversation held at outcome altitude — what hurts, for whom, what a user would observe if it worked, what is out of scope, and whether it should be built at all. Use whenever the user brings an idea for a new feature, capability, or initiative — "I have an idea", "I've been thinking about", "what if it could", "should we build" — BEFORE any brainstorming, even when the request sounds like a build request. Also use when the user asks to create the PRD, draft the PRD, or lock in success criteria, or when starting the document chain for any new project. Not for bugs, bounded changes to existing behavior, or refactors — those go straight to Superpowers.
+model: opus
+---
+
+# Create PRD
+
+Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) for the document chain rules.
+
+This skill is the conversation that turns an idea into PRD.org, and it runs before any brainstorm: do not invoke `superpowers:brainstorming` during this stage, whatever the request sounds like. Brainstorming is the design conversation, and it starts only once PRD.org exists. Input is the idea as the human brings it, in whatever state — a sentence, a paragraph, a half-formed thought. The user may pass it inline when invoking; otherwise ask for it. If the human arrives with an existing brainstorm document instead of an idea, treat the document as the idea: reflect it back and run the same conversation.
+
+## The conversation
+
+Open by reflecting the idea back in two or three sentences — what you heard, and what kind of thing it seems to be — then ask one question. Do not classify the request or announce a path; routing has already happened by the time this skill runs.
+
+Altitude rule: before asking any question, apply one test — could the answer change the outcomes? Questions that pass: who hurts, why now, what a user would observe if it worked, what this deliberately is not, whether there is a cheaper way to reach the same outcome. A question whose answer can only change the mechanism is a design question; do not ask it. One question per message; offer multiple choice where it helps.
+
+Parking: when either of you drifts into mechanism — schemas, module names, screens, test plans, library choices — write one line to SKETCH.org (below), say so in a clause, and return to the outcome question. Material the human volunteers "for the design" goes there the same way, without comment. Nothing parked is argued during this stage.
+
+Ask the existence question out loud at least once; never leave it implicit: is the pain real enough to build for, could something that already exists cover it, could this be nothing.
+
+Soft bound: there is no turn count. If the conversation circles, say so, state what is settled and what is not, and ask which unsettled item to take next.
+
+## SKETCH.org
+
+The initiative directory `docs/YYYY-MM-DD-<initiative-slug>/` (date = today, via `date '+%Y-%m-%d'`; slug from the working name of the idea) is created at the first parked line or the first PRD draft, whichever comes first; set or update the `Active initiative:` line in the repo's CLAUDE.md at the same moment, noting its previous value. Create `SKETCH.org` in the directory from the repo-local `templates/SKETCH.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/SKETCH.org`, and append parked thoughts as list items, one per line, in the order they came up. No LOGBOOK, no timestamps, no sections. SKETCH.org has no authority and is never cited by any chain document; DESIGN.org supersedes it on contact.
+
+## Exit
+
+When you believe you can state the problem, the success criteria, and the non-goals, say so and propose one of four verdicts. The human rules; never assume the verdict.
+
+1. **Write the PRD.** Continue with Drafting the PRD below.
+2. **Set aside.** Append a dated heading to `docs/backlog.org` (create the file with a `#+title:` line if absent): the idea in a sentence, the verdict, the reason in the human's words, and the parked lines from SKETCH.org if any. Then remove the initiative directory this conversation created — it holds only SKETCH.org — and restore the `Active initiative:` line to its previous value. A set-aside idea is reopened by starting a new conversation from its backlog entry. STOP.
+3. **Different idea.** Write the same backlog entry for the original idea, with one line naming the idea that emerged, then restart the conversation on that idea from the top of this skill.
+4. **Bounded, no chain.** Too small for a document chain. State what was settled in a few lines so the brainstorm does not re-ask it, remove the initiative directory if one was created and restore the `Active initiative:` line (as in verdict 2), and hand the human to Superpowers directly. STOP.
+
+## Drafting the PRD
+
+1. From the conversation, extract exactly three things — nothing more:
+   - **The problem**: what hurts, for whom, why off-the-shelf doesn't fit.
+   - **Success Criteria**: the observable outcomes that define success. Number them (1, 2, 3, ...) — the numbers are stable handles, never renumbered, and downstream artifacts (DESIGN.org's alignment trace, story Acceptance Criteria) cite them as SC-n. Keep these outcome-shaped ("a kid can see today's chores in one tap"), not mechanism-shaped ("the LiveView renders a chore list component"). Mechanisms belong in SKETCH.org now and DESIGN.org later.
+   - **Out of Scope**: explicit non-goals for this version.
+2. Create the initiative directory if the conversation has not already (see SKETCH.org above), then write `PRD-draft.org` inside it using the repo-local `templates/PRD.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/PRD.org`, filling those three sections and leaving the Amendments section with its protocol comment and "(no amendments)". Do NOT carry over personas, market context, competitive framing, or stakeholder matrices — for this document chain, those are ceremony.
+
+   Write to `PRD-draft.org`, never `PRD.org`. The prd-lock hook blocks Write/Edit/MultiEdit on any path ending `PRD.org`, and blocks write-shaped Bash (redirects, `sed -i`, `tee`, `mv`/`cp` onto, `rm`, `truncate`) that targets `PRD.org` — writing `PRD.org` directly at this stage would be blocked by the kit's own hook before a human had approved anything. `PRD-draft.org` matches neither the hook's filename glob nor its Bash regex, so drafting and revision stay unrestricted.
+3. For a personal-mvp weight class (check CLAUDE.md), the whole PRD should be around ten lines of content. For work-grade, be as complete as the conversation supports, but every Success Criterion must still be an observable outcome.
+4. Iterate on `PRD-draft.org` with the human without restriction — it is a draft, not yet a contract, so edit it as many times as the conversation needs.
+5. Before presenting the draft for approval, scrub it for references to scratch material: grep `PRD-draft.org` for "SKETCH", "spec §", and "brainstorm". Report every hit, then rewrite each to self-contained wording per org-conventions' Document chain & version control section (the rule lives there, not here). This is a report-then-fix step — list what was found and how each was reworded, never a silent rewrite.
+6. When the human is satisfied, present the draft and ask explicitly: "Approve this as the invariant contract? If so, perform the rename yourself: `mv docs/<initiative-dir>/PRD-draft.org docs/<initiative-dir>/PRD.org`. That rename is the approval — after it, agents cannot edit the file, and changes require the human Amendment protocol."
+7. After giving that instruction, name the next step: the design brainstorm. State the hand-off as one sentence — PRD.org is the fixed contract, SKETCH.org is the starting material — and remind the human to run `/model opus` and open a fresh session with "let's design <initiative>". `/workflow-kit:promote-design` follows the brainstorm, and refuses to run until `PRD.org` exists.
+
+Never write, edit, rename, or copy anything onto `PRD.org` — the prd-lock hook blocks every such path by design, and that is not a workaround problem to solve; it is the point. The human's own rename, run in their own shell, is the only approval act. If asked to change an already-approved PRD.org, explain the Amendment protocol in the file's header instead. Never write DESIGN.org.
+
+STOP. You are done when the rename instruction and the hand-off have been given, or when a set-aside, different-idea, or bounded verdict has been recorded as described above.
+#+end_example
+
+- [ ] *Step 2: verify*
+
+#+begin_src bash
+test/hooks_test.sh | tail -3
+grep -ci 'intent' skills/create-prd/SKILL.md
+grep -c 'superpowers:brainstorming' skills/create-prd/SKILL.md
+grep -o 'SKETCH.org' skills/create-prd/SKILL.md | wc -l
+sed -n '2,/^---$/p' skills/create-prd/SKILL.md | grep '^model:'
+#+end_src
+
+Expected: 66 passed, 0 failed; intent count 0; the brainstorming mention count is 1 (the prohibition); the SKETCH.org occurrence count is 11; the model line prints =model: opus=.
+
+- [ ] *Step 3: commit*
+
+#+begin_src bash
+git add skills/create-prd/SKILL.md
+git commit -F - <<'EOF'
+feat: create-prd is the conversation before any brainstorm
+
+create-prd extracted the PRD from an approved brainstorm document. In
+live use the brainstorm fired on the first mention of a feature idea
+and was discussing design before the human had settled what the
+feature was or whether it should exist, so the outcome conversation
+never happened and the PRD was extracted after the fact.
+
+The skill now owns that conversation. It opens by reflecting the idea
+back, asks one outcome-altitude question at a time (the test: could
+the answer change the outcomes?), parks mechanism material in
+SKETCH.org, asks the existence question out loud, and ends by
+proposing one of four verdicts the human rules on: write the PRD, set
+aside (a dated backlog entry), different idea (restart), or bounded
+with no chain (hand to Superpowers). It never invokes brainstorming.
+Drafting, the lock, and the human rename are unchanged; the closing
+hand-off now names the design brainstorm, from PRD.org and
+SKETCH.org, as the next step.
+
+Design: docs/2026-09-05-prd-conversation-design.org.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+EOF
+#+end_src
+
+* Task 3: promote-design reads the seam correctly
+
+Files:
+- Modify: ~skills/promote-design/SKILL.md~ (the Input paragraph, line 11; step 5, line 19)
+
+Interfaces:
+- Consumes: create-prd's hand-off (Task 2): the brainstorm starts from PRD.org and SKETCH.org.
+
+- [ ] *Step 1: replace the Input paragraph*
+
+The paragraph beginning "Input: the approved brainstorm document (same source" currently reads:
+
+#+begin_example
+Input: the approved brainstorm document (same source `/workflow-kit:create-prd` used). The user may pass its path when invoking; otherwise list candidates under `docs/superpowers/specs/` and ask which document to promote — never guess. The brainstorm document predates the PRD: if the human pivoted at PRD review, divergence between it and PRD.org is expected and healthy, not lineage breakage to repair — PRD.org and DESIGN.org supersede it on contact.
+#+end_example
+
+Replace it with:
+
+#+begin_example
+Input: the approved brainstorm document — the design brainstorm's output, which ran against PRD.org as the fixed contract and started from SKETCH.org. The user may pass its path when invoking; otherwise list candidates under `docs/superpowers/specs/` and ask which document to promote — never guess. SKETCH.org is not an input: the brainstorm document supersedes it, and nothing in DESIGN.org is copied from the sketch. PRD.org predates and outranks the brainstorm document, so where they conflict the brainstorm yields (step 3).
+#+end_example
+
+- [ ] *Step 2: extend the scrub*
+
+In step 5, the phrase
+
+#+begin_example
+grep for "spec §", "brainstorm", and the spec filename pattern.
+#+end_example
+
+becomes
+
+#+begin_example
+grep for "spec §", "brainstorm", "SKETCH", and the spec filename pattern.
+#+end_example
+
+- [ ] *Step 3: verify*
+
+#+begin_src bash
+test/hooks_test.sh | tail -3
+grep -o 'SKETCH' skills/promote-design/SKILL.md | wc -l
+grep -ci 'intent' skills/promote-design/SKILL.md
+grep -c 'predates the PRD' skills/promote-design/SKILL.md
+#+end_src
+
+Expected: 66 passed; SKETCH occurrences 3; intent 0; the old "predates the PRD" phrase count 0.
+
+- [ ] *Step 4: commit*
+
+#+begin_src bash
+git add skills/promote-design/SKILL.md
+git commit -F - <<'EOF'
+tweak: promote-design names SKETCH.org at the seam
+
+With create-prd running before the brainstorm, the brainstorm
+document no longer predates the PRD; it was written against a locked
+one. promote-design's input paragraph now says so, states that
+SKETCH.org is not an input (the brainstorm document supersedes it),
+and its reference scrub greps for SKETCH alongside the brainstorm-spec
+patterns so nothing in DESIGN.org cites the sketch.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+EOF
+#+end_src
+
+* Task 4: CLAUDE.md templates route new-feature requests
+
+Files:
+- Modify: ~project-setup/CLAUDE.md.mvp~ (Workflow section, line 19 and a new paragraph after it)
+- Modify: ~project-setup/CLAUDE.md.workgrade~ (same)
+
+Interfaces:
+- Consumes: create-prd's behavior (Task 2).
+- Produces: the binding routing rule that the README (Task 5) describes.
+
+- [ ] *Step 1: mvp pipeline line*
+
+In ~project-setup/CLAUDE.md.mvp~, the Workflow section's first paragraph begins:
+
+#+begin_example
+Pipeline: brainstorm (Superpowers) → `/workflow-kit:create-prd` → `/workflow-kit:promote-design` → `/workflow-kit:user-stories` →
+#+end_example
+
+Replace that opening (up to and including the second arrow after promote-design) so the paragraph begins:
+
+#+begin_example
+Pipeline: `/workflow-kit:create-prd` (the conversation that turns an idea into PRD.org) → design brainstorm (Superpowers, from PRD.org and SKETCH.org) → `/workflow-kit:promote-design` → `/workflow-kit:user-stories` →
+#+end_example
+
+The rest of the paragraph ("per story: TDD implementation then ...") is unchanged.
+
+- [ ] *Step 2: mvp routing paragraph*
+
+Insert this paragraph immediately after the pipeline paragraph (before the "Model routing:" paragraph), as its own paragraph:
+
+#+begin_example
+A request for a new feature, capability, or initiative goes to `/workflow-kit:create-prd` first, whether or not the request names it: that skill is the conversation that settles what is wanted, and a session does not invoke `superpowers:brainstorming` for such a request. Brainstorming is the design conversation: it runs once PRD.org exists, treats the PRD's Success Criteria as settled, and starts from SKETCH.org in the initiative directory. Bugs, bounded changes to existing behavior, and refactors go straight to Superpowers.
+#+end_example
+
+- [ ] *Step 3: workgrade, same two edits*
+
+In ~project-setup/CLAUDE.md.workgrade~, the pipeline paragraph begins:
+
+#+begin_example
+Pipeline: brainstorm (Superpowers) → `/workflow-kit:create-prd` → `/workflow-kit:promote-design` (skeptic review runs at this weight class) → `/workflow-kit:user-stories` →
+#+end_example
+
+Replace that opening so it begins:
+
+#+begin_example
+Pipeline: `/workflow-kit:create-prd` (the conversation that turns an idea into PRD.org) → design brainstorm (Superpowers, from PRD.org and SKETCH.org) → `/workflow-kit:promote-design` (skeptic review runs at this weight class) → `/workflow-kit:user-stories` →
+#+end_example
+
+Then insert the identical routing paragraph from Step 2 after the pipeline paragraph.
+
+- [ ] *Step 4: verify*
+
+#+begin_src bash
+test/hooks_test.sh | tail -3
+for f in project-setup/CLAUDE.md.mvp project-setup/CLAUDE.md.workgrade; do
+  echo "$f: $(grep -c 'goes to `/workflow-kit:create-prd` first' $f) routing, $(grep -c '^Pipeline: `/workflow-kit:create-prd`' $f) pipeline, $(grep -ci intent $f) intent"
+done
+diff project-setup/CLAUDE.md.mvp project-setup/CLAUDE.md.workgrade | grep -c '^[<>] Pipeline'
+#+end_src
+
+Expected: 66 passed; each file prints =1 routing, 1 pipeline, 0 intent=; the diff count is 2 (the two pipeline lines still differ only by the skeptic-review parenthetical, as before).
+
+- [ ] *Step 5: commit*
+
+#+begin_src bash
+git add project-setup/CLAUDE.md.mvp project-setup/CLAUDE.md.workgrade
+git commit -F - <<'EOF'
+feat: CLAUDE.md templates route feature ideas to create-prd
+
+The kit cannot edit the Superpowers brainstorming skill, and its
+trigger rule fires on any build request. Superpowers' own priority
+rule places project instructions above skills, so the binding lever
+is a paragraph in the consuming repo's CLAUDE.md.
+
+Both weight-class templates now say: a request for a new feature,
+capability, or initiative goes to create-prd first, whether or not it
+names the skill, and a session does not invoke brainstorming for it;
+brainstorming is the design conversation, run once PRD.org exists,
+from PRD.org and SKETCH.org. Bugs, bounded changes, and refactors go
+straight to Superpowers. The pipeline line starts at create-prd and
+places the design brainstorm second. Repos without the kit's CLAUDE.md
+see no change.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+EOF
+#+end_src
+
+* Task 5: README pipeline table and the retired fence
+
+Files:
+- Modify: ~README.org~ (line 3 intro sentence; the pipeline table at lines 23–34; the "Brainstorm kickoff fence" section at lines 38–46)
+
+Interfaces:
+- Consumes: Tasks 2 and 4.
+
+- [ ] *Step 1: intro sentence*
+
+Line 3 contains "Superpowers owns the process phases (brainstorming, TDD inner loop)". Change the parenthetical to "(the design brainstorm, TDD inner loop)".
+
+- [ ] *Step 2: replace the pipeline table*
+
+Replace the whole table under =* The pipeline= (from the header row through the "Phase close" row) with this table, columns padded as shown:
+
+#+begin_example
+| Stage             | Invocation                                                      | Owner                       |
+|-------------------+-----------------------------------------------------------------+-----------------------------|
+| Idea → PRD        | ~/workflow-kit:create-prd~ (fires on a new-feature request)     | this kit                    |
+| Design brainstorm | automatic (Superpowers), from PRD.org and SKETCH.org            | Superpowers brainstorming   |
+| Design            | ~/workflow-kit:promote-design~                                  | this kit (+ skeptic agent)  |
+| Stories + plan    | =/workflow-kit:user-stories PRD.org DESIGN.org=                 | this kit                    |
+| Implementation    | normal session, Superpowers TDD                                 | Superpowers                 |
+| Story close-out   | =/workflow-kit:story-closeout stories/story-NN-*.org=           | this kit (+ verifier agent) |
+| Doc consistency   | ~/workflow-kit:update-design~                                   | this kit                    |
+| Phase close       | ~/workflow-kit:phase-close~                                     | this kit                    |
+#+end_example
+
+- [ ] *Step 3: retire the fence section*
+
+Replace everything from the line =* Brainstorm kickoff fence= through the end of the paragraph that begins "A related human prompt pattern, proven twice in live use" (that paragraph ends "...when the human is the one stating the expectation.") with:
+
+#+begin_example
+* Stating the expected outcome of a skill run
+
+A human prompt pattern, proven twice in live use: state the expected outcome of a skill run in the invocation itself, before it runs. That turns the run into a checkable prediction, and any deviation from the prediction becomes signal instead of noise. For example, invoking ~/workflow-kit:update-design~ with "expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it" gives the session a stated bar to run against, and the human a one-line check when it finishes. This is deliberately a human practice, not kit machinery — no skill encodes or checks the prediction, because the pattern only works when the human is the one stating the expectation.
+#+end_example
+
+The paste-in fence line and its rationale paragraph are gone: create-prd now holds the outcome altitude and parks mechanism material in SKETCH.org, which is what the fence asked the human to do by hand.
+
+- [ ] *Step 4: verify*
+
+#+begin_src bash
+test/hooks_test.sh | tail -3
+grep -c 'kickoff fence\|for the design doc' README.org
+grep -c 'Idea → PRD\|Design brainstorm' README.org
+grep -ci 'intent' README.org
+awk '/^\* The pipeline/,/^\* Stating/' README.org | grep '^|' | awk -F'|' '{print length($0)}' | sort -u | wc -l
+#+end_src
+
+Expected: 66 passed; fence count 0; the two new rows count 2; intent 0; the last command prints 1 (every table line is the same width, so the columns are aligned).
+
+- [ ] *Step 5: commit*
+
+#+begin_src bash
+git add README.org
+git commit -F - <<'EOF'
+docs: README pipeline starts at create-prd, fence retired
+
+The pipeline table listed the brainstorm as the automatic first stage
+and the PRD as an extraction after it. It now lists the PRD
+conversation first and the design brainstorm second, starting from
+PRD.org and SKETCH.org. The "Brainstorm kickoff fence" section, a
+paste-in line asking the human to hold outcome altitude and park
+mechanism material by hand, is retired because create-prd now does
+both; the expected-outcome-prediction paragraph that shared the
+section keeps its own heading, since it is a separate practice.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+EOF
+#+end_src
+
+* Task 6: CHANGELOG entry and version bump
+
+Files:
+- Modify: ~CHANGELOG.org~ (new entry at the top, after the ~#+title:~ line and blank line)
+- Modify: ~.claude-plugin/plugin.json~ (version and description)
+
+Interfaces:
+- Consumes: every prior task.
+
+- [ ] *Step 1: CHANGELOG entry*
+
+Insert after the =#+title: Changelog — workflow-kit= line and its following blank line, before the =* 0.7.6= heading:
+
+#+begin_example
+* 0.8.0 — [2026-09-05]
+
+The PRD conversation runs before any brainstorm. In live use the Superpowers brainstorm fired on the first mention of a feature idea, asked a few good questions, and was discussing design before the human had settled what the feature was, whether it was the right feature, or whether it should exist; by the time it stopped it was proposing an implementation plan, and the PRD was extracted after the fact from a design document. Right for a one-shot change to an existing thing; the cart ahead of the horse for a product feature. The 2026-09-01 adversarial review measured the cost of everything downstream of that seam and never named this gap, so it is fixed first, on its own, before any decision about the rest of the kit's shape. Design: ~docs/2026-09-05-prd-conversation-design.org~.
+
+~create-prd~ becomes that conversation. It opens by reflecting the idea back and asking one question; every question passes one test before it is asked — could the answer change the outcomes? — and a question that can only change the mechanism is not asked. Mechanism material that comes up anyway is parked, one line each, in a new scratch file, ~SKETCH.org~, beside PRD.org (template ~templates/SKETCH.org~), and the conversation returns to outcome altitude. The existence question is asked out loud at least once. When the session believes it can state the problem, the success criteria, and the non-goals, it proposes one of four verdicts and the human rules: write the PRD (drafting, the lock, and the human rename are unchanged), set aside (a dated entry in the repo-level ~docs/backlog.org~, the initiative directory removed), different idea (the same entry, then a restart), or bounded with no chain (settled points stated, hand-off to Superpowers). No turn count; a circling conversation says so and asks which unsettled item to take next. The skill never invokes ~superpowers:brainstorming~, never writes DESIGN.org, and keeps its Opus pin. Its closing hand-off names the design brainstorm as the next step, with PRD.org as the fixed contract and SKETCH.org as starting material.
+
+Routing uses the two levers the kit has. Both CLAUDE.md templates gain a Workflow paragraph — a new feature, capability, or initiative goes to create-prd first whether or not the request names it, a session does not invoke brainstorming for such a request, brainstorming is the design conversation and runs once PRD.org exists, and bugs, bounded changes, and refactors go straight to Superpowers — which binds because Superpowers' own priority rule places project instructions above skills; repos without the kit's CLAUDE.md (dotfiles) see no change. The skill description claims the phrasings a feature idea arrives in and says to use it before any brainstorming. Routing cannot be unit-tested: the acceptance test is a fresh bear-cub session opened with a raw feature idea, and if brainstorming still fires first the recorded fallback is to fork the brainstorming skill into the kit with an initiative path ahead of design — rejected for this release as a 4,000-word copy against a moving upstream when the cheaper levers are Superpowers' own declared mechanism.
+
+Conventions and seam: org-conventions names SKETCH.org in the chain location, adds it to the never-cited rule beside the brainstorm spec, says it rides in the PRD lock commit and is edited freely afterward until DESIGN.org exists, gives it a scratch entry in the mutability policy, and gains a Set-aside ideas section naming ~docs/backlog.org~; no crown-jewel block is touched. SKETCH.org living in the initiative directory does not reverse the 2026-07-11 ruling that initiative directories hold only chain documents and brainstorm outputs stay in ~docs/superpowers/specs/~: SKETCH.org is kit-authored by create-prd and committed with the lock, not a brainstorm output, and the human approved its location 2026-09-05. promote-design's input paragraph now says the brainstorm ran against a locked PRD (it no longer "predates the PRD") and that SKETCH.org is not an input, and its reference scrub greps for SKETCH. README's pipeline table starts at the PRD conversation with the design brainstorm second, and the "Brainstorm kickoff fence" section is retired — create-prd now does what the paste-in line asked the human to do by hand; the expected-outcome-prediction paragraph keeps its own heading. PRD.org keeps its name: a rename would touch the lock hook and its tests, three templates, every SC-n citation, both CLAUDE.md templates, the README, and bear-cub's live chains, and mixing it into this behavior change would obscure both; it is a clean follow-up if wanted.
+
+Recorded as follow-up designs, not folded in: the brainstorm-to-DESIGN seam (the review's largest proposed cut; this release's hand-off contract holds under either resolution), the review's four open rulings (PRD lock hook, per-checkbox LOGBOOK notes, the tilde/equals markup convention, weight class), and the close-out cost the bear-cub chore-lifecycle retro exposed (97 close-out and 59 update-design minutes against 44 implementation minutes over five stories). No hook changes; ~test/hooks_test.sh~ green (66/66).
+#+end_example
+
+- [ ] *Step 2: bump the version and description*
+
+In ~.claude-plugin/plugin.json~, change ="version": "0.7.6"= to ="version": "0.8.0"=, and in the description change the final clause =it owns brainstorming and TDD, this kit owns the record= to =it owns the design brainstorm and TDD, this kit owns the idea-to-PRD conversation and the record=.
+
+- [ ] *Step 3: verify*
+
+#+begin_src bash
+test/hooks_test.sh | tail -3
+jq -r '.version, .description' .claude-plugin/plugin.json
+grep -c '^\* 0.8.0' CHANGELOG.org
+grep -rci 'intent' skills templates project-setup README.org CHANGELOG.org .claude-plugin/plugin.json | grep -v ':0$'
+git status --short
+#+end_src
+
+Expected: 66 passed; version 0.8.0 and the new description; the 0.8.0 heading count 1; the intent grep prints nothing (every file is 0); git status shows only the two modified files.
+
+- [ ] *Step 4: commit*
+
+#+begin_src bash
+git add CHANGELOG.org .claude-plugin/plugin.json
+git commit -F - <<'EOF'
+bump: 0.8.0
+
+The PRD conversation runs before any brainstorm: create-prd owns the
+idea-to-PRD.org conversation, parks mechanism material in SKETCH.org,
+and both CLAUDE.md templates route new-feature requests to it ahead
+of Superpowers brainstorming. CHANGELOG carries the rationale, the
+routing fallback, and the follow-ups deliberately left out.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+EOF
+#+end_src
+
+* Acceptance (human, after the release)
+
+Not a task: the routing test is a live run. In bear-cub, load the working copy with =claude --plugin-dir /Users/dustin/Code/claude-workflow-kit= (or install 0.8.0), open a session with a raw feature idea and no slash command, and check: create-prd fires rather than brainstorming; questions stay at outcome altitude; a mechanism remark lands in SKETCH.org with a one-clause acknowledgment; the existence question is asked; the four verdicts are offered. Findings return to this kit as the next CHANGELOG entry. If brainstorming fires first, the fallback in the spec's Routing section applies.
