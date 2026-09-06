@@ -441,7 +441,7 @@ test/hooks_test.sh | tail -3
 grep -c 'kickoff fence\|for the design doc' README.org
 grep -c 'Idea → PRD\|Design brainstorm' README.org
 grep -ci 'intent' README.org
-awk '/^\* The pipeline/,/^\* Stating/' README.org | grep '^|' | awk -F'|' '{print length($0)}' | sort -u | wc -l
+awk '/^\* The pipeline/,/^\* Stating/' README.org | grep '^|' | while IFS= read -r l; do echo "${#l}"; done | sort -u | wc -l
 #+end_src
 
 Expected: 66 passed; fence count 0; the two new rows count 2; intent 0; the last command prints 1 (every table line is the same width, so the columns are aligned).
