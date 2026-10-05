@@ -10,8 +10,10 @@ event timeline for the phase-close session to write observations from.
 Usage:
   story-metrics.py [--repo PATH] [--projects-dir DIR] [--no-git] STORY...
 
-STORY is a story file path or basename (story-03-archive-replaces-delete.org)
-or the bare story-NN key. Attribution is heuristic: a session belongs to the
+STORY is a story file path or basename (story-03-archive-replaces-delete.org).
+Sessions are matched on the full story stem — number and slug — so a repo with
+several initiatives does not fold same-numbered stories from earlier chains into
+this batch's rows. Attribution is heuristic: a session belongs to the
 story named in its user prompts (first one wins); a session whose prompts name
 no story falls back to the first story its tool calls reference, but only if it
 ran an implementation skill (TDD or story-closeout) — a user-stories run or a
@@ -84,8 +86,19 @@ def load_session(path):
 
 
 def story_key(name):
-    m = re.search(r"story-(\d+)", os.path.basename(name))
-    return f"story-{m.group(1)}" if m else name
+    """story-NN-slug: the file stem, which is unique per initiative."""
+    base = os.path.basename(name)
+    return base[:-4] if base.endswith(".org") else base
+
+
+def short(key):
+    """story-NN, the table label; the full stem stays the attribution key."""
+    m = re.match(r"(story-\d+)", key)
+    return m.group(1) if m else key
+
+
+def story_ref(name):
+    return name[:-4] if name.endswith(".org") else name
 
 
 def stories_in(e):
@@ -93,11 +106,11 @@ def stories_in(e):
     m = e.get("message") or {}
     prompt, tool = [], []
     if e["type"] == "user" and isinstance(m.get("content"), str) and not m["content"].startswith("<"):
-        prompt = [f"story-{n}" for _, n in STORY_RE.findall(m["content"])]
+        prompt = [story_ref(n) for n, _ in STORY_RE.findall(m["content"])]
     if e["type"] == "assistant":
         for c in m.get("content") or []:
             if isinstance(c, dict) and c.get("type") == "tool_use":
-                tool += [f"story-{n}" for _, n in STORY_RE.findall(json.dumps(c.get("input", {})))]
+                tool += [story_ref(n) for n, _ in STORY_RE.findall(json.dumps(c.get("input", {})))]
     return prompt, tool
 
 
@@ -145,7 +158,7 @@ def analyse(events, key):
     out_tokens = 0
     tests = 0
     verifier = {"count": 0, "ms": 0}
-    pending = {}  # tool_use id -> description, for notifications
+    pending = {}  # tool_use id -> (description, dispatch time), for completions
     timeline = []
     prev_t = None
     for e in events:
@@ -174,7 +187,7 @@ def analyse(events, key):
             elif name == "Agent":
                 desc = inp.get("description") or ""
                 st = inp.get("subagent_type") or ""
-                pending[tu["id"]] = desc
+                pending[tu["id"]] = (desc, t, bool(inp.get("run_in_background")))
                 if "verifier" in st or "verif" in desc.lower():
                     verifier["count"] += 1
                 timeline.append((t, f"agent {st}: {desc}"))
@@ -189,17 +202,34 @@ def analyse(events, key):
                     timeline.append((t, "commit"))
         if e["type"] == "assistant":
             out_tokens += (m.get("usage") or {}).get("output_tokens", 0) or 0
+        def finish(tid, ms):
+            desc, t0, _ = pending.pop(tid, ("subagent", None, False))
+            if ms is None and t0 is not None:
+                ms = int((t - t0).total_seconds() * 1000)  # wall time since dispatch
+            if ms is None:
+                return
+            if "verif" in desc.lower():
+                verifier["ms"] += ms
+            timeline.append((t, f"done ({ms/60000:.1f} min): {desc}"))
+
+        if e["type"] == "user" and isinstance(m.get("content"), list):
+            # a foreground agent returns as a tool_result, timed by the entry's
+            # toolUseResult when it carries one and by wall time otherwise; a
+            # background dispatch's tool_result is only the acknowledgement, and
+            # its task-notification completes it
+            for blk in m["content"]:
+                if isinstance(blk, dict) and blk.get("type") == "tool_result" and blk.get("tool_use_id") in pending:
+                    if pending[blk["tool_use_id"]][2]:
+                        continue
+                    tur = e.get("toolUseResult") or {}
+                    ms = tur.get("totalDurationMs") if isinstance(tur, dict) else None
+                    finish(blk["tool_use_id"], int(ms) if ms is not None else None)
         if e["type"] == "user" and isinstance(m.get("content"), str) and not e.get("isMeta"):
             c = m["content"]
             if c.startswith("<task-notification>"):
                 tid = re.search(r"<tool-use-id>([^<]+)", c)
                 d = re.search(r"<duration_ms>(\d+)", c)
-                desc = pending.get(tid.group(1) if tid else "", "subagent")
-                if d:
-                    ms = int(d.group(1))
-                    if "verif" in desc.lower():
-                        verifier["ms"] += ms
-                    timeline.append((t, f"done ({ms/60000:.1f} min): {desc}"))
+                finish(tid.group(1) if tid else "", int(d.group(1)) if d else None)
             elif not c.startswith("<"):
                 timeline.append((t, f"user: {c[:90]!r}"))
         if prev_t is not None:
@@ -330,15 +360,15 @@ def main():
     for k in keys:
         events = sorted(by_story.get(k, []), key=lambda e: e["_t"])
         if not events:
-            rows.append(f"| {k} | - | - | - | - | - | - | - | - | no transcript on this machine |")
+            rows.append(f"| {short(k)} | - | - | - | - | - | - | - | - | no transcript on this machine |")
             continue
         r = analyse(events, k)
         delta = None if args.no_git else git_delta(args.repo, [r["window"]])
         code, test = (delta if delta else ("-", "-"))
         v = r["verifier"]
-        note = f"also read {', '.join(sorted(flagged[k]))}" if flagged.get(k) else ""
+        note = f"also read {', '.join(sorted(short(o) for o in flagged[k]))}" if flagged.get(k) else ""
         rows.append(
-            f"| {k} | {r['active']['implement']:.0f} | {r['active']['closeout']:.0f} | {r['active']['update-design']:.0f}"
+            f"| {short(k)} | {r['active']['implement']:.0f} | {r['active']['closeout']:.0f} | {r['active']['update-design']:.0f}"
             f" | {r['tests']} | {v['count']}({v['ms']/60000:.1f}m) | {fmt_k(r['out_tokens'])} | {code} | {test} | {note} |")
         for p in PHASES:
             totals[p] += r["active"][p]

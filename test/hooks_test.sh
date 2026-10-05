@@ -178,6 +178,9 @@ check "story-metrics timeline has question" "$(echo "$OUT" | grep -c 'Defer AC-3
 check "story-metrics prompt wins over tool refs" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-02-gadget 2>/dev/null | grep '^| story-02 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "10.0k"
 check "story-metrics story-01 unpolluted" "$(echo "$OUT" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "5.0k"
 check "story-metrics slash-invoked skill in timeline" "$(echo "$OUT" | grep -c 'skill update-design (slash)')" 1
+check "story-metrics same number, other initiative, not folded in" "$(echo "$OUT" | grep -c '7.8k\|12.8k')" 0
+check "story-metrics other initiative's story-01 stands alone" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-gizmo.org 2>/dev/null | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "7.8k"
+check "story-metrics verifier minutes: background by notification, foreground by tool_result" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-gizmo.org 2>/dev/null | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$7); print $7}')" "2(7.0m)"
 check "story-metrics missing story flagged" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-09-none 2>/dev/null | grep -c '^| story-09 .*no transcript')" 1
 
 echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
