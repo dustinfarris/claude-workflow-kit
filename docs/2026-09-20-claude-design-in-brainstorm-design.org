@@ -1,0 +1,63 @@
+#+title: Design — Claude Design in the design brainstorm: visual decisions are seen before they harden
+#+date: [2026-09-20 Sun]
+
+Status: sequence approved in session 2026-09-20. Nothing ships in the kit until the bear-cub trial (step 2 below) has run; this document fixes what is settled and names what the trial must answer.
+
+* Problem
+
+The kit has no visual stage. The design brainstorm (README run step 3) is text-only, so layout, flow, and screen-level decisions are made as prose, promoted into DESIGN.org unseen, and reworked during implementation once they meet the real components. DESIGN.org is the first durable document in the chain, so that is where a blind visual decision hardens, and every correction after it is an ~update-design~ pass rather than a right-first-time decision.
+
+Claude Design (claude.ai/design) produces live artboards on a canvas, and a Claude Code session can create and read such a canvas directly through the Artifact tool's Design type, with the repo in context. That makes it possible to show a visual decision inside the brainstorm session rather than describe it.
+
+* What is settled
+
+** Where it sits
+
+After the PRD lock, before ~/workflow-kit:promote-design~ — inside the design brainstorm, not as a new stage. Not earlier: a mockup is mechanism, and a mockup that exists before the lock leaks into a contract that is held at outcome altitude. Not later: a visual discovery made after promotion arrives as a correction to DESIGN.org instead of as its first content.
+
+Story-level embedding of canvas material and a close-out visual check were considered and dropped. The first touches the DESIGN EXCERPT SCOPE rules and adds context ~story-verifier~ cannot read; the second is new ceremony with no observed friction behind it.
+
+** The canvas has no authority
+
+A canvas lives on claude.ai, outside git, stays editable after promotion, and cannot be locked by any hook. It therefore has the standing SKETCH.org has: exploration material that no chain document cites. Every decision it informed is written into the brainstorm spec as prose, and the prose wins on any disagreement. Consistent with how ~promote-design~ step 5 already treats the brainstorm spec and SKETCH.org, a canvas URL does not appear in DESIGN.org or in a shared-log entry.
+
+** Who edits the canvas, and the one invariant
+
+The session seeds the canvas from PRD.org, SKETCH.org, and the repo's components; the human is free to edit it directly in Claude Design. Because the human's edits are invisible to the session, the session re-reads the canvas as the last act before any visual decision is written into the spec — always, including when it believes it made every edit itself. When only the session edited, the re-read is a no-op; when the human edited, it is what keeps the spec from describing a stale canvas.
+
+** The design system is a prerequisite, and it lives in the consuming repo
+
+A canvas with no design system attached renders generic UI, and decisions made against generic UI are reworked on contact with the real components — the same rework this design exists to remove. A Claude Design design-system project, seeded from the repo's component library with ~/design-sync~, is what makes a canvas trustworthy. The account has no design systems as of this date.
+
+The design-system project is a copy of the components and will drift as stories change them. Re-sync cadence is deliberately not mechanized now. The likely eventual home is a ~phase-close~ checklist line gated on the repo having a design-system project (per batch, inside an existing reconciliation step, invisible to repos without UI); it is filed as a backlog candidate and promoted the first time a stale design system misleads a brainstorm.
+
+** Weight class
+
+The whole feature is opt-in by construction: it applies only in a repo that has a design-system project, and only when a brainstorm decision is visual. A personal-mvp repo or a backend initiative never encounters it.
+
+* Approaches considered
+
+1. /Workflow paragraph only./ The CLAUDE.md templates' brainstorm sentence carries the rule. Nearly free, but a CLAUDE.md sentence is the weakest available owner for the re-read invariant, and Superpowers brainstorming ships its own visual companion that competes unless explicitly displaced.
+2. /A small kit skill for the canvas work./ Invoked from inside the brainstorm session when a decision is visual: open or reopen the initiative's canvas with the design system attached, iterate, re-read, write a prose block of visual decisions into the brainstorm spec, stop. It makes no design decisions and never touches DESIGN.org. The re-read gets an owner and a stopping condition.
+3. /Fold into promote-design./ Rejected: reconciliation lands after the brainstorm has closed, and promotion starts doing design work — a skill doing the adjacent stage's job. Only the scrub-pattern change survives from this approach, and it belongs to either of the others.
+
+Chosen: approach 2, reached through approach 1, because kit edits come from real project use and a skill written before anyone has run the flow is guesswork.
+
+* Sequence
+
+1. *Spike in bear-cub: can ~/design-sync~ seed a design system from Phoenix function components styled with daisyUI and Tailwind?* ~/design-sync~ uploads standalone HTML previews per component; server-rendered function components do not yield those for free. The probable route is rendering each component to static HTML against the compiled CSS. Unverified. If seeding is impractical the premise weakens, so this runs first. Output is an answer and, if positive, a seeded design-system project; any tooling built is throwaway until the trial says otherwise.
+2. *One hand-run trial in bear-cub, no kit edit.* The paragraph below goes into bear-cub's own CLAUDE.md Workflow section, and the next UI-bearing initiative's brainstorm runs with it. The trial records: whether the session reached for the canvas unprompted when a decision was visual; whether it fought Superpowers' visual companion; whether the re-read happened without reminding; how well canvas state transcribed into prose a later reader could implement from; and whether ~promote-design~ carried those decisions into DESIGN.org without loss.
+3. *Codify in the kit.* Write the skill from what the trial showed; add the canvas URL to ~promote-design~ step 5's scrub patterns; update both CLAUDE.md templates' Workflow paragraph and the README run-through; CHANGELOG entry citing the trial; version bump. File the ~phase-close~ re-sync line in ~docs/backlog.org~ as a candidate, not as built machinery.
+
+** Trial paragraph for bear-cub's CLAUDE.md
+
+#+begin_quote
+During the design brainstorm, a decision about layout, screen flow, or component appearance is shown, not described: create or reopen this initiative's Claude Design canvas (Artifact tool, Design type) with the bear-cub design system attached, and use it in place of the Superpowers visual companion. The canvas carries no authority — it lives outside git and stays editable, and the human may edit it directly. Before writing any visual decision into the brainstorm spec, re-read the canvas, every time, then record the decision as prose complete enough to implement from without the canvas. The spec never links to the canvas.
+#+end_quote
+
+* Open questions the trial answers
+
+- Whether the skill's trigger can live in its description alone, or whether the Workflow paragraph must also name it for the brainstorm session to reach for it.
+- One canvas per initiative or one per visual question. The paragraph assumes per initiative.
+- What "prose complete enough to implement from" needs to contain in practice — component names from the design system, states, breakpoints — so the skill can say so specifically rather than gesture at it.
+- Whether the human wants the canvas kept after promotion or deleted; deletion is a human-confirmed, irreversible act and is not something the skill does on its own.
