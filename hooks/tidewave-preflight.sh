@@ -3,9 +3,10 @@
 # project's dev server is running, so a session that starts against a stopped server
 # discovers the problem at its first mcp__tidewave__* call — after the tokens that got
 # it there are already spent. This probes the endpoint once at session start and, when
-# it is not answering, injects context telling the session to surface it to the human
-# before doing dependent work. Advisory only: it never blocks a tool call and never
-# starts anything itself.
+# it is not answering, warns the human directly (systemMessage) and tells the session to
+# raise it in its first reply, so the server gets started before any work begins rather
+# than mid-task. Advisory only: it never blocks a tool call and never starts anything
+# itself.
 #
 # No-op unless this project has an MCP server whose URL contains /tidewave/mcp, so it
 # stays silent in every non-Tidewave repo the plugin is enabled in.
@@ -22,20 +23,23 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 # The URL Claude Code itself would dial: the project's checked-in config first, then
 # the per-project entry in ~/.claude.json, where `claude mcp add` writes it. Matching on
 # the URL rather than the server name catches the ones registered under another name.
-URL=""
+# Each candidate is "<server name> <url>"; the name is what the human reconnects in /mcp.
+ENTRY=""
 if [ -f "$CWD/.mcp.json" ]; then
-  URL=$(jq -r '(.mcpServers // {}) | to_entries[] | .value.url // empty' "$CWD/.mcp.json" 2>/dev/null \
+  ENTRY=$(jq -r '(.mcpServers // {}) | to_entries[] | "\(.key) \(.value.url // "")"' "$CWD/.mcp.json" 2>/dev/null \
         | grep -m1 '/tidewave/mcp')
 fi
-if [ -z "$URL" ] && [ -f "$HOME/.claude.json" ]; then
-  URL=$(jq -r --arg d "$CWD" '((.projects[$d].mcpServers) // {}) | to_entries[] | .value.url // empty' \
+if [ -z "$ENTRY" ] && [ -f "$HOME/.claude.json" ]; then
+  ENTRY=$(jq -r --arg d "$CWD" '((.projects[$d].mcpServers) // {}) | to_entries[] | "\(.key) \(.value.url // "")"' \
         "$HOME/.claude.json" 2>/dev/null | grep -m1 '/tidewave/mcp')
 fi
-[ -n "$URL" ] || exit 0
+[ -n "$ENTRY" ] || exit 0
+NAME=${ENTRY%% *}
+URL=${ENTRY#* }
 
-emit() { # emit <context>: SessionStart context goes on stdout; exit 0 never blocks.
-  jq -n --arg c "$1" \
-    '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
+emit() { # emit <warning for the human> <context for the session>; exit 0 never blocks.
+  jq -n --arg m "$1" --arg c "$2" \
+    '{systemMessage:$m,hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
   exit 0
 }
 
@@ -50,11 +54,13 @@ CODE=$(curl -s -m 2 -o /dev/null -w '%{http_code}' \
 RC=$?
 
 if [ "$RC" -ne 0 ]; then
-  emit "Tidewave pre-flight: nothing is listening at $URL, so this project's dev server is not running. Every mcp__tidewave__* tool call will fail. Before doing any work that depends on Tidewave — running code in the app, querying the database, reading logs, taking screenshots — stop and ask the human to start the dev server (\`mix phx.server\`, or whatever command this repo's CLAUDE.md names). Do not route around it with \`mix run\`, \`iex\` or a second server process, and do not start the server yourself."
+  emit "Tidewave: nothing is listening at $URL — start this project's dev server, then reconnect $NAME in /mcp." \
+    "Tidewave pre-flight: nothing is listening at $URL, so this project's dev server is not running. Every mcp__tidewave__* tool call will fail. The human has been shown a warning; in your first reply, before starting any task, ask them to start the dev server (\`mix phx.server\`, or whatever command this repo's CLAUDE.md names) and then reconnect the $NAME MCP server with /mcp. Do not route around it with \`mix run\`, \`iex\` or a second server process, and do not start the server yourself."
 fi
 
 if [ "$CODE" != "200" ]; then
-  emit "Tidewave pre-flight: $URL answered HTTP $CODE rather than a JSON-RPC result. Something is listening on that port, but it is not responding as a Tidewave MCP endpoint — most likely a different app on the port, or a transport mismatch (sse vs http) in the MCP server config. Expect mcp__tidewave__* calls to fail, and surface this to the human before relying on them."
+  emit "Tidewave: $URL answered HTTP $CODE, not as a Tidewave endpoint — check what is on that port and the MCP transport." \
+    "Tidewave pre-flight: $URL answered HTTP $CODE rather than a JSON-RPC result. Something is listening on that port, but it is not responding as a Tidewave MCP endpoint — most likely a different app on the port, or a transport mismatch (sse vs http) in the MCP server config. Expect mcp__tidewave__* calls to fail, and surface this to the human before relying on them."
 fi
 
 exit 0

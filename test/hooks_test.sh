@@ -97,6 +97,9 @@ tw_rc() { # tw_rc <cwd> -> exit status
 tw_ctx() { # tw_ctx <hook stdout> -> the injected context
   echo "$1" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null
 }
+tw_msg() { # tw_msg <hook stdout> -> the warning shown to the human
+  echo "$1" | jq -r '.systemMessage // empty' 2>/dev/null
+}
 
 # Not applicable: no MCP config at all, and a project whose only server is not Tidewave.
 check "no MCP config is silent"       "$(tw_out "$TWDIR")" ""
@@ -110,11 +113,17 @@ tw_down="$(tw_out "$TWDIR")"
 check "down server warns about dev server" "$(tw_ctx "$tw_down" | grep -c 'dev server')" 1
 check "down server names the URL"          "$(tw_ctx "$tw_down" | grep -c '127.0.0.1:1/tidewave/mcp')" 1
 check "down server still exits 0"          "$(tw_rc "$TWDIR")" 0
+check "down server tells the agent to raise it first" "$(tw_ctx "$tw_down" | grep -c 'first reply')" 1
+check "down server warns the human"        "$(tw_msg "$tw_down" | grep -c 'dev server')" 1
+check "human warning names the URL"        "$(tw_msg "$tw_down" | grep -c '127.0.0.1:1/tidewave/mcp')" 1
+check "human warning says to reconnect"    "$(tw_msg "$tw_down" | grep -c 'reconnect')" 1
 
 # The URL also resolves from ~/.claude.json, which is where Claude Code keeps it.
 rm -f "$TWDIR/.mcp.json"
 jq -n --arg d "$TWDIR" '{projects:{($d):{mcpServers:{jump:{type:"http",url:"http://127.0.0.1:1/tidewave/mcp"}}}}}' > "$TWHOME/.claude.json"
-check "URL found in ~/.claude.json"        "$(tw_ctx "$(tw_out "$TWDIR")" | grep -c 'dev server')" 1
+tw_jump="$(tw_out "$TWDIR")"
+check "URL found in ~/.claude.json"        "$(tw_ctx "$tw_jump" | grep -c 'dev server')" 1
+check "warning names the registered server" "$(tw_msg "$tw_jump" | grep -c 'reconnect jump in /mcp')" 1
 check "other project's server ignored"     "$(tw_out "$(mktemp -d)")" ""
 
 # Server up: a stub that answers the ping with 200.
@@ -131,7 +140,9 @@ check "live endpoint exits 0"         "$(tw_rc "$TWDIR")" 0
 
 # Listening, but that path is not a Tidewave endpoint: wrong app on the port, or wrong transport.
 jq -n --arg u "http://127.0.0.1:$TWPORT/wrong/tidewave/mcp" '{mcpServers:{tidewave:{type:"http",url:$u}}}' > "$TWDIR/.mcp.json"
-check "non-200 response is reported"  "$(tw_ctx "$(tw_out "$TWDIR")" | grep -c 'HTTP 404')" 1
+tw_wrong="$(tw_out "$TWDIR")"
+check "non-200 response is reported"  "$(tw_ctx "$tw_wrong" | grep -c 'HTTP 404')" 1
+check "non-200 warns the human"       "$(tw_msg "$tw_wrong" | grep -c 'HTTP 404')" 1
 check "non-200 response exits 0"      "$(tw_rc "$TWDIR")" 0
 
 kill "$TWPID" 2>/dev/null
