@@ -203,35 +203,48 @@ def analyse(events, key):
         if e["type"] == "assistant":
             out_tokens += (m.get("usage") or {}).get("output_tokens", 0) or 0
         def finish(tid, ms):
-            desc, t0, _ = pending.pop(tid, ("subagent", None, False))
-            if ms is None and t0 is not None:
-                ms = int((t - t0).total_seconds() * 1000)  # wall time since dispatch
+            if tid not in pending:
+                return  # a repeat notification for a dispatch already completed
+            desc, t0, _ = pending.pop(tid)
             if ms is None:
-                return
+                ms = int((t - t0).total_seconds() * 1000)  # wall time since dispatch
             if "verif" in desc.lower():
                 verifier["ms"] += ms
             timeline.append((t, f"done ({ms/60000:.1f} min): {desc}"))
 
+        def notified(c):
+            tid = re.search(r"<tool-use-id>([^<]+)", c)
+            d = re.search(r"<duration_ms>(\d+)", c)
+            finish(tid.group(1) if tid else "", int(d.group(1)) if d else None)
+
         if e["type"] == "user" and isinstance(m.get("content"), list):
             # a foreground agent returns as a tool_result, timed by the entry's
             # toolUseResult when it carries one and by wall time otherwise; a
-            # background dispatch's tool_result is only the acknowledgement, and
-            # its task-notification completes it
+            # background dispatch's tool_result is only the launch
+            # acknowledgement, and its task-notification completes it. A
+            # dispatch is background when its input asks for it or when the
+            # acknowledgement says it was launched async — the harness can
+            # background an agent whose input carries no flag
             for blk in m["content"]:
                 if isinstance(blk, dict) and blk.get("type") == "tool_result" and blk.get("tool_use_id") in pending:
-                    if pending[blk["tool_use_id"]][2]:
+                    tur = e.get("toolUseResult")
+                    tur = tur if isinstance(tur, dict) else {}
+                    if pending[blk["tool_use_id"]][2] or tur.get("isAsync") or tur.get("status") == "async_launched":
                         continue
-                    tur = e.get("toolUseResult") or {}
-                    ms = tur.get("totalDurationMs") if isinstance(tur, dict) else None
+                    ms = tur.get("totalDurationMs")
                     finish(blk["tool_use_id"], int(ms) if ms is not None else None)
         if e["type"] == "user" and isinstance(m.get("content"), str) and not e.get("isMeta"):
             c = m["content"]
             if c.startswith("<task-notification>"):
-                tid = re.search(r"<tool-use-id>([^<]+)", c)
-                d = re.search(r"<duration_ms>(\d+)", c)
-                finish(tid.group(1) if tid else "", int(d.group(1)) if d else None)
+                notified(c)
             elif not c.startswith("<"):
                 timeline.append((t, f"user: {c[:90]!r}"))
+        # a task-notification can instead arrive as a queued_command attachment
+        # (the queue-operation entries carrying the same text are skipped: a
+        # dequeue can land minutes after the completion)
+        att = e.get("attachment") if e["type"] == "attachment" else None
+        if isinstance(att, dict) and att.get("type") == "queued_command" and str(att.get("prompt", "")).startswith("<task-notification>"):
+            notified(att["prompt"])
         if prev_t is not None:
             gap = (t - prev_t).total_seconds()
             if 0 <= gap < IDLE_GAP:

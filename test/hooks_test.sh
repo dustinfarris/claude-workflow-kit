@@ -181,6 +181,9 @@ check "story-metrics slash-invoked skill in timeline" "$(echo "$OUT" | grep -c '
 check "story-metrics same number, other initiative, not folded in" "$(echo "$OUT" | grep -c '7.8k\|12.8k')" 0
 check "story-metrics other initiative's story-01 stands alone" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-gizmo.org 2>/dev/null | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$8); print $8}')" "7.8k"
 check "story-metrics verifier minutes: background by notification, foreground by tool_result" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-gizmo.org 2>/dev/null | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$7); print $7}')" "2(7.0m)"
+ASYNC="$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-01-sprocket 2>/dev/null)"
+check "story-metrics async-launched verifier timed by its queued_command notification" "$(echo "$ASYNC" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$7); print $7}')" "2(6.3m)"
+check "story-metrics repeat notification and launch ack add no completion" "$(echo "$ASYNC" | grep -c 'done (')" 2
 check "story-metrics missing story flagged" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-09-none 2>/dev/null | grep -c '^| story-09 .*no transcript')" 1
 
 echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
