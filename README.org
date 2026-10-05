@@ -35,6 +35,8 @@ Copy =skills/=, =agents/=, =hooks/=, and =tools/= into a repo's =.claude/= direc
 
 The weight-class section in each project's CLAUDE.md is the amplitude knob: it selects the DoD variant, toggles the skeptic review, and sets PRD length expectations. Skills and plugins set the shape of the process; CLAUDE.md sets the amplitude.
 
+Design iteration — a visual design round (Claude Design, say) or a design revision — sits before user-stories or between batches, never inside an open batch. Stories that come out of a round run before user-stories are planned into the batch user-stories opens; stories from a round run after a gate are planned into the next batch. A round run inside an open batch can only produce inserted stories, and it competes with that batch's stories for the session's time and tokens. If a design question comes up mid-batch, finish or gate the batch first.
+
 * A run, end to end
 
 The table above lists what each stage is. This is what a human types, and where the stages hand off to each other.
