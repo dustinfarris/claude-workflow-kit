@@ -1,6 +1,6 @@
 {
   "name": "workflow-kit",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "Org-native artifact layer for spec-driven development. Document-chain skills (create-prd, promote-design, user-stories, story-closeout, update-design, phase-close), skeptic-reviewer and story-verifier agents, and PRD-lock/auto-format hooks. Designed to layer on obra/superpowers: it owns the design brainstorm and TDD, this kit owns the idea-to-PRD conversation and the record.",
   "author": {
     "name": "Dustin"

@@ -1,0 +1,200 @@
+#+title: Design — close-out cost: what the passes after the code spend, and what to cut
+#+date: [2026-10-04 Sun]
+
+Status: draft for ruling. No skill, agent, or hook is edited by this document. The 0.8.0 entry recorded close-out cost as a follow-up design; this is that design.
+
+* Problem
+
+Two batches in bear-cub now show the same shape: the passes after the code cost more than the code.
+
+| Batch                              | Stories                          | Impl min | Close-out min | Update-design min |
+|------------------------------------+----------------------------------+----------+---------------+-------------------|
+| chore-lifecycle batch 1            | all five                         |       44 |            97 |                59 |
+| effort-multiplier batch 1          | the seven clean ones (see below) |       61 |            49 |                34 |
+
+The chore-lifecycle figures are its retro's table. The effort-multiplier figures are its retro's observation over stories 01–03 and 05–08, which leaves out story-04 (its row absorbs the Claude Design adoption) and story-09 (its row absorbs the gate). Re-running ~tools/story-metrics.py~ over the same seven stories today prints 61 / 50 / 35; the one-minute differences are rounding, since the row values are rounded before they are summed.
+
+One more qualification on the effort-multiplier set: story-07 ran one verifier dispatch, not two (the drift 0.8.5 ruled on). Under the current skill the 49 close-out minutes would be one dispatch higher.
+
+The alignment plan's operating rule applies: if a stage is never consulted to make a decision, it is ceremony and gets cut. This document checks each per-story stage against that rule for these two batches, names where the minutes actually go, and proposes the cuts the evidence supports.
+
+* Where the minutes go
+
+** Verifier dispatches, measured
+
+The retro gives "3–5 minutes" for the AC pass and "2–5" for the DoD pass. Those figures were read from dispatch timestamps in the script's timeline: each one runs from a dispatch to the next event, so it includes main-session work after the verifier returned. Measured from each dispatch to its completion notification in the bear-cub transcripts, the passes are shorter:
+
+| Story (effort-multiplier) | Impl | Close-out | Update-design | AC pass | DoD pass |
+|---------------------------+------+-----------+---------------+---------+----------|
+| story-01                  |    7 |         8 |             3 |     3.2 |      2.5 |
+| story-02                  |    3 |         6 |             9 |     1.5 |      1.1 |
+| story-03                  |   10 |         9 |             3 |     2.1 |      2.7 |
+| story-05                  |   10 |        11 |             6 |     3.0 |      3.3 |
+| story-06                  |   10 |         9 |             3 |     2.7 |      1.4 |
+| story-07                  |    3 |         4 |             7 |     1.0 |        — |
+| story-08                  |   17 |         3 |             4 |     0.9 |      0.8 |
+| total                     |   61 |        50 |            35 |    14.4 |     11.8 |
+
+Story-04, which is excluded from the set, ran 4.7 and 1.6.
+
+| Story (chore-lifecycle) | Impl | Close-out | Update-design | AC passes          | DoD passes  |
+|-------------------------+------+-----------+---------------+--------------------+-------------|
+| story-01                |    6 |        34 |            13 | 6.4, 10.3          | 11.4, 10.0  |
+| story-02                |   13 |        37 |            20 | 8.6, 11.7, 11.1    | 6.8         |
+| story-03                |    9 |         8 |             6 | 4.1                | 1.9         |
+| story-04                |   12 |        11 |             6 | 3.8                | 1.8         |
+| story-05                |    4 |         6 |            15 | 3.3                | 1.2         |
+
+The chore-lifecycle retro records story-02's verifiers as 26.3 minutes. That figure leaves out the 13:46 "Re-verify AC-3 and AC-4 fixes" dispatch, whose completion the 0.7.4 script could not pair; the measured total is about 38. Verifier minutes and phase minutes are not additive: the phase figure is active time with gaps over ten minutes dropped, and a long verifier wait can fall into such a gap.
+
+** What that leaves
+
+- *Clean close-out has two halves.* On effort-multiplier's seven stories, verifier wall time is about 26 of the 49 close-out minutes, and the main session spends about 23. That main-session half is reading the verifier reports, reading org-conventions, and two rounds of checkbox ticks with a LOGBOOK entry per item. A close-out ran 1–9 ~date~ calls across both rounds and a similar number of edits, about two minutes a round. Per clean story that comes to about 7 minutes of close-out, of which the DoD dispatch is 0.8–3.3.
+- *The Verify command is not where the time goes.* ExUnit's =Finished in= lines in these transcripts put a full bear-cub suite run at 4–5.4 seconds, and the shortest DoD pass, 0.8 minutes, includes a whole ~mix precommit~ run. Verifier minutes are the subagent loading the story, the excerpt and the implementation, then auditing and writing verdicts. That is why merging the dispatches saves less than half of the verifier time (below).
+- *Chore-lifecycle's close-out was fix loops that caught real defects.* Stories 01 and 02 account for 71 of the 97 close-out minutes and about 76 verifier minutes. Those passes found:
+  - a backfill that stamped an evening-created chore a day late (D87);
+  - a production creation path that bypassed the context (~priv/repo/seeds.exs~);
+  - an AC-2 web edge that no test pinned;
+  - AC-3 and AC-4 test gaps;
+  - AC-7's untestable dead tolerance, which became D90.
+
+  This is the verifier doing its job, and none of it is ceremony. Stories 03–05 closed on one AC pass and one DoD pass each.
+- *Most of the "3 to 39 minutes" range for update-design is attribution, not the pass.* On the clean effort-multiplier stories it ran 3–9 minutes. The 39 belongs to story-09's row, which absorbs the gate: phase-close, its design audit, the retroactive update-design that minted D119, and the deploy. The 142 on story-04 is mostly the Claude Design adoption, which 0.8.6 already moved out of open batches.
+
+* Was each stage consulted?
+
+Applied per stage across the twelve stories of the two batches (five chore-lifecycle, seven clean effort-multiplier). The dispatch and session counts of 13 also include effort-multiplier story-04, whose close-out was ordinary even though its row is not:
+
+| Stage                                    | Consulted to make a decision?                                                                                                        |
+|------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------|
+| AC verifier pass                         | Yes. Found every chore-lifecycle defect listed above, including D87 and D90.                                                         |
+| DoD verifier pass                        | Once in 13 dispatches. Chore-lifecycle story-01's DoD item 2 used mutation to find AC-2's web edge unpinned after the AC fix loop.   |
+| update-design step 2 (pivots)            | Yes, on 3 of 12: cl-01 (D87, D88), cl-02 (D89, D90), em-08 (D118).                                                                   |
+| update-design steps 3–4 (excerpt resync) | Yes, on 2 of 12: cl-01 resynced stories 02–05; cl-02 resynced story 03. Skipped by its own condition elsewhere, at no cost.           |
+| update-design step 1, Plan status entry  | Only by the gate's audit that it exists. Implementation sessions read PLAN.org in 2 of 13; both gates found nothing to repair.        |
+
+The other DoD NOT MET in these batches was chore-lifecycle story-02, where DoD items 1 and 2 restated AC-7's open state, which the AC pass and a human question had already raised.
+
+Two of these rows decide the shape of the cuts.
+
+- *The DoD dispatch is almost never the stage that decides.* It decided once, and that one finding was about AC test coverage on code the AC fix loop had just changed. What earns its keep is a fresh audit of DoD item 2 /after the last fix/, not a second dispatch on every story.
+- *update-design is consulted and stays.* D118 is the clearest case. Story-08 closed out in three minutes with no fix loop, and its Technical Notes allowed either route for the extras' color mixes, so the verifier, which audits against the story, had no ground to flag the inline route. Only update-design's step 2, reviewing the implementation against DESIGN.org, set it against D117's ~--kid~ property. Gating update-design on a close-out signal would have carried that drift to the gate, with every story in between implementing against a stale excerpt.
+
+* Cut 1 — one verifier dispatch per close-out, auditing both sections (recommended)
+
+** What it removes
+
+story-closeout's second dispatch. Step 1 dispatches the verifier over Acceptance Criteria /and/ Definition of Done, and its report keeps checklist order: AC items, then DoD items. The verifier runs the declared ~Verify command:~ once, as now, and DoD items are evaluated against the same pass's AC verdicts. The separate tick rounds become one: AC and DoD are both ticked from the findings of the last pass.
+
+The fix loop becomes a single rule: *any change to the story or the code after a pass re-runs the full pass before anything is ticked.* That covers a fix for an AC finding, a fix for a DoD finding, and a human ruling that changes an item's state, such as a deferral. The merit judgment step 5 applies to DoD findings stays as it is.
+
+** Weighed against step 5
+
+Today, step 2 repeats only the AC dispatch, and step 5 repeats only the DoD dispatch. Under the merge every repeat is a full pass, so the loop costs change:
+
+- An AC-fix iteration also re-audits DoD, at roughly 1–3 minutes more per iteration on these stories. This is also what preserves the one DoD finding of the two batches: DoD item 2 is re-audited after every fix, not only once at the end.
+- A DoD-only fix iteration also re-audits AC, at roughly 3–4 minutes more on a clean story and about 10 in a fix-loop story. The two batches contain one DoD-fix iteration (cl-01), and it repaired a gap the AC fix had just left open. So it was not a pure DoD-only iteration, and a merged re-pass would plausibly have raised it alongside the AC finding, one iteration earlier.
+- A cheaper alternative keeps today's asymmetry: a fix made only for a DoD item re-dispatches with DoD scope. It is rejected here because it puts back a session judgment about which section a fix touched, and that kind of judgment is how 0.8.5's drift started.
+
+The rule also states one case the current loop leaves implicit. Chore-lifecycle story-02's DoD pass returned DoD items 1 and 2 NOT MET while AC-7 was open. The human then ruled AC-7 retired (D90): the null tolerance came out of three queries and the constraint test was rewritten. DoD items 1 and 2 were then ticked ~[X]~ with no dispatch after the ruling. That was a code change, so step 5 as written already owed a repeat of step 4, and the session drifted from the existing loop rather than through a hole in it. What the merged rule adds is that a ruling which changes an item's state forces a re-pass even when no code changes.
+
+** What it actually saves
+
+It does not halve the verifier time. It saves one context load per story, the DoD subagent's write-up, and one tick round in the main session. The Verify run it saves is seconds on bear-cub. The upper bound on the clean effort-multiplier stories is the DoD dispatches' 11.8 minutes, about 1.7 per story, plus one tick round of about two minutes. Part of the DoD dispatch's work moves into the merged pass, so the realistic saving is lower: perhaps 2–3 minutes of a clean story's ~7. Fix-loop stories cost about the same as now.
+
+At personal-mvp, the merged pass adds little to an AC-only pass. Every personal-mvp DoD item is evidence the AC audit already produces:
+- item 1 is derived from the AC verdicts;
+- item 2 is the tests the AC verdicts cite;
+- item 3 is already in the verifier's mandate to report "style-guideline breaches per CLAUDE.md";
+- item 4 is the single Verify run.
+
+The evidence base is all personal-mvp. At work-grade, the Verify run is ~mix check~ with dialyzer, so the saved run is real time, but this document has no measurement of it.
+
+** The structural argument
+
+0.8.5 fixed in prose a drift that was always the same shape. On story-07 and story-09 the second dispatch was dropped, and the DoD items were ticked on the session's own test runs. With one dispatch there is no second one to drop. The flow then states its point directly: no checkbox, AC or DoD, is ticked without a verifier pass over the final code behind it.
+
+** What evidence it loses
+
+- One independent fresh-context look per story. Today the DoD section is read by a second subagent that did not write the AC verdicts. In these batches that second look found something new once in 13, and the full-re-pass rule keeps that one case.
+- The ordering guarantee that ACs are settled before DoD is looked at. In the merged flow both sections are judged together. DoD item 1 is judged against verdicts from the same pass rather than against ticked checkboxes, and this is sound only because ticks wait for a clean pass.
+
+** Invariants it must not weaken
+
+- *0.8.5's ruling.* A Definition of Done item is never ticked without this close-out's own verifier pass behind it. A fresh test run, a green ~Verify command:~, or an earlier pass is evidence to cite, never a substitute. The paragraph's "both dispatches" becomes "the dispatch covering both sections", and every other clause stays verbatim: no exemption by size or weight class, and no tick without the pass.
+- *The red-run paragraph.* Unchanged. A ruled deferral is still marked ~[-]~ only on the human's ruling, and under this cut the ruling also triggers a re-pass before the ticks.
+- *story-verifier's hard rules.* Unchanged: the single-run rule, "a test you did not run is not evidence", "absence of evidence is NOT MET", "the bar is audited as written", and never modifying files. Only the input line changes, from "which section to audit" to "the sections to audit (Acceptance Criteria and Definition of Done)".
+- *Skills stop.* The STOP boundary and the "never touches PLAN.org or DESIGN" scope are unchanged.
+- *Reviews check different things.* The verifier stays an auditor of the checklist and does not become an editorial reviewer.
+- *Weight class stays the amplitude knob.* This cut removes a dispatch and adds no ceremony, so it applies uniformly.
+
+** Files
+
+- ~skills/story-closeout/SKILL.md~: the six steps become three (dispatch, fix-and-repeat, tick), and the 0.8.5 paragraph is reworded as above.
+- ~agents/story-verifier.md~: the input line only.
+
+No hook change, so the routing lint in ~test/hooks_test.sh~ is unaffected. Before the version bump, run a dry read-through against a bear-cub story with a fix loop (chore-lifecycle story-01's transcript is the reference case).
+
+* Cut 2 — the per-story Plan status narrative (proposed; needs an explicit release)
+
+** What it removes
+
+update-design step 1 writes a Plan LOGBOOK entry on every story. In practice that entry opens by restating close-out's evidence: "Closed out with all five acceptance criteria and all four Definition of Done items ~[X]~; ~mix precommit~ green at =Result: 495 passed=…". Those facts already live in the story's own per-item LOGBOOK entries and in git. The cut drops that restatement. Step 1 still:
+- moves the story's Plan TODO state;
+- carries Deferred discoveries into ~* Deferred~;
+- writes a Plan LOGBOOK entry when, and only when, there is something to record there: an implementation decision that clarifies the design without changing it, a deferral, or an observation a later stage needs.
+
+** Why it qualifies
+
+The status narrative's only reader in either batch is the audit that checks it was written:
+- Implementation sessions read PLAN.org in 2 of 13.
+- The retros' rulings cite story LOGBOOKs and timelines, never the Plan LOGBOOK.
+- Phase-close step 3 did read it. The chore-lifecycle gate record cross-checks each story's "checkbox count matching its LOGBOOK claim (01: 5 AC + 4 DoD; …)", and both gates reported every status truthful with no retroactive pass needed. That comparison sets the restatement against the story file it was copied from. Reading the story's checkboxes directly gives the gate the same fact.
+
+Chore-lifecycle story-01's Plan entry included a carry-forward addressed to story 02: fixtures default ~local_now~ to the epoch, so date-bounded tests must opt in. Story 02's implementation session made no tool call that named PLAN.org. A note addressed to the next implementer, written where the next implementer does not look, is the clearest case of an entry no one consults. Moving such notes into the later story's Technical Notes would be new behavior, not a cut, and it is not proposed here.
+
+** What it saves
+
+Unmeasured. The narrative is one paragraph written by an Opus pass that is already reading everything it needs, so the saving is probably under a minute per story. That is why this cut ranks second and could reasonably be declined.
+
+** What evidence it loses
+
+- PLAN.org stops being a running narrative of the batch. A reader who wants the story-by-story account reads each story's LOGBOOK and git log instead.
+- The gate loses its cross-check between the Plan's claimed checkbox counts and the story files. It keeps the story files themselves, which are what the counts were copied from.
+
+** Files
+
+- ~skills/update-design/SKILL.md~: step 1's wording.
+- ~skills/phase-close/SKILL.md~: step 3's "its LOGBOOK captures what was carried forward" audits the entries that remain, and status truth is read from the story files.
+
+org-conventions does not change.
+
+** Invariants it must not weaken
+
+- *The update-design five-step flow is a crown jewel.* Step 1's wording changes, so this cut ships only on Dustin's explicit release of that step. Without it, this cut does not happen.
+- *The Advisory-requires-body-edit paired invariant.* org-conventions routes "an implementation decision [that] clarifies something the design already says correctly" to the Plan LOGBOOK. This cut must leave that destination intact. That is why it removes the status restatement only and not the Plan LOGBOOK, and why the "when, and only when" list above leads with exactly that case.
+- *Single source of truth.* The LOGBOOK entry format is untouched, so org-conventions does not change. The cut changes when step 1 writes an entry, not how.
+
+* Not proposed, and why
+
+- *A size-based exemption from either pass.* 0.8.5 ruled small-story thinning "drift, not an allowance". Cut 1 lowers the floor for small stories without reopening that.
+- *Scoping fix-loop re-dispatches to the NOT MET items.* The evidence does not support a saving. Chore-lifecycle story-02's "Verify AC-3 per-cell test closes gap" was already scoped to one item and ran 11.1 minutes, longer than the 8.6-minute first pass over every AC.
+- *Gating update-design on a close-out signal.* D118 was found by update-design after a clean close-out. See above.
+- *Trimming the personal-mvp DoD template.* After Cut 1, DoD items cost only their ticks. Item 2 is the one that found the only DoD finding in these batches.
+- *Per-item ~date~ capture.* Each tick round ran 1–9 ~date~ calls, about seconds each. That is not worth touching the timestamp convention.
+- *0.7.2's other open item,* a proportionality clause in the work-grade DoD. bear-cub is personal-mvp, so these batches carry no evidence for or against it.
+
+* Measurement caveat and follow-up
+
+~tools/story-metrics.py~ still reads 0.0–0.1 verifier minutes on both batches' transcripts after 0.8.4. These verifiers were launched asynchronously, and their tool result is the launch acknowledgement ("Async agent launched", status ~async_launched~), yet the dispatch input carries no ~run_in_background~ flag. So the script times the acknowledgement as a foreground completion and never pairs the completion notification that follows. The durations above were measured by pairing each dispatch with its completion notification by hand.
+
+The fix is a one-line follow-up in the script: treat an ~async_launched~ result as a background launch. It is not part of this design. Until it lands, the next batch's retro cannot measure Cut 1's effect from the table alone.
+
+* How the next retro tells whether Cut 1 worked
+
+On the next bear-cub batch's clean stories, three things should hold:
+- one verifier dispatch per story;
+- close-out minutes per story below the ~7 measured here;
+- no story with a DoD tick that lacks a pass after its last change.
+
+Fix-loop stories should cost about what they cost now. If clean close-out does not move, the saving was smaller than the context load suggested, and the cut should be judged on its structural argument alone.
