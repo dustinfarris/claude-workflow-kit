@@ -35,6 +35,20 @@ Copy =skills/=, =agents/=, =hooks/=, and =tools/= into a repo's =.claude/= direc
 
 The weight-class section in each project's CLAUDE.md is the amplitude knob: it selects the DoD variant, toggles the skeptic review, and sets PRD length expectations. Skills and plugins set the shape of the process; CLAUDE.md sets the amplitude.
 
+* A run, end to end
+
+The table above lists what each stage is. This is what a human types, and where the stages hand off to each other.
+
+1. =/workflow-kit:create-prd=, naming the idea — a sentence, or an entry in =docs/backlog.org=. Outcome altitude only; mechanism that comes up is parked in =SKETCH.org=. The run ends at one of four verdicts, and the one that continues writes =PRD-draft.org= into a new initiative directory.
+2. *The human renames the draft*, moving =PRD-draft.org= to =PRD.org= in the initiative directory. That rename is the approval act — no skill performs it, and prd-lock blocks agents from writing the locked filename at all. The lock commit follows, doc-only, with =SKETCH.org= riding along.
+3. =/model opus=, then *a fresh session* opened with "let's design <initiative>". No slash command exists for this stage: Superpowers' brainstorming fires on the phrasing, and the CLAUDE.md Workflow paragraph supplies the inputs — the locked PRD as the fixed contract, SKETCH.org as starting material. The fresh session is the point, not a formality: the brainstorm should meet the contract as a contract rather than remember negotiating it. Output stays in =docs/superpowers/specs/=, gitignored.
+4. =/workflow-kit:promote-design= → DESIGN.org, presented with its alignment trace. The skeptic review runs at work-grade only.
+5. =/workflow-kit:user-stories PRD.org DESIGN.org= → =stories/= and a new open batch in PLAN.org.
+6. Per story, one story per session: TDD implementation, then =/workflow-kit:story-closeout stories/story-NN-*.org=, then =/workflow-kit:update-design=. All three, every story — close-out records the evidence, update-design keeps DESIGN and the unimplemented stories' excerpts truthful.
+7. =/workflow-kit:phase-close= once the batch's last story is done.
+
+Steps 2 and 3 are the ones that go missing, because neither is a skill invocation and so neither appears in the table. A hand-off that names =/workflow-kit:promote-design= straight after the PRD has skipped the design brainstorm.
+
 * Stating the expected outcome of a skill run
 
 A human prompt pattern, proven twice in live use: state the expected outcome of a skill run in the invocation itself, before it runs. That turns the run into a checkable prediction, and any deviation from the prediction becomes signal instead of noise. For example, invoking =/workflow-kit:update-design= with "expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it" gives the session a stated bar to run against, and the human a one-line check when it finishes. This is deliberately a human practice, not kit machinery — no skill encodes or checks the prediction, because the pattern only works when the human is the one stating the expectation.
