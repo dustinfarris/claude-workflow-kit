@@ -83,6 +83,61 @@ echo "== stop-test-gate =="
 check "stop_hook_active passthrough" "$(echo '{"stop_hook_active":true}' | CLAUDE_PROJECT_DIR=/tmp "$ROOT/hooks/stop-test-gate.sh" >/dev/null 2>&1; echo $?)" 0
 check "no mix.exs no-op"             "$(echo '{"stop_hook_active":false}' | CLAUDE_PROJECT_DIR=/tmp "$ROOT/hooks/stop-test-gate.sh" >/dev/null 2>&1; echo $?)" 0
 
+echo "== tidewave-preflight =="
+TWDIR="$(mktemp -d)"
+TWHOME="$(mktemp -d)"
+tw_out() { # tw_out <cwd> -> hook stdout
+  echo "{\"cwd\":\"$1\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\"}" \
+    | HOME="$TWHOME" "$ROOT/hooks/tidewave-preflight.sh" 2>/dev/null
+}
+tw_rc() { # tw_rc <cwd> -> exit status
+  echo "{\"cwd\":\"$1\"}" | HOME="$TWHOME" "$ROOT/hooks/tidewave-preflight.sh" >/dev/null 2>&1
+  echo $?
+}
+tw_ctx() { # tw_ctx <hook stdout> -> the injected context
+  echo "$1" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null
+}
+
+# Not applicable: no MCP config at all, and a project whose only server is not Tidewave.
+check "no MCP config is silent"       "$(tw_out "$TWDIR")" ""
+check "no MCP config exits 0"         "$(tw_rc "$TWDIR")" 0
+echo '{"mcpServers":{"playwright":{"type":"stdio","command":"npx"}}}' > "$TWDIR/.mcp.json"
+check "non-tidewave server is silent" "$(tw_out "$TWDIR")" ""
+
+# Configured but nothing listening: port 1 refuses immediately.
+echo '{"mcpServers":{"tidewave":{"type":"http","url":"http://127.0.0.1:1/tidewave/mcp"}}}' > "$TWDIR/.mcp.json"
+tw_down="$(tw_out "$TWDIR")"
+check "down server warns about dev server" "$(tw_ctx "$tw_down" | grep -c 'dev server')" 1
+check "down server names the URL"          "$(tw_ctx "$tw_down" | grep -c '127.0.0.1:1/tidewave/mcp')" 1
+check "down server still exits 0"          "$(tw_rc "$TWDIR")" 0
+
+# The URL also resolves from ~/.claude.json, which is where Claude Code keeps it.
+rm -f "$TWDIR/.mcp.json"
+jq -n --arg d "$TWDIR" '{projects:{($d):{mcpServers:{jump:{type:"http",url:"http://127.0.0.1:1/tidewave/mcp"}}}}}' > "$TWHOME/.claude.json"
+check "URL found in ~/.claude.json"        "$(tw_ctx "$(tw_out "$TWDIR")" | grep -c 'dev server')" 1
+check "other project's server ignored"     "$(tw_out "$(mktemp -d)")" ""
+
+# Server up: a stub that answers the ping with 200.
+TWPORT="$(python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));p=s.getsockname()[1];s.close();print(p)')"
+python3 "$ROOT/test/fixtures/tidewave-stub.py" "$TWPORT" &
+TWPID=$!
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  curl -s -m 1 -o /dev/null "http://127.0.0.1:$TWPORT/tidewave/mcp" && break
+  sleep 0.2
+done
+jq -n --arg u "http://127.0.0.1:$TWPORT/tidewave/mcp" '{mcpServers:{tidewave:{type:"http",url:$u}}}' > "$TWDIR/.mcp.json"
+check "live endpoint is silent"       "$(tw_out "$TWDIR")" ""
+check "live endpoint exits 0"         "$(tw_rc "$TWDIR")" 0
+
+# Listening, but that path is not a Tidewave endpoint: wrong app on the port, or wrong transport.
+jq -n --arg u "http://127.0.0.1:$TWPORT/wrong/tidewave/mcp" '{mcpServers:{tidewave:{type:"http",url:$u}}}' > "$TWDIR/.mcp.json"
+check "non-200 response is reported"  "$(tw_ctx "$(tw_out "$TWDIR")" | grep -c 'HTTP 404')" 1
+check "non-200 response exits 0"      "$(tw_rc "$TWDIR")" 0
+
+kill "$TWPID" 2>/dev/null
+wait "$TWPID" 2>/dev/null
+rm -rf "$TWDIR" "$TWHOME"
+
 echo "== skill/agent frontmatter lint =="
 for f in "$ROOT"/skills/*/SKILL.md "$ROOT"/agents/*.md; do
   rel="${f#"$ROOT"/}"
