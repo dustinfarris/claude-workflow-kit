@@ -198,3 +198,13 @@ On the next bear-cub batch's clean stories, three things should hold:
 - no story with a DoD tick that lacks a pass after its last change.
 
 Fix-loop stories should cost about what they cost now. If clean close-out does not move, the saving was smaller than the context load suggested, and the cut should be judged on its structural argument alone.
+
+* Addendum [2026-10-05 Mon] — what the next retro found
+
+Written because the section above asked for it; an addendum is added to a design only when the design itself asked a later retro a question, so that these docs do not become a second Plan LOGBOOK. Source: bear-cub docs/2026-10-04-routine-schedule/retro.org, batch 1 (five stories, 0.8.8 in effect for the visual DoD item at least; which plugin version the sessions loaded is unrecorded).
+
+- One verifier dispatch per clean story: not met. Story 01 ran one; Stories 02–05 ran two each. 04 and 05 record their reason (a human ruling that deferred AC 4; a NOT MET on the visual DoD item, fixed, then a full re-pass — the fix loop as written). 02 and 03 record none: either an unrecorded fix loop or the two-dispatch habit surviving from the corpus. Unresolved; the next batch decides which.
+- Close-out minutes per story below ~7: met. 4, 3, 3, 8, 3 — 4.2 average, with the 8 a fix-loop story. Per-story output tokens ~106k against ~156k on the two prior batches.
+- No DoD tick lacking a pass after its last change: met. Story 05's record is the case the rule exists for.
+
+Cut 2's premise also got its counterexample: this batch's Plan LOGBOOK was read. Story 04 resolved Story 03's note (5) and Story 02's Deferred list by name, and the gate found both unrecorded divergences through "for the gate" notes in Stories 01, 03 and 04. Every entry was a clarification, a deferral or a carry-forward and none a status restatement, which is the narrowed form working as designed. The retro ruled it evidence, not a change.
