@@ -16,11 +16,17 @@ tooling. This repo IS the workflow: skills, agents, hooks, and templates consume
 
 ## Testing
 
-Hook changes require `test/hooks_test.sh` green before commit — both the existing cases and a new case for any new block/allow pattern. Skill changes get at least a dry read-through in a consuming repo before a version bump; friction found there gets fixed here directly, with the rationale captured in the CHANGELOG entry.
+Hook changes require `./test/hooks_test.sh` green before commit — both the existing cases and a new case for any new block/allow pattern. The same script (also run by CI) lints skill/agent frontmatter, pins each skill's and agent's `model:` (changing a pin means changing its table there), and tests `tools/story-metrics.py` against `test/fixtures/story-metrics/`; fixtures are copied from a real transcript, never built from an assumed shape (0.8.7). Skill changes get at least a dry read-through in a consuming repo (bear-cub, `~/Code/bear-cub`) before a version bump; friction found there gets fixed here directly, with the rationale captured in the CHANGELOG entry.
 
 ## Iteration loop
 
 kit edit (from real project use) → CHANGELOG.org entry → version bump. Edits without an explicit rationale in the CHANGELOG are suspect — this kit should shrink over time, not grow. If a stage or rule has not been consulted to make a decision across two or three projects, propose cutting it rather than polishing it.
+
+The version lives only in `.claude-plugin/plugin.json`. A release is one commit: the version bump, a newest-first `* X.Y.Z — [YYYY-MM-DD]` CHANGELOG heading, and the change, with subject `type(X.Y.Z): …`. Kit design docs for a change go in `docs/YYYY-MM-DD-<topic>-design.org` (not `.work/`) and are committed with it.
+
+## Layout
+
+`skills/`, `agents/`, `hooks/`, `templates/` are the plugin's components. `project-setup/` is copied into consuming repos: `copy-in-settings.json` mirrors `hooks/hooks.json` for repos without the plugin, so the two change together, and so do `CLAUDE.md.mvp` and `CLAUDE.md.workgrade`. `tools/story-metrics.py` feeds phase-close's retro table. The plugin name `workflow-kit` is the `/workflow-kit:` namespace that skills and project-setup cite, and CI fails if it changes.
 
 ## Conventions for this repo
 
