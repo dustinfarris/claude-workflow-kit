@@ -273,6 +273,10 @@ class OpenBatch(Base):
         self.assertNotEqual(rc, 0)
         self.assertEqual(s.calls, [])
         self.assertIn("stray.txt", out)
+        # it says what to do, not only what it found
+        self.assertIn("finish closeout in the resumed session", out)
+        self.assertIn("then rerun run-batch.py", out)
+        self.assertIn("story-05-kiosk-weather-row.org", out)
 
     def test_dirty_tree_allowed_when_resuming_mid_story(self):
         with open(os.path.join(self.repo, "lib.ex"), "w") as f:

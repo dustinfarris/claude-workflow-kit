@@ -309,6 +309,13 @@ def stop(stage, story, session, message, why):
     return 1
 
 
+def dirty_message(story, dirty):
+    return (f"working tree is not clean before {story.name}'s implement stage, and the driver does not classify or commit what it finds:\n{dirty}\n"
+            f"If a stop during implement, or a closeout left with an unticked item, left these changes: finish closeout in the resumed session "
+            f"(claude --resume <id>) until every Acceptance Criteria and Definition of Done item in {story.name} is ticked or ruled, then rerun run-batch.py. "
+            f"Otherwise commit or stash them yourself, then rerun run-batch.py.")
+
+
 def run_story(repo, init, story, mode):
     start = first_stage(repo, init, story)
     if start is None:
@@ -316,7 +323,7 @@ def run_story(repo, init, story, mode):
     if start == "implement":
         dirty = git_status(repo)
         if dirty:
-            raise Refusal(f"working tree is not clean before {story.name}; it is not the driver's to classify or commit:\n{dirty}")
+            raise Refusal(dirty_message(story, dirty))
     session = None
     for stage in STAGES[STAGES.index(start):]:
         if stage != "implement" and predicate(stage, repo, init, story):
@@ -381,7 +388,7 @@ def dry_run(repo, init, batch, problems):
     start, story = first
     print(f"\nfirst stage: {start} ({os.path.splitext(story.name)[0]})")
     if start == "implement" and git_status(repo):
-        problems.append(f"working tree is not clean before {story.name}")
+        problems.append(dirty_message(story, git_status(repo)))
     for p in problems:
         print(f"would refuse: {p}", file=sys.stderr)
     return 1 if problems else 0
