@@ -1,7 +1,7 @@
 #+title: Design — batch driver: executing an open batch without the human at the keyboard
 #+date: [2026-10-08 Thu]
 
-Status: ruled 2026-10-08 (shape B, the deterministic driver), not yet built. No skill, agent or hook is edited by this design; it adds one tool and documents its contract.
+Status: ruled 2026-10-08 (shape B, the deterministic driver), built in 0.9.0 (ead243a) as ~tools/run-batch.py~, with a per-stage timeout and the dirty-tree guidance added in 0.9.1. The Open at build time items below were settled by test; CHANGELOG.org's 0.9.0 entry records how. Not yet run against a real batch. No skill, agent or hook is edited by this design; it adds one tool and documents its contract.
 
 * Problem
 
