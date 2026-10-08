@@ -197,6 +197,22 @@ check "story-metrics async-launched verifier timed by its queued_command notific
 check "story-metrics repeat notification and launch ack add no completion" "$(echo "$ASYNC" | grep -c 'done (')" 2
 check "story-metrics missing story flagged" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-09-none 2>/dev/null | grep -c '^| story-09 .*no transcript')" 1
 
+echo "== run-batch driver =="
+# Fixtures are bear-cub's weather-indicator PLAN and stories at real commits;
+# test/run_batch_test.py names them. Its cases run the driver against a temp
+# git copy with the Claude invocation stubbed.
+if python3 "$ROOT/test/run_batch_test.py" >/dev/null 2>&1; then check "run-batch unit cases" 0 0; else check "run-batch unit cases (python3 test/run_batch_test.py)" 1 0; fi
+RBFIX="$ROOT/test/fixtures/run-batch"
+RBHOME="$(mktemp -d)"
+rb_dry() { HOME="$RBHOME" python3 "$ROOT/tools/run-batch.py" --repo "$1" --dry-run 2>&1; }
+check "run-batch dry-run refuses a closed batch"   "$(rb_dry "$RBFIX/closed" | grep -c 'refusing: no open batch')" 1
+check "run-batch dry-run closed batch exits 1"     "$(rb_dry "$RBFIX/closed" >/dev/null; echo $?)" 1
+RBOUT="$(rb_dry "$RBFIX/open")"
+check "run-batch dry-run lists TODO stories in order" "$(echo "$RBOUT" | grep -o '^story-0[0-9]-[a-z-]*\.org' | tr '\n' ' ')" "story-04-shows-weather-flag.org story-05-kiosk-weather-row.org "
+check "run-batch dry-run skips a ticked story's closeout" "$(echo "$RBOUT" | sed -n '/^story-04/,/^$/p' | grep -c '^  closeout *skip')" 1
+check "run-batch dry-run first stage is update-design"  "$(echo "$RBOUT" | grep -c '^first stage: update-design (story-04-shows-weather-flag)$')" 1
+rm -rf "$RBHOME"
+
 echo "== no 'Changelog' stragglers in skills/templates/project-setup =="
 strays="$(grep -rl -e Changelog -e changelog "$ROOT/skills" "$ROOT/templates" "$ROOT/project-setup" 2>/dev/null | wc -l | tr -d ' ')"
 check "no Changelog/changelog strings" "$strays" 0

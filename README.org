@@ -37,6 +37,8 @@ The weight-class section in each project's CLAUDE.md is the amplitude knob: it s
 
 Design iteration — a visual design round (Claude Design, say) or a design revision — sits before user-stories or between batches, never inside an open batch. Stories that come out of a round run before user-stories are planned into the batch user-stories opens; stories from a round run after a gate are planned into the next batch. A round run inside an open batch can only produce inserted stories, and it competes with that batch's stories for the session's time and tokens. If a design question comes up mid-batch, finish or gate the batch first.
 
+Once the stories and PLAN exist, the batch is run by the driver to the gate: =tools/run-batch.py=, run from the consuming repo's root (=--dry-run= first prints the stories, stages and predicate results it would act on). For each TODO story of the open batch, in PLAN order, it opens one headless session and sends the four prompts a human would — =implement @<story path>=, =/workflow-kit:story-closeout=, =/workflow-kit:update-design=, =commit= — skipping a stage whose artifact already says done and stopping at the first that does not end in its done state, with the session id to resume. It stops before phase-close, which stays the human's; it never answers a question, and it refuses with no open batch, a dirty tree, or a dev server not answering. The contract is docs/2026-10-08-batch-driver-design.org.
+
 * A run, end to end
 
 The table above lists what each stage is. This is what a human types, and where the stages hand off to each other.
