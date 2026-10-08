@@ -174,6 +174,43 @@ class OpenBatch(Base):
         self.assertNotIn("--resume", s.calls[2])
         self.assertTrue(all(c[c.index("--resume") + 1] == "b" for c in s.calls[3:]))
 
+    def test_driver_never_commits(self):
+        # the session commits on the "commit" prompt; the driver only reads git
+        real, seen = rb.subprocess.run, []
+
+        def spy(argv, *a, **k):
+            if argv[:1] == ["git"]:
+                seen.append(argv)
+            return real(argv, *a, **k)
+        head = subprocess.run(["git", "-C", self.repo, "rev-parse", "HEAD"], capture_output=True, text=True).stdout
+        rb.subprocess.run = spy
+        try:
+            s = self.stub([
+                (lambda r: mark_done(r, S04), reply("RESULT: done", "a")),
+                (None, reply("Committed.\nRESULT: done", "a")),  # says so, commits nothing
+            ])
+            rc, out = self.run_driver()
+        finally:
+            rb.subprocess.run = real
+        self.assertNotEqual(rc, 0)
+        self.assertEqual(s.prompts(), ["/workflow-kit:update-design", "commit"])
+        self.assertIn("STOP at commit", out)
+        self.assertEqual(head, subprocess.run(["git", "-C", self.repo, "rev-parse", "HEAD"], capture_output=True, text=True).stdout)
+        self.assertTrue(seen)
+        self.assertEqual({a[a.index("-C") + 2] for a in seen}, {"status"})
+
+    def test_stops_before_phase_close(self):
+        for story in (S04, S05):
+            tick(self.repo, story)
+            mark_done(self.repo, story)
+        self.commit_all(self.repo)
+        s = self.stub([])
+        rc, out = self.run_driver()
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(s.calls, [])
+        self.assertIn("phase-close is next, and it is the human's to run", out)
+        self.assertNotIn("phase-close", " ".join(rb.PROMPTS.values()))
+
     def test_argv_shape_and_never_a_bypass(self):
         s = self.stub([(None, reply("RESULT: blocked — nothing", "a"))])
         self.run_driver()
