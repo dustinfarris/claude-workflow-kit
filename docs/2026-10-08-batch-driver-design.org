@@ -1,0 +1,94 @@
+#+title: Design — batch driver: executing an open batch without the human at the keyboard
+#+date: [2026-10-08 Thu]
+
+Status: ruled 2026-10-08 (shape B, the deterministic driver), not yet built. No skill, agent or hook is edited by this design; it adds one tool and documents its contract.
+
+* Problem
+
+Once DESIGN.org, the stories and PLAN.org exist, a bear-cub batch is run by hand as the same four prompts per story, in a fresh session each time: the implement prompt, ~/workflow-kit:story-closeout~, ~/workflow-kit:update-design~, and "commit". The weather-indicator batch (five stories, 2026-10-08) had exactly those human turns and one "continue" after an API connection drop. No question reached the human.
+
+| Weather-indicator batch 1                      | Minutes |
+|------------------------------------------------+---------|
+| Active, all five stories                       |      67 |
+| Wall clock, first prompt to last commit        |     264 |
+
+The difference is the human not being at the keyboard between prompts. Night owl (2026-10-07) had the same shape: every human turn was the implement prompt and "commit". The loop is mechanical because the stories are good; the stories are what make it mechanical. The human's ruling: execute the whole plan on one "Go", pause only when something needs a human, and keep the chain as it is.
+
+* Ruling
+
+Compile the loop, do not fuse the stages. The skills stay exactly as written, each with its STOP. What is built is the thing that types the four prompts: a deterministic driver, not an orchestrating agent. Shape B below; shape A (an orchestrator agent dispatching worker subagents) is recorded under Not proposed with the reasons.
+
+* Shape
+
+~tools/run-batch.py~ in the kit, run from a consuming repo's root. It reads the open batch in the active initiative's PLAN.org, and for every story still ~TODO~, in PLAN order, runs one headless Claude Code session through the four stages, resuming the same session by id for each stage. It stops at the first stage that does not end in its done state, and it stops when the batch has no ~TODO~ story left, which is when phase-close is next.
+
+Each story is still one fresh session, so the cold start per story is preserved, and the session is a real session: the repo's ~.claude/settings.json~ model default, the skill model pins, the dirty-tree guard, the Tidewave preflight and every other hook behave as they do today. The transcript is written to the project's session directory with the same prompts, so ~tools/story-metrics.py~ matches it unchanged and the retro table keeps its shape; the driver's turns appear where the human's did.
+
+** The four stages
+
+| Stage         | Prompt (verbatim)                                              | Done predicate (artifact, not words)                                   |
+|---------------+----------------------------------------------------------------+------------------------------------------------------------------------|
+| implement     | ~implement @<story path>~                                      | none; always runs                                                      |
+| closeout      | ~/workflow-kit:story-closeout~                                 | the story file has no ~** [ ]~ item left under Acceptance Criteria or Definition of Done |
+| update-design | ~/workflow-kit:update-design~                                  | the story's heading in PLAN.org reads ~DONE~                            |
+| commit        | ~commit~                                                       | ~git status --porcelain~ is empty                                       |
+
+The driver runs a stage's prompt only when its predicate is false, and re-checks the predicate afterwards. This is what handles the implementer that self-triggers story-closeout (seen more than once in bear-cub): the story is already ticked, so the driver skips to update-design. It also makes the driver idempotent: after a pause the human resumes the stuck session interactively, answers in place, and reruns the driver, which picks up at the first false predicate of the first ~TODO~ story. A stage whose predicate is still false after its prompt is a stop, whatever the session said.
+
+The implement prompt stays byte-identical to today's so that story-metrics' session matching holds. Nothing the driver needs to say to the session goes into the user prompt; it goes into ~--append-system-prompt~.
+
+** The pause protocol
+
+Fail closed. The appended system prompt asks each turn to end its final message with one line: =RESULT: done=, or =RESULT: blocked — <what the human must decide>=. The driver treats anything other than a clean done, plus a false predicate after the stage, as a stop. On a stop it prints the session id, the stage, the story, and the session's final message, and exits non-zero. The human's path is ~claude --resume <id>~, answer, rerun the driver. The driver never answers a question itself and never retries a blocked stage with a different prompt; a STOP in a skill is a STOP in the driver.
+
+Expected-outcome prediction applies: the appended system prompt also states what each stage should conclude (closeout: every item ticked from the verifier's pass, or a named item the human must rule on; update-design: PLAN marked DONE, a body edit only with its D-entry and Advisory; commit: code commit then doc-only commit, tree clean), so a deviation is visible in the final message rather than discovered at the gate.
+
+** Mechanical recoveries the driver owns
+
+These are the interruptions whose answer is never a judgment, taken from the retros:
+
+- An API connection lost mid-response (weather-indicator Story 02, answered by a human "continue" 1 h 45 min later): the driver sends ~continue~ once, then re-checks the predicate. One retry; a second failure is a stop.
+- A dirty working tree before a story (the implementation-session rule in both project-setup CLAUDE.md templates): the driver checks ~git status --porcelain~ before each story and stops without starting the session. It never classifies or commits what it finds.
+- The dev server not running (routine-schedule Stories 03 and 04): the driver probes the port the repo's Tidewave registration names before the first story, and stops with the preflight's own message when nothing answers. It never starts a server; that design is the kit backlog's session-owned dev server item.
+- Signing: a commit that cannot be signed is a stop, never a ~--no-gpg-sign~. The precondition is documented below.
+
+** Boundaries
+
+- The driver stops before phase-close. The gate is where this batch's divergence check and advisory judgments landed, and the retro section is the human's by rule. A later ruling may add the gate as a fifth prompt once two or three batches have run clean; not now.
+- PRD.org is never touched. prd-lock runs in the headless session as it does today.
+- One open batch at a time, as org-conventions says; the driver refuses when PLAN.org has no open batch or the active initiative cannot be resolved from CLAUDE.md's ~Active initiative:~ line.
+- Weight class: the driver adds no ceremony to any skill, so it needs no gate; a personal-mvp repo opts in by running it.
+
+** Preconditions, settled at the retro
+
+- *Signing.* bear-cub's commits are SSH-signed through 1Password, and signing from Claude Code's shells failed because ~SSH_AUTH_SOCK~ was never exported: the shell inherited the macOS launchd agent, which holds no keys, while only ~~/.ssh/config~'s ~IdentityAgent~ pointed at 1Password, which ssh honours and ~ssh-keygen -Y sign~ does not. With the variable set to the 1Password socket, signing succeeded from both the sandboxed and the unsandboxed Bash tool on 2026-10-08. The fix is one ~sessionVariables~ line in the dotfiles' zsh module; 1Password's per-application approval remembered until quit then means at most one dialog per 1Password launch. No dedicated key is needed.
+- *Permission mode.* The headless sessions run with the permission mode the human's interactive sessions already use (auto); the flag is ~--permission-mode~. The driver never passes a bypass flag.
+- *Model routing.* Unchanged: the repo's settings default (Sonnet in bear-cub) and the skills' pins apply inside a headless session as in an interactive one.
+
+* What the next retro checks
+
+- Human turns per story in the metrics timeline: zero outside stops. Every stop is listed in the retro's Observations with its cause, and each cause is classified as a judgment (correct stop) or mechanical (a recovery the driver should own next).
+- Wall clock per batch approaches active minutes.
+- The predicates were sufficient: no stage ran twice because a predicate misread an artifact, and no self-triggered closeout was re-prompted.
+- story-metrics.py still matches every session, and the table reads as before.
+
+* Not proposed, and why
+
+- *Shape A, an orchestrator agent.* Buildable: subagents nest three deep and can invoke plugin skills. Rejected for now on three counts. Skill model pins are turn-scoped in the main session and probably do not apply inside a Sonnet worker, so update-design, the judgment stage, would run on the builder's model unless dispatched as its own Opus subagent, a second design. Worker transcripts land under the session's subagents directory with no human turns, so story-metrics.py and every retro table it feeds would need a rewrite before the first retro. And the orchestrator is an LLM deciding whether a worker's final message meant "done" or "needs the human", the one judgment this layer must never get wrong and the failure mode the skills' STOP boundaries exist to prevent. A script cannot answer a question meant for the human. Revisit if the driver runs two or three batches clean and the remaining cost is wanting the loop inside a session.
+- *Skipping user stories for plan mode.* Three quarters of a batch's active minutes are closeout and update-design, and plan mode would skip them; but they were never the human's minutes, and the retros show what they buy: verifier findings on two of five stories here and two of four on night owl, D143 and D144 recorded where plan mode would have left the DESIGN rotting, a cold read per story, the human's cold read at the handoff (the skeptic review at personal-mvp, which caught D135 → D137), and the record the retro reads. Plan mode remains the route for bounded work, which create-prd already sends to Superpowers; the threshold stays at PRD-worthiness.
+- *The driver committing by itself.* The session knows the code/doc split and the message conventions; the driver does not. "commit" stays a prompt. The kit backlog's "story-closeout owns doc-commit moments" item is unaffected; if it ships, the commit predicate is simply already true.
+- *A kit-wide RESULT line in every skill.* The protocol lives in the driver's appended system prompt, not in the skills, so a skill run by hand prints nothing new and the crown-jewel blocks are untouched.
+
+* Open at build time
+
+- Whether a plugin-namespaced slash command (~/workflow-kit:story-closeout~) expands inside a ~-p~ prompt; the docs say skills do and do not name the namespaced form. Test first; if it does not expand, the stage prompt names the skill in words ("Run the workflow-kit story-closeout skill") and the metrics matcher is checked against it.
+- The exact ~--permission-mode~ value to pass, read from the human's interactive default rather than hardcoded.
+- PLAN.org parsing: the open batch is the last ~* ~ batch heading without a gate record in its LOGBOOK; stories are its ~** TODO~ links in file order; the story path is the org link target.
+- Session id and result come from ~--output-format json~ (~session_id~, ~result~); each later stage uses ~--resume <id>~.
+
+* Files
+
+- ~tools/run-batch.py~ — the driver, stdlib only, tested like ~tools/story-metrics.py~ against fixtures under ~test/fixtures/run-batch/~ (a PLAN with an open batch, a ticked and an unticked story, a clean and a dirty tree), with the Claude invocation behind one function the tests stub.
+- ~test/hooks_test.sh~ — the fixture cases.
+- ~README.org~ — one paragraph under the pipeline section: once the stories and PLAN exist, the batch is run by the driver to the gate.
+- ~CHANGELOG.org~ and ~.claude-plugin/plugin.json~ — a ~feat(0.9.0)~ release; the first new stage-level tool since story-metrics.
