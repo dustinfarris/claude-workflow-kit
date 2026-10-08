@@ -17,14 +17,16 @@ predicate is a stop: the driver prints the session id and exits non-zero, and
 the human resumes that session (claude --resume <id>), answers, and reruns the
 driver, which picks up at the first false predicate. It never answers a
 question, never retries a stop with another prompt, and sends "continue" once
-only for a connection lost mid-response.
+only for a connection lost mid-response. A stage with no result within
+--stage-timeout minutes (default 60) is killed and is a stop: in -p mode a
+step waiting on a permission prompt would otherwise hang without a word.
 
 It refuses with no open batch, a dirty tree before a story's implement stage,
 a Tidewave dev server not answering, or a bypassPermissions default. The
 permission mode is the human's interactive default (permissions.defaultMode).
 
 Usage:
-  run-batch.py [--repo PATH] [--dry-run]
+  run-batch.py [--repo PATH] [--stage-timeout MINUTES] [--dry-run]
 
 Design: docs/2026-10-08-batch-driver-design.org in the kit.
 Python 3 standard library only.
@@ -33,8 +35,10 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
+import uuid
 import urllib.error
 import urllib.request
 
@@ -45,6 +49,8 @@ PROMPTS = {
     "commit": "commit",
 }
 CONTINUE = "continue"
+CLAUDE = ["claude"]
+STAGE_TIMEOUT_MIN = 60.0  # wall clock per stage; a -p step waiting on a permission prompt would otherwise hang
 DONE_LINE = "RESULT: done"
 LOST_RE = re.compile(r"^API Error: Connection lost", re.I)
 
@@ -68,6 +74,10 @@ Expected outcome of each turn:
 
 class Refusal(Exception):
     """A precondition the driver will not work around."""
+
+
+class StageTimeout(Exception):
+    """A stage produced no result within the per-stage limit."""
 
 
 def read(path):
@@ -260,19 +270,35 @@ def probe(url):
 
 # --- Claude ----------------------------------------------------------------
 
-def invoke(argv, cwd):
-    """The one place Claude is run. Tests replace this. Returns (rc, stdout, stderr)."""
-    r = subprocess.run(argv, cwd=cwd, stdin=subprocess.DEVNULL, capture_output=True, text=True)
-    return r.returncode, r.stdout, r.stderr
+def invoke(argv, cwd, timeout=None):
+    """The one place Claude is run. Tests replace this. Returns (rc, stdout, stderr);
+    raises StageTimeout after killing the session's whole process group."""
+    p = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        out, err = p.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        for sig in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(p.pid, sig)
+                p.communicate(timeout=10)
+                break
+            except ProcessLookupError:
+                break
+            except subprocess.TimeoutExpired:
+                continue
+        raise StageTimeout()
+    return p.returncode, out, err
 
 
-def claude(prompt, repo, mode, session):
-    argv = ["claude", "-p", prompt, "--output-format", "json", "--append-system-prompt", SYSTEM_PROMPT]
+def claude(prompt, repo, mode, session, resume, timeout):
+    """One turn. The first stage of a story names its session up front
+    (--session-id) so even a turn that never returns can be resumed by id."""
+    argv = CLAUDE + ["-p", prompt, "--output-format", "json", "--append-system-prompt", SYSTEM_PROMPT]
     if mode:
         argv += ["--permission-mode", mode]
-    if session:
-        argv += ["--resume", session]
-    rc, out, err = invoke(argv, repo)
+    argv += ["--resume" if resume else "--session-id", session]
+    rc, out, err = invoke(argv, repo, timeout=timeout)
     try:
         data = json.loads(out)
     except ValueError:
@@ -316,7 +342,7 @@ def dirty_message(story, dirty):
             f"Otherwise commit or stash them yourself, then rerun run-batch.py.")
 
 
-def run_story(repo, init, story, mode):
+def run_story(repo, init, story, mode, timeout_min=STAGE_TIMEOUT_MIN):
     start = first_stage(repo, init, story)
     if start is None:
         raise Refusal(f"{story.name} reads TODO in PLAN.org but every stage predicate is already true")
@@ -324,19 +350,24 @@ def run_story(repo, init, story, mode):
         dirty = git_status(repo)
         if dirty:
             raise Refusal(dirty_message(story, dirty))
-    session = None
+    session, started = str(uuid.uuid4()), False
     for stage in STAGES[STAGES.index(start):]:
         if stage != "implement" and predicate(stage, repo, init, story):
             print(f"  {stage}: already done, skipped")
             continue
         prompt = f"implement @{story.path}" if stage == "implement" else PROMPTS[stage]
         print(f"  {stage}: {prompt}", flush=True)
-        data = claude(prompt, repo, mode, session)
-        session = data.get("session_id") or session
-        if lost(data) and session:
-            print(f"  {stage}: connection lost, sending {CONTINUE} once", flush=True)
-            data = claude(CONTINUE, repo, mode, session)
+        try:
+            data = claude(prompt, repo, mode, session, started, timeout_min * 60)
+            started = True
             session = data.get("session_id") or session
+            if lost(data):
+                print(f"  {stage}: connection lost, sending {CONTINUE} once", flush=True)
+                data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60)
+                session = data.get("session_id") or session
+        except StageTimeout:
+            return stop(stage, story, session, None,
+                        f"no result after {timeout_min:g} min, so the stage was stopped; a step waiting on a permission prompt looks like this")
         if not clean(data):
             return stop(stage, story, session, data.get("result"), "the turn did not end in a clean " + DONE_LINE)
         if stage != "implement" and not predicate(stage, repo, init, story):
@@ -397,6 +428,8 @@ def dry_run(repo, init, batch, problems):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=os.getcwd())
+    ap.add_argument("--stage-timeout", type=float, default=STAGE_TIMEOUT_MIN, metavar="MINUTES",
+                    help=f"wall-clock limit for one stage before the run stops (default {STAGE_TIMEOUT_MIN:g})")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the stories, stages and predicate results it would act on, without invoking Claude")
     args = ap.parse_args(argv)
@@ -416,7 +449,7 @@ def main(argv=None):
                 print(f"\nNo TODO story left in {batch.title}: phase-close is next, and it is the human's to run.")
                 return 0
             print(f"\n{todo[0].name}", flush=True)
-            if run_story(repo, init, todo[0], mode):
+            if run_story(repo, init, todo[0], mode, args.stage_timeout):
                 return 1
     except Refusal as e:
         print(f"run-batch: refusing: {e}", file=sys.stderr)

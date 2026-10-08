@@ -22,7 +22,9 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
+import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -74,7 +76,7 @@ class Stub:
     def __init__(self, repo, steps):
         self.repo, self.steps, self.calls = repo, list(steps), []
 
-    def __call__(self, argv, cwd):
+    def __call__(self, argv, cwd, timeout=None):
         self.calls.append(argv)
         effect, out = self.steps.pop(0)
         if effect:
@@ -210,6 +212,37 @@ class OpenBatch(Base):
         self.assertEqual(s.calls, [])
         self.assertIn("phase-close is next, and it is the human's to run", out)
         self.assertNotIn("phase-close", " ".join(rb.PROMPTS.values()))
+
+    def test_stage_timeout_stops_naming_story_and_stage(self):
+        rb.CLAUDE = [sys.executable, os.path.join(FIX, "sleeping-claude.py")]
+        try:
+            t0 = time.monotonic()
+            rc, out = self.run_driver("--stage-timeout", "0.02")  # 1.2 s
+            elapsed = time.monotonic() - t0
+        finally:
+            rb.CLAUDE = ["claude"]
+        self.assertNotEqual(rc, 0)
+        self.assertLess(elapsed, 20)
+        self.assertIn("STOP at update-design for story-04-shows-weather-flag.org", out)
+        self.assertIn("no result after 0.02 min", out)
+        # the session id was chosen up front, so even a first stage can be resumed
+        self.assertRegex(out, r"claude --resume [0-9a-f-]{36}")
+
+    def test_stage_timeout_default_and_passed_through(self):
+        seen = []
+        rb.invoke = lambda argv, cwd, timeout=None: (seen.append(timeout), (0, reply("RESULT: blocked — x"), ""))[1]
+        self.run_driver()
+        self.assertEqual(seen, [60 * 60])
+        seen.clear()
+        self.run_driver("--stage-timeout", "5")
+        self.assertEqual(seen, [5 * 60])
+
+    def test_first_stage_names_its_session(self):
+        s = self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        self.run_driver()
+        argv = s.calls[0]
+        self.assertRegex(argv[argv.index("--session-id") + 1], r"^[0-9a-f-]{36}$")
+        self.assertNotIn("--resume", argv)
 
     def test_argv_shape_and_never_a_bypass(self):
         s = self.stub([(None, reply("RESULT: blocked — nothing", "a"))])
