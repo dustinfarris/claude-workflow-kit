@@ -52,7 +52,10 @@ CONTINUE = "continue"
 CLAUDE = ["claude"]
 STAGE_TIMEOUT_MIN = 60.0  # wall clock per stage; a -p step waiting on a permission prompt would otherwise hang
 DONE_LINE = "RESULT: done"
-LOST_RE = re.compile(r"^API Error: Connection lost", re.I)
+# The two shapes seen, both in interactive transcripts: "lost" (CLI, bear-cub
+# weather-indicator Story 02) and "closed" (desktop). No -p session on record
+# has hit one, so the JSON form is unverified; anything else is a stop.
+LOST_RE = re.compile(r"^API Error: Connection (lost|closed) mid-response\b")
 
 SYSTEM_PROMPT = """\
 This session is driven by tools/run-batch.py, a script, not a person. It sends the batch's four prompts for one story in turn (implement, /workflow-kit:story-closeout, /workflow-kit:update-design, commit), and nobody reads your messages between them. Every skill's STOP still holds.

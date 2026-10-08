@@ -295,6 +295,26 @@ class OpenBatch(Base):
         self.assertEqual(s.prompts(), ["/workflow-kit:update-design", "continue", "commit", "continue"])
         self.assertEqual(s.calls[1][s.calls[1].index("--resume") + 1], "a")
 
+    def test_connection_closed_wording_also_continues(self):
+        # the desktop transcripts carry "closed" where bear-cub's CLI one says "lost"
+        s = self.stub([
+            (None, reply("API Error: Connection closed mid-response. The response above may be incomplete.", "a", is_error=True)),
+            (None, reply("RESULT: blocked — x", "a")),
+        ])
+        self.run_driver()
+        self.assertEqual(s.prompts(), ["/workflow-kit:update-design", "continue"])
+
+    def test_unmatched_failure_stops_without_retry(self):
+        for text in ("API Error: Server is temporarily limiting requests (not your usage limit) · Rate limited",
+                     "Login expired · Please run /login",
+                     "API Error: Connection lost"):  # no "mid-response": not the shape seen
+            with self.subTest(text=text):
+                s = self.stub([(None, reply(text, "a", is_error=True, subtype="error_during_execution"))])
+                rc, out = self.run_driver()
+                self.assertNotEqual(rc, 0)
+                self.assertEqual(s.prompts(), ["/workflow-kit:update-design"])
+                self.assertIn(text, out)
+
     def test_dirty_tree_refused_before_a_story_starts(self):
         tick(self.repo, S04)  # nothing left for 04, so the next start is 05's implement
         mark_done(self.repo, S04)
