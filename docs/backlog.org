@@ -192,6 +192,8 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
+- Note taken on [2026-10-08 Thu 13:36] \\
+  Evidence (bear-cub weather-indicator retro, 2026-10-08): three dev-environment facts — a Playwright resize that did not take, freezing the settle beat with ~liveSocket.disconnect()~, ~hydrate_cache/1~ undoing a staged cache — were written into PLAN LOGBOOK notes and moved to ~docs/learnings.org~ by hand at the retro; routine-schedule did the same for a Tailwind note. Second batch where update-design parked a repo-level lesson in the chain. Still coupled to the bundle; not built from the retro.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#C], coupled — rides with the initiative-close/lessons-codification bundle, not alone. update-design has zero mentions of ~design-language.org~ or ~learnings.org~ at 0.6.0, but neither does the rest of the kit: this cannot ship before kit-side lessons codification lands. Deliberately untagged for size — the bundle sizes it.
 - Note taken on [2026-07-18 Sat 23:33] \\

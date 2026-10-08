@@ -22,7 +22,7 @@ Acceptance Criteria must be consistent with both the embedded Design excerpt (se
 
 Tracing runs both directions. Outward: no AC may exceed the excerpt or the PRD's intent. Inward: every requirement the embedded excerpt explicitly enumerates for this story's scope must be either covered by an AC or surfaced as uncovered — quoting a requirement in the excerpt and then omitting it from the ACs is the same drift in reverse.
 
-Where the design is silent on a detail an AC would need to state (a location, a threshold, a behavior), do not resolve the silence — write the AC at the design's level of specificity, or surface the gap as a "# GAP:" comment in the story for human adjudication. "# GAP:" is the greppable convention for surfaced gaps.
+Where the design is silent on a detail an AC would need to state (a location, a threshold, a behavior), do not resolve the silence — write the AC at the design's level of specificity, or surface the gap as a "# GAP:" comment in the story for human adjudication. "# GAP:" is the greppable convention for surfaced gaps. An alternative the design leaves open ("A or B", "either X or Y") is a gap of the same kind: the AC does not pick a side — write it at the design's level of specificity or surface the choice as a "# GAP:" comment. A side picked in an AC is a design decision made where no decision is recorded.
 
 Example Acceptance Criteria for documentation work:
 
@@ -49,7 +49,7 @@ Each user story includes, at a minimum:
 2. The User Story in standard "As a / I need / so that" form.
 3. Acceptance Criteria as checkbox TODOs.
 4. The Definition of Done for the declared weight class, copied verbatim from the matching block below, plus the visual review item when its conditions hold (see Definition of Done — visual review item).
-5. A "Technical Notes" section for implementation details relevant to the story but not part of the acceptance criteria. The Technical Notes reference the Design excerpt as the source of truth for the spec, with DESIGN.org as broader context only. Dependencies on previous stories are noted here ("This story depends on Story N because ...").
+5. A "Technical Notes" section for implementation details relevant to the story but not part of the acceptance criteria. The Technical Notes reference the Design excerpt as the source of truth for the spec, with DESIGN.org as broader context only. Dependencies on previous stories are noted here ("This story depends on Story N because ..."). The Technical Notes also tell the implementer to read the Plan LOGBOOK entries of earlier stories in PLAN.org before starting — notes an earlier story left for this one ("for Story N") live there, not in this file.
 
 ## Definition of Done — work-grade weight class (verbatim)
 
