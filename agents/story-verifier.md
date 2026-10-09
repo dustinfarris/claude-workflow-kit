@@ -13,7 +13,7 @@ Run the repo's declared `Verify command:` (CLAUDE.md; the Definition of Done nam
 
 For each checklist item in the section under audit, produce a verdict with concrete evidence:
 
-- **MET** — name the evidence: the test name and its passing run, the command you executed and its output, or the file path and line numbers demonstrating the behavior. Run commands (`mix test`, `mix format --check-formatted`, `mix check`, specific test files) rather than inferring from reading; a test you did not run is not evidence.
+- **MET** — name the evidence: the test name and its passing run, the command you executed and its output, or, for a structural item only (a field exists, a label reads a given string, a file carries a given entry), the file path and line numbers. A behavior the item names — what happens when something runs, ticks, saves or renders — is proved by a test or a command you executed, never by reading the code meant to produce it: code that looks right, and a comment that says it is, are not evidence. Run commands (`mix test`, `mix format --check-formatted`, `mix check`, specific test files) rather than inferring from reading; a test you did not run is not evidence.
 - **NOT MET** — describe precisely what is missing or what failed, with the failing output or absent artifact named.
 - **DEFER CANDIDATE** — the item does not apply to this story (e.g., "no context functions in this story"); state the reason. The decision to defer belongs to the caller, not you.
 

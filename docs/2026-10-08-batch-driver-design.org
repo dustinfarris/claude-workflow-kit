@@ -92,3 +92,13 @@ These are the interruptions whose answer is never a judgment, taken from the ret
 - ~test/hooks_test.sh~ — the fixture cases.
 - ~README.org~ — one paragraph under the pipeline section: once the stories and PLAN exist, the batch is run by the driver to the gate.
 - ~CHANGELOG.org~ and ~.claude-plugin/plugin.json~ — a ~feat(0.9.0)~ release; the first new stage-level tool since story-metrics.
+
+* Addendum [2026-10-08 Thu] — what the first run found
+
+Written because "What the next retro checks" asked. Source: bear-cub docs/2026-10-08-bonus-countdown/retro.org, Batch 1 (six stories, driver 0.9.1, run twice: a stop at Story 04 and a resume).
+
+- Human turns per story outside stops: zero. Every human turn in the six timelines is the driver's prompt; no question reached the human. One stop, classified mechanical: 1Password locked with the screen and refused to sign Story 04's commit ("agent refused operation"), answered by a resume and a second "commit" six minutes later, and closed for good outside the kit by moving commit signing to a key file that never asks an agent. The approval memory the retro had counted on does not cover unlock.
+- Wall clock approaches active minutes: met. 33 wall against 33 active (12 implementation, 10 close-out, 11 update-design), where the weather batch spent 264 wall on 67 active.
+- The predicates were sufficient: met. No stage ran twice because a predicate misread an artifact. No implementer self-triggered close-out, so that path is still untested in the field.
+- story-metrics.py matched every session and the table reads as before; the driver's turns appear where the human's did.
+- Not exercised: the lost-connection retry. Also seen: the gate's design walk found a divergence the story verifier had passed on structural evidence (0.9.2), which is a verifier matter, not a driver one.
