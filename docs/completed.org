@@ -172,3 +172,15 @@ Completed backlog items, moved here from docs/backlog.org when marked DONE (per 
 - Note taken on [2026-10-11 Sun 06:58] \\
   Remainder of the killed initiative-close entry (docs/wontdo.org). ~templates/PLAN.org~ line 17 still reads "Promoted to v2 candidates at initiative close" — ordered fixed by that entry's 2026-07-12 note and never done; every bear-cub PLAN since inherits the line. Current doctrine: Deferred items are swept into the repo-level ~docs/backlog.org~ at the batch gate (bear-cub's sweeps of 2026-07-18, 07-25, 09-06 and 09-21 all landed there, the last one explicitly "at the Batch 1 gate"), and nothing is versioned. One comment clause; CHANGELOG + bump, rides with any next patch. Check whether phase-close should name the sweep too — at 0.9.4 its steps never mention Deferred, so the sweep is habit, not skill text.
 :END:
+
+* DONE [#C] initiative retirement edits to the consuming repo's CLAUDE.md have no owner
+:PROPERTIES:
+:CREATED:  [2026-10-11 Sun 06:58]
+:END:
+- State "DONE"       from "TODO"       [2026-10-11 Sun 07:18]
+:LOGBOOK:
+- Note taken on [2026-10-11 Sun 07:18] \\
+  Shipped in 0.9.6 as a third shape, not either of the two this entry offered; the human said to proceed and the choice is stated in the CHANGELOG. create-prd's Write-the-PRD verdict now adds the superseded chain to the repo CLAUDE.md's closed-chains list, when the repo keeps one, and leaves it off with a word to the human if its PLAN has an ungated batch. Supersession is when a chain closes in practice: bear-cub's ~Active initiative:~ line has never been set to a none value, only replaced with "(previously: …)". The flip to a none value is not built; org-conventions path resolution gives it no meaning and no repo uses it. The bear-cub evidence was repaired by hand in its 2b22b3a before this shipped.
+- Note taken on [2026-10-11 Sun 06:58] \\
+  Remainder of the killed initiative-close entry (docs/wontdo.org), the one spec step with no substitute. When an initiative's last batch gates, the repo CLAUDE.md should move the chain to its Closed / historical tier and flip ~Active initiative:~ to the none-marker; create-prd flips the line when the next initiative opens, but nothing adds the historical entry. Evidence: bear-cub's Closed / historical list stops at routine-schedule while night-owl-bonus, weather-indicator and bonus-countdown are gated and superseded as the active chain. Decision for the human before any edit: a short tail on phase-close gated on the human saying no further batch is planned (the only all-weight-class shape — personal-mvp must be able to answer "not yet"), or an explicit human step named in the gate report. Untagged — size at pull time.
+:END:
