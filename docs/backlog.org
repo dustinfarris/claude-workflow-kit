@@ -5,6 +5,11 @@
 Repo-level backlog, cumulative across initiatives. Items land here from PLAN Deferred sections at initiative close, from ad-hoc discovery (org-capture or mid-session), and from work surfaced out of scope during execution. Items leave by being done, claimed by an initiative, or deliberately dropped. Rule [2026-10-10 Sat]: DONE entries do not stay here and are not pruned — at each backlog review, move every DONE entry to docs/completed.org (heading, properties, and full capture/triage/done trail intact), so this file only ever holds open work. KILL entries likewise move to docs/wontdo.org with their full trail, where they still fence off relitigation.
 
 Size tags: oneshot (compiled single-session prompt), hand (inert edit, no session), promote (candidate for initiative-scale work). Untagged means untriaged — sizing happens at review or pull time, not capture time.
+* TODO leverage Claude Design during the design step
+:PROPERTIES:
+:CREATED:  [2026-10-11 Sun 07:32]
+:END:
+There should be guidance around providing a prompt for Claude Design, using a design system if applicable, to put together a hand-off for the rest of the design step; and (re)syncing the design system after everything is built.  I'm not sure how this fits in with the =brainstorm= superpower skill, but it is an important part of the overall process when the change impacts the frontend UI.
 * [2026-07-13 Mon]
 Groomed [2026-10-11 Sun 06:58]: ruling on the initiative-close promotion candidate — KILL the skill as designed, moved to docs/wontdo.org with its trail (nine bear-cub initiatives closed since its spec, each at a single-batch gate, with no skill; the spec's steps now sit in phase-close, org-conventions, create-prd and the repo-level decisions.org). Two remainders captured below as new entries: the PLAN template's Deferred comment (hand) and the ownerless CLAUDE.md retirement edits. The governance-file reconciliation entry is decoupled from the dissolved bundle and stands alone. The empty Promotion candidates subheading is gone with its only child.
 
