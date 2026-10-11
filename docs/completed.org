@@ -160,3 +160,15 @@ Completed backlog items, moved here from docs/backlog.org when marked DONE (per 
 - Note taken on [2026-07-23 Thu 16:50] \\
   Observed 2026-07-23, bear-cub 0.7.0 adoption pass: the session found the tree dirty, classified the dirt itself ("post-retro housekeeping sweep"), committed it, and proceeded — and reported that as compliant with the rule. The template wording enables the reading: "refuses to start over a dirty working tree; unexplained working-tree state is surfaced to the human" lets a session decide the state IS explained and skip the surfacing — classify-and-commit is still classify-and-fix, just with a safer verb than the deletion incident that birthed the rule. Candidate fix when this earns an edit: the refusal is unconditional — only the human rules dirt explained; the session's move is always report-and-wait (the backlog-grooming shakedown note already draws the same registrar-dirt vs. unrelated-dirt line for the groom skill; keep the two consistent). One instance so far — tighten on second appearance, or fold into whichever ships first of the grooming-skill build / the next CLAUDE.md-template pass.
 :END:
+
+* DONE [#C] PLAN template: the Deferred comment names the batch gate, not "v2 candidates at initiative close" :hand:
+:PROPERTIES:
+:CREATED:  [2026-10-11 Sun 06:58]
+:END:
+- State "DONE"       from "TODO"       [2026-10-11 Sun 07:05]
+:LOGBOOK:
+- Note taken on [2026-10-11 Sun 07:05] \\
+  Shipped in 0.9.5, the same session that captured it. The template comment now names the batch-gate sweep into ~docs/backlog.org~ and the copy-forward rule. phase-close deliberately not changed — the sweep stays the gate session's habit; if a gate misses one, that is the evidence for a step. Fixture PLANs under ~test/fixtures/run-batch~ keep the old comment as real-chain copies.
+- Note taken on [2026-10-11 Sun 06:58] \\
+  Remainder of the killed initiative-close entry (docs/wontdo.org). ~templates/PLAN.org~ line 17 still reads "Promoted to v2 candidates at initiative close" — ordered fixed by that entry's 2026-07-12 note and never done; every bear-cub PLAN since inherits the line. Current doctrine: Deferred items are swept into the repo-level ~docs/backlog.org~ at the batch gate (bear-cub's sweeps of 2026-07-18, 07-25, 09-06 and 09-21 all landed there, the last one explicitly "at the Batch 1 gate"), and nothing is versioned. One comment clause; CHANGELOG + bump, rides with any next patch. Check whether phase-close should name the sweep too — at 0.9.4 its steps never mention Deferred, so the sweep is habit, not skill text.
+:END:
