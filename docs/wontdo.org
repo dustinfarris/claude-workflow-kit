@@ -1,0 +1,86 @@
+#+title: Won't do
+#+startup: showall
+#+TAGS: oneshot(o) hand(h) promote(p)
+
+Declined backlog items, moved here from docs/backlog.org when marked KILL (per the rule recorded in its preamble, [2026-10-10 Sat]). Each entry keeps its full trail, including the ruling that declined it, so the idea is not relitigated; a groom or brainstorm that meets a declined idea again checks here first. New arrivals append at the end.
+* KILL the ~create-prd~ skill must handle a pre-existing initiative directory
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 21:38]
+:END:
+:LOGBOOK:
+- Note taken on [2026-07-13 Mon 22:53] \\
+  Groom [2026-07-13 Mon]: CLOSE confirmed. CANCELLED paragraph verified in the 0.4.1 CHANGELOG entry. Stays in the registrar per the declined-ideas convention — the entry exists to fence off relitigation.
+- Note taken on [2026-07-12 Sun 12:26] \\
+  CANCELLED 2026-07-11 by human ruling, superseding this item's original fix direction (the body previously said "prefer in-directory specs as the convention going forward" — the ruling went the opposite way): brainstorm outputs stay OUT of initiative directories entirely; they live in ~docs/superpowers/specs/~ and initiative directories contain only chain documents. create-prd creates the directory itself, per its own spec, and needs no reuse logic. Already recorded as CANCELLED in the 0.4.1 CHANGELOG; a repo-CLAUDE.md convention line (shipped in bear-cub) owns the placement rule, not skill logic. Kept here per the declined-ideas convention.
+:END:
+
+* KILL [#B] story-closeout owns doc-commit moments (three misses this batch) :oneshot:
+:PROPERTIES:
+:CREATED:  [2026-07-18 Sat 23:33]
+:END:
+- State "KILL"       from "TODO"       [2026-10-10 Sat 19:51]
+:LOGBOOK:
+- Note taken on [2026-10-10 Sat 19:51] \\
+  Human ruled [2026-10-10 Sat]: do it if it still makes sense; it does not, so KILL. Since 0.9.0 the per-story commit is its own stage after update-design, owned by the batch driver's commit prompt (a code commit, then a doc-only commit, then a clean tree). Closeout committing at its end would now land before update-design's doc edits and split the story's doc commit, so the proposed fix is harmful, not just unneeded. The milestone moments are committed in practice: bear-cub across four initiatives since August, e.g. PRD lock 5958ec5, promotion a8c2875, stories 1601450, batch close 4493c60, each story a feat/docs pair. The ~chain-authoring~ skill the capture names does not exist. Recorded as not changed in the 0.9.4 CHANGELOG entry.
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B], tagged oneshot. Verified open — zero commit steps in skills/story-closeout/SKILL.md at 0.6.0. Interaction found at groom: 0.6.0's Document chain & version control section (920ddcc) defines the canonical commit moments but assigns no owner — this entry complements it, no duplication. Pairs with the bar-substitution entry below: both edit story-closeout; one compiled session prompt can carry both.
+- Note taken on [2026-07-18 Sat 23:33] \\
+  Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ performs the commits itself as its final step — code commit, then doc commit; the doc-commit message template enumerates any governance-file changes it touches (e.g. ~design-language.org~/~learnings.org~). Authoring skills (~user-stories~, ~chain-authoring~) end by instructing the human to make the milestone doc commit, not by making it themselves. Three instances this batch of doc-commit moments being missed because no step owned them.
+:END:
+
+* KILL [#B] [doctrine] initiative-close skill designed but not built :promote:
+:PROPERTIES:
+:CREATED:  [2026-07-11 Sat 13:04]
+:END:
+- State "KILL"       from "TODO"       [2026-10-11 Sun 06:58]
+:LOGBOOK:
+- Note taken on [2026-10-11 Sun 06:58] \\
+  Groom [2026-10-11 Sun], human ruling: KILL the skill as designed; two hand-sized remainders re-captured in docs/backlog.org, and the governance-file reconciliation entry decoupled from this bundle. Still not built at 0.9.4 — no ~skills/initiative-close/~, and ~templates/PLAN.org~ line 17 still says "Promoted to v2 candidates at initiative close" — but bear-cub has closed nine initiatives since the 2026-07-12 spec, gamification-points through bonus-countdown, every one a single batch whose gate was the close, with no skill. Nearly every step of the 11-step spec now has another owner, verified against kit source and bear-cub: (5) lessons harvest — phase-close step 4 names ~docs/learnings.org~ (0.6.2, 3207d88), and bear-cub's 2026-10-04/07/08 entries landed by hand at the retro; (6) Deferred sweep — happens at the batch gate in practice (bear-cub backlog: "Swept [2026-09-21 Mon 06:57] … at the Batch 1 gate"); (7) asterisk grep — an org-conventions rule since a8797cf; (8) the D-range half is dead — entries mint into the repo-level ~docs/decisions.org~ since 0.7.0 and 0.9.3 dropped ranges from the DESIGN pointer because they rot — and the Active-initiative flip is create-prd's when the next initiative opens (bear-cub's line reads "(previously: …)"); (9) retrospective — phase-close step 7 writes ~retro.org~ and leaves the Retro section to the human, the exact boundary this spec reserved. Per the kit's own iteration rule, a stage not consulted across two or three projects is cut, not polished. What survives is re-captured as two entries: the PLAN template comment (hand), and the CLAUDE.md retirement edits, whose one visible rot is bear-cub's Closed / historical list stopping at routine-schedule while night-owl, weather-indicator and bonus-countdown are closed.
+- Note taken on [2026-07-22 Wed 21:20] \\
+  Groom [2026-07-22 Wed]: KEPT, [#B] promote, still the top promotion candidate — no ~skills/initiative-close/~ at 0.6.0; ~templates/PLAN.org~ line 17 still carries the stale "Promoted to v2 candidates" comment. Bundle grows: the governance-file reconciliation entry (2026-07-18) is coupled in per this groom's ruling, alongside the kit-side lessons codification already bundled.
+- Note taken on [2026-07-13 Mon 22:53] \\
+  Groom [2026-07-13 Mon]: PROMOTION CANDIDATE, [#B] — flagged only; the promotion runs in a fresh session. Verified not built (no ~skills/initiative-close/~ at 0.5.0); corroborated open by ~templates/PLAN.org~ line 17 still carrying the stale "Promoted to v2 candidates at initiative close" comment that note (2) below orders fixed. Bundles the kit-side lessons codification item above per groom ruling.
+- Note taken on [2026-07-11 Sat 13:04] \\
+  Carried forward from friction.org (retired). Chain-retirement extraction
+  pass, distinct from the per-batch gate: harvest confirmations from
+  surviving Decision Log entries and corrections from withdrawn advisories +
+  prior friction notes into a lessons store (one lesson per file, one-line
+  summary at top; record corrections and confirmed approaches with why they
+  mattered; don't duplicate what the repo or git already records; update
+  rather than duplicate; delete notes that prove wrong). Also owns Deferred
+  -> v2-candidate promotion and the stages-earned-their-keep retrospective --
+  both pulled out of phase-close in 0.3.0. Blocked on a real initiative
+  actually closing; do not build speculatively.
+- Note taken on [2026-07-12 Sun 12:26] \\
+  Spec corrections accumulated since the note above — when this is built, build to CURRENT doctrine, not the 0.3.0-era note:
+  (1) "one lesson per file" is superseded: lessons live in the single cumulative repo-level ~docs/learnings.org~ (one dated entry per learning);
+  (2) "Deferred → v2-candidate promotion" is superseded by the non-sequential-initiatives ruling: the step is "sweep PLAN's Deferred into the repo-level backlog" (a per-repo todo/backlog file) — no versioning language anywhere; ALSO fix the PLAN template's Deferred comment, which still says "Promoted to v2 candidates at initiative close";
+  (3) advisory withdrawal at close doubles as promotion review to lessons (unchanged);
+  (4) still blocked on a real initiative actually closing — bear-cub MVP close is on hold (Phase 5 unresolved) and extras is mid-batch; do not build speculatively. When one closes, the manual run is the spec shakedown.
+- Note taken on [2026-07-12 Sun 17:15] \\
+  UNBLOCKED 2026-07-12: extras initiative closed via a manual pass (bear-cub
+  86d9bf6) — this 11-step observed sequence is the empirical spec; build the
+  skill from it, not from the 0.3.0-era note above:
+  (1) load org-conventions before writing anything; (2) read learnings.org,
+  the chain's PLAN (gate record + Deferred), and confirm/locate the repo
+  backlog file (create docs/backlog.org with the standard header if absent);
+  (3) verify lesson citations against the DESIGN's actual Decision Log text,
+  never the gate summary; (4) read repo CLAUDE.md in full to enumerate
+  retirement edits; (5) append lessons to learnings.org, house format,
+  newest-first, harvesting selectively (gate-flagged candidates + surviving
+  D-entries that generalize — most don't); (6) sweep every PLAN Deferred item
+  to the backlog: condensed, file pointers and act-only-if conditions kept,
+  provenance-tagged; COPY forward — never edit the chain's Deferred section;
+  (7) self-check all written org for line-initial asterisks from quoted code
+  or error text (grep '^\*\*') — also a candidate rule for org-conventions
+  itself; (8) CLAUDE.md retirement edits: Active initiative → none-marker,
+  chain to historical tier with its D-range, backlog/learnings in the
+  repo-level tier, next-D pointer bumped; (9) one document-level LOGBOOK
+  drawer under the PLAN title recording the closure — gate record and story
+  entries untouched; (10) repo verify command before staging; (11) stage the
+  doc files explicitly by name and commit marking the initiative closed.
+  Skill boundaries when built: audits-not-maintains posture inherited from
+  phase-close; refuses to run on a chain whose last batch has no gate
+  record; the retrospective (stages-earned-their-keep) stays HUMAN — the
+  skill may prompt for it but never writes it.
+:END:

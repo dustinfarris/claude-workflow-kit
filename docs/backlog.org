@@ -2,16 +2,47 @@
 #+startup: showall
 #+TAGS: oneshot(o) hand(h) promote(p)
 
-Repo-level backlog, cumulative across initiatives. Items land here from PLAN Deferred sections at initiative close, from ad-hoc discovery (org-capture or mid-session), and from work surfaced out of scope during execution. Items leave by being done, claimed by an initiative, or deliberately dropped.
+Repo-level backlog, cumulative across initiatives. Items land here from PLAN Deferred sections at initiative close, from ad-hoc discovery (org-capture or mid-session), and from work surfaced out of scope during execution. Items leave by being done, claimed by an initiative, or deliberately dropped. Rule [2026-10-10 Sat]: DONE entries do not stay here and are not pruned — at each backlog review, move every DONE entry to docs/completed.org (heading, properties, and full capture/triage/done trail intact), so this file only ever holds open work. KILL entries likewise move to docs/wontdo.org with their full trail, where they still fence off relitigation.
 
 Size tags: oneshot (compiled single-session prompt), hand (inert edit, no session), promote (candidate for initiative-scale work). Untagged means untriaged — sizing happens at review or pull time, not capture time.
 * [2026-07-13 Mon]
+Groomed [2026-10-11 Sun 06:58]: ruling on the initiative-close promotion candidate — KILL the skill as designed, moved to docs/wontdo.org with its trail (nine bear-cub initiatives closed since its spec, each at a single-batch gate, with no skill; the spec's steps now sit in phase-close, org-conventions, create-prd and the repo-level decisions.org). Two remainders captured below as new entries: the PLAN template's Deferred comment (hand) and the ownerless CLAUDE.md retirement edits. The governance-file reconciliation entry is decoupled from the dissolved bundle and stands alone. The empty Promotion candidates subheading is gone with its only child.
+
+Groomed [2026-10-10 Sat 19:41]: third manual groom, at 0.9.3. Ruling this groom: done entries move to docs/completed.org instead of being pruned, at every review from now on (bear-cub's convention since 2026-07-24). Nine DONE entries moved, each verified against kit source at 0.9.3 with its commit hash resolved: asterisk rule (a8797cf), prediction pattern (b115ac9), lessons file (3207d88), shared Decision Log and D-entry headings (1d03600), dirty-tree guard (b115ac9), red-run self-tick guard (ce4e929), authority marking (b115ac9), dev-server MVP (0668c5a). Second ruling this groom: KILL entries move to docs/wontdo.org the same way; the one KILL entry (create-prd and a pre-existing initiative directory) moved. Dispositions for the open entries and four proposed captures await rulings.
 
 Groomed [2026-07-22 Wed 21:20]: second manual groom (spec shakedown for the backlog-grooming entry). No prunes; all open entries verified against kit source at 0.6.0 — never from recollection — and kept per ruling. Six retro-born captures (2026-07-18/19, bear-cub gamification retro) triaged with priorities and size tags per ruling; governance-file reconciliation coupled into the initiative-close bundle. Rulings this groom: retro docs are committed (b07fccf); capture and groom land as separate commits. The shipped asterisk-rule DONE entry (a8797cf) was omitted from this groom's proposal batch and stays unpruned — prune-eligible next groom.
 
 Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipped in 0.5.0 (commit 2969141), each verified against the kit source at groom time; full entry text remains in this file's git history at d0599f2 and in CHANGELOG.org. Dispositions below carry their evidence in per-entry LOGBOOK notes.
 
-** TODO [#C] Registrar files vs. branches: stranding + divergence policy :promote:
+* TODO [#B] session-owned dev server: Claude starts, uses and stops the project's dev server :promote:
+:PROPERTIES:
+:CREATED:  [2026-10-05 Mon 13:03]
+:END:
+:LOGBOOK:
+- Note taken on [2026-10-05 Mon 13:03] \\
+  Follow-up to the 0.8.9 MVP (the "dev server as a session precondition" entry above). Goal: the session, not the human, makes sure the dev server is running, and stops it when no session needs it — for the whole development experience (browser review, logs, staging states), not only so Tidewave answers. Needs its own requirements before any build: what a session may do with a server it controls (start, restart after ~mix.exs~ / ~config/~ / migration changes, read its log), how the session and the human each learn its URL, and what happens to a server the human started by hand.
+  Findings from the 2026-10-05 design conversation, so they are not re-derived. (1) ~mix tidewave.proxy~ (tidewave 0.9.1, already in bear-cub) declares only ~@requirements ["loadpaths"]~: it compiles stale deps, never the project, so it adds no project compile at session start; it may briefly wait on Mix's build lock while the server compiles. (2) It is a Mix task from the tidewave dep, so it runs from the project directory and registers in the project's ~.mcp.json~; a user-level entry would spawn a failing server in every other repo. (3) Each proxied tool takes a required ~port~ argument, so the session must be told the port. (4) Claude Code runs a stdio MCP server as a child of the session; when the session ends by any route, including a crash or ~kill -9~, the pipe closes and the proxy exits. That is a reliable end-of-session signal where SessionEnd is not. The candidate shape: ~.mcp.json~ runs a project script instead of the bare proxy; the script starts the server as its own child when the port is free (stdin from ~/dev/null~, output to a log, never to stdout, which is the MCP channel), writes a pidfile and a portfile, runs the proxy in the foreground, and a watcher process stops the server and removes both files once the script is gone; a second session reads the portfile and reuses the server; a server it did not start is never stopped. Rare concurrent sessions in bear-cub make losing the server when the owning session closes acceptable. (5) Port: derived from the repo path (e.g. 4100 + hash mod 900, next free if taken) rather than random, so a restart keeps the port the session and browser already use; a ~mkdir~ lock around check-portfile, pick, start, write closes the two-sessions race. bear-cub's ~config/runtime.exs~ reads ~PORT~ for every non-test env, so a ~PORT~ the script sets wins over ~dev.exs~. (6) One server, not two: a Tidewave-only server beside a human one on 4000 works mechanically (bear-cub's ~listeners: [Phoenix.CodeReloader]~ makes a shared ~_build~ safe) but Tidewave then inspects a VM the human is not looking at — its logs, live state, and PubSub broadcasts (bear-cub's ~:schedule_changed~ scenario staging) stay in the other VM — and both run the asset watchers into one ~priv/static~. (7) A server started by hand has no portfile and would be invisible to the script; either hand starts go through the script, or the script adopts a listening ~beam~ whose cwd is the repo.
+:END:
+
+* TODO [#C] PLAN template: the Deferred comment names the batch gate, not "v2 candidates at initiative close" :hand:
+:PROPERTIES:
+:CREATED:  [2026-10-11 Sun 06:58]
+:END:
+:LOGBOOK:
+- Note taken on [2026-10-11 Sun 06:58] \\
+  Remainder of the killed initiative-close entry (docs/wontdo.org). ~templates/PLAN.org~ line 17 still reads "Promoted to v2 candidates at initiative close" — ordered fixed by that entry's 2026-07-12 note and never done; every bear-cub PLAN since inherits the line. Current doctrine: Deferred items are swept into the repo-level ~docs/backlog.org~ at the batch gate (bear-cub's sweeps of 2026-07-18, 07-25, 09-06 and 09-21 all landed there, the last one explicitly "at the Batch 1 gate"), and nothing is versioned. One comment clause; CHANGELOG + bump, rides with any next patch. Check whether phase-close should name the sweep too — at 0.9.4 its steps never mention Deferred, so the sweep is habit, not skill text.
+:END:
+
+* TODO [#C] initiative retirement edits to the consuming repo's CLAUDE.md have no owner
+:PROPERTIES:
+:CREATED:  [2026-10-11 Sun 06:58]
+:END:
+:LOGBOOK:
+- Note taken on [2026-10-11 Sun 06:58] \\
+  Remainder of the killed initiative-close entry (docs/wontdo.org), the one spec step with no substitute. When an initiative's last batch gates, the repo CLAUDE.md should move the chain to its Closed / historical tier and flip ~Active initiative:~ to the none-marker; create-prd flips the line when the next initiative opens, but nothing adds the historical entry. Evidence: bear-cub's Closed / historical list stops at routine-schedule while night-owl-bonus, weather-indicator and bonus-countdown are gated and superseded as the active chain. Decision for the human before any edit: a short tail on phase-close gated on the human saying no further batch is planned (the only all-weight-class shape — personal-mvp must be able to answer "not yet"), or an explicit human step named in the gate report. Untagged — size at pull time.
+:END:
+
+* TODO [#C] Registrar files vs. branches: stranding + divergence policy :promote:
 :PROPERTIES:
 :CREATED:  [2026-07-12 Sun 22:37]
 :END:
@@ -23,101 +54,13 @@ Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipp
 :END:
 [2026-07-12 Sun]
 Registrar files (backlog.org, learnings.org, design-language.org) are append-mostly and branch-agnostic, but writes land on whatever branch is checked out. Two failure modes: entries stranded on abandoned branches; divergent edits merging badly. Candidate mechanisms when this earns design: merge=union gitattribute for append traffic, default-branch guard on automated commits (capture hook has one as of today), session-side rule for which branch registrar writes belong on. One instance so far (theoretical, bear-cub capture hook) — design on second appearance.
-** DONE [#A] org-conventions: forbid line-initial asterisks in quoted code/error text :oneshot:
-:PROPERTIES:
-:CREATED:  [2026-07-12 Sun 17:56]
-:END:
-- State "DONE"       from "TODO"       [2026-07-13 Mon 23:21]
-:LOGBOOK:
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: KEPT, [#A], tagged oneshot. Verified unshipped at 0.5.0 — no line-initial-asterisk rule in skills/org-conventions/SKILL.md. Highest priority of the open set: every org-writing session is exposed, and the initiative-close promotion's step 7 cites the same grep self-check.
-- Note taken on [2026-07-12 Sun 17:56] \\
-  Retro-born (extras close, step 7 of the manual pass): quoted Elixir error text beginning ~** (~ at line-start parses as an org level-2 heading and silently corrupts document structure. Any session writing error output into org files is exposed — LOGBOOK evidence quotes error text constantly. Fix: org-conventions gains a rule — no line in body/LOGBOOK text may begin with asterisks unless it is a heading; reflow quoted code/error text so ~**~ lands mid-sentence, or wrap in a src/example block; self-check with ~grep '^\*\*'~ before finishing any org write. Acceptance: rule stated with the grep; CHANGELOG + bump (rides with any next patch).
-:END:
-
-** DONE [#C] document the expected-outcome-prediction prompt pattern :hand:
-:PROPERTIES:
-:CREATED:  [2026-07-12 Sun 17:56]
-:END:
-- State "DONE"       from "TODO"       [2026-07-22 Wed 21:28]
-:LOGBOOK:
-- Note taken on [2026-07-22 Wed 21:28] \\
-  Shipped in 0.6.1 (b115ac9): README.org paragraph after the brainstorm-kickoff quote block, carrying the update-design example and the human-practice-only caveat per the capture note's do-NOT-encode rule. Drafted by a Sonnet subagent, reviewed before commit.
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#C] hand, unchanged — verified still absent from README.org at 0.6.0.
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: KEPT, [#C], tagged hand. Verified absent from README.org. The pattern is written down in docs/fable-charter.org, but the charter is unversioned doctrine, not the kit's shipped surface — the entry stands. Can ride in the same patch as the asterisk rule above.
-- Note taken on [2026-07-12 Sun 17:56] \\
-  Retro-born: stating the expected outcome of a skill run in the invocation — before it runs — turns the run into a checkable prediction ("expected: PLAN reconciliation only, NO DESIGN body edits; if you believe a body edit is warranted, surface the case before making it"). Used twice on extras (update-design after story 01; the initiative-close brief) and deviations-from-prediction became signal instead of noise. This is a recommended human prompt pattern, not machinery: one short paragraph in README (near the brainstorm kickoff fence) naming the pattern with the update-design example. Do NOT encode it into any skill — it only works because the human states the expectation. Acceptance: README paragraph; CHANGELOG + bump (rides with any next patch).
-:END:
-
-** DONE [#B] codify repo-level lessons file in the kit (bear-cub's move already executed)
-:PROPERTIES:
-:CREATED:  [2026-07-12 Sun 11:44]
-:END:
-- State "DONE"       from "TODO"       [2026-07-23 Thu 16:26]
-:LOGBOOK:
-- Note taken on [2026-07-23 Thu 16:26] \\
-  Shipped in 0.6.2 (3207d88), pulled alone by explicit human request — the initiative-close bundle coupling is unblocked, not dissolved; the governance-file reconciliation entry below still rides with that promotion. What shipped: org-conventions gains a Lessons file section (new section after Document chain location; the two jewel-internal "lesson candidate" mentions stand verbatim); phase-close step 4 names ~docs/learnings.org~ as the promotion destination; project-setup seeds ~learnings.org~ with the header rules (one dated entry per learning; update rather than duplicate; delete entries that prove wrong); both README install paths copy it to ~docs/learnings.org~; both CLAUDE.md templates name the repo-level tier. Scope (3) needed no edit: the superseded "one lesson per file" wording lives only in the initiative-close entry's own LOGBOOK, where the 2026-07-12 note already records the supersession — no kit text carried it. Acceptance verified: grep shows no kit text implying per-initiative lessons; ~test/hooks_test.sh~ green (45/45).
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B], unchanged — zero ~learnings~ references in skills/, templates/, project-setup/, agents/ at 0.6.0. The bundle this rides with grows: the governance-file reconciliation entry (2026-07-18) is coupled in per this groom's ruling, since it presumes governance files the kit does not yet codify.
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: KEPT, [#B], coupled — rides with the initiative-close promotion (see Promotion candidates below), not alone. Verified open: zero ~learnings~ references anywhere in skills/, templates/, project-setup/, agents/; project-setup seeds no learnings file; the three ~lesson~ mentions (phase-close step 4, org-conventions ×2) name no path.
-- Note taken on [2026-07-12 Sun 12:26] \\
-  Status: bear-cub executed the move 2026-07-12 (~git mv docs/2026-07-09-mvp/learnings.org docs/learnings.org~ + CLAUDE.md Authoritative-docs tiering: live chain / repo-level lessons / historical chains). Remaining scope is kit-side codification only:
-  (1) grep skills/, templates/, project-setup/ for any per-initiative lessons-path assumption and restate as ~docs/learnings.org~, repo-level, cumulative across initiatives;
-  (2) project-setup seeds ~docs/learnings.org~ (empty, with the header rules: one dated entry per learning; update rather than duplicate; delete entries that prove wrong) so new repos get it from birth;
-  (3) coordinate with the initiative-close item below — its spec says "lessons store, one lesson per file", which contradicts the single-file convention bear-cub actually runs; the single cumulative file is the ratified shape.
-  Acceptance: no kit text implies lessons live inside an initiative directory; tests/tripwires green.
-:END:
-
-** DONE [#B] non-sequential initiatives: lift the Decision Log to a repo-level shared log :oneshot:
-:PROPERTIES:
-:CREATED:  [2026-07-11 Sat 21:33]
-:END:
-- State "DONE"       from "TODO"       [2026-07-23 Thu 16:40]
-:LOGBOOK:
-- Note taken on [2026-07-23 Thu 16:40] \\
-  Shipped in 0.7.0 (1d03600), paired with the headings item below per the groom ruling — one session, both Decision Log section changes at once. All four ruling points implemented as recorded: shared ~docs/decisions.org~ (project-setup seeds it; both README install paths copy it), historical entries in situ with a pointing-back header, chain-qualified pointers once the log serves multiple chains, overrule protocol (eager notice, lazy repair, owner-only writes) and the accepted collision risk in org-conventions with the gate repair in phase-close's new step 5. The decide-and-state fork: DESIGN's Decision Log section is pointer-only, no local entries — single source of truth settles it; rationale in the CHANGELOG. The horizon question (DESIGN body lifting repo-level) stays parked, untouched.
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B] oneshot, unchanged — no shared-log or repo-level-log language in skills/org-conventions/SKILL.md at 0.6.0. Pairing with the headings item below stands.
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: KEPT, [#B], tagged oneshot as a pair with the headings item below — one compiled session prompt, both changes to the Decision Log section land at once. Verified open: no shared-log or repo-level-log language in skills/org-conventions/SKILL.md. The human ruling recorded below stands — do not relitigate.
-- Note taken on [2026-07-12 Sun 12:26] \\
-  Human ruling (2026-07-11), recorded for implementation — do not relitigate:
-  (1) single repo-wide monotonic D-sequence, lifted to a shared repo-level log file; old entries remain in situ in historical chains (no retroactive surgery); the shared log starts where they left off with a header pointing back;
-  (2) pointers become chain-qualified once the log serves multiple chains (e.g. "settles extras/SC-2", "→ extras/Key Behaviors") — bare "FR-13"/"§6" is ambiguous across initiatives;
-  (3) overrule protocol: eager notice, lazy repair, owner-only writes — the overruling session's whole obligation is a loud supersession entry (cite the old D-number + advisory-style payload if the dead position could trap); each open chain reconciles at its own gates; NO cross-chain writes by non-owning sessions;
-  (4) known accepted risk: two concurrent sessions can mint the same next number; rare solo, gate-fixable.
-  Interim state to migrate from: bear-cub already runs the single sequence but stores entries inside each initiative's DESIGN (extras DESIGN carries D27–D37 + a numbering comment; MVP DESIGN carries D1–D26). The lift moves the *location* convention, not the numbering.
-  Implementation surface: org-conventions Decision Log section (location + pointer qualification + overrule protocol), DESIGN template (Decision Log section becomes a pointer to the shared log or a local-entries-plus-shared-log rule — decide and state), update-design + phase-close (where entries/reconciliation land), project-setup (seed the shared log). Coordinate with the headings/links item below — same section, do them together.
-  Open horizon question (human, not Sonnet): does the DESIGN *body* eventually lift to a repo-level living system description too? Park, don't answer.
-:END:
-
-** DONE [#B] make decision records headings and link to them when referenced :oneshot:
-:PROPERTIES:
-:CREATED:  [2026-07-11 Sat 12:47]
-:END:
-- State "DONE"       from "TODO"       [2026-07-23 Thu 16:40]
-:LOGBOOK:
-- Note taken on [2026-07-23 Thu 16:40] \\
-  Shipped in 0.7.0 (1d03600) with the shared-log lift above — same section, changed once. Acceptance met: org-conventions' Decision Log format is now a heading with ~:CUSTOM_ID:~ (lowercase D-number, e.g. =d27=), citation link syntax stated for both in-log and cross-file references, and the worked example shows heading + CUSTOM_ID + an Advisory line citing it as a link; the DESIGN template's Decision Log comment demonstrates the link form. Historical logs stay list-format — the no-retroactive-conversion line rides in the citation-form bullet; CHANGELOG + bump to 0.7.0.
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B] oneshot, unchanged — no ~CUSTOM_ID~ convention in skills/org-conventions/SKILL.md at 0.6.0. Pairing with the shared-log lift above stands.
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: KEPT, [#B], tagged oneshot as a pair with the shared-log lift above — same section changes once, not twice. Verified open: no CUSTOM_ID convention in skills/org-conventions/SKILL.md.
-- Note taken on [2026-07-12 Sun 12:26] \\
-  Problem: D-entries are list items, so advisories, body text, and stories cite them as bare "(D25)" with no link target; readers grep. As headings (e.g. ~*** D27 — Extras are chore rows with routine = nil~) each entry gets a ~:CUSTOM_ID:~ (~#+name~ equivalent for org heading links) and references become real org links.
-  Scope: org-conventions Decision Log format (heading shape, CUSTOM_ID convention ~d27~, link syntax for citations), DESIGN template, and a one-line note that HISTORICAL logs stay list-format (no retroactive conversion — the format change applies from adoption forward).
-  Sequencing: do this WITH the shared-log lift above — the location and the format of the same section should change once, not twice.
-  Acceptance: org-conventions + template updated; an example entry shows heading + CUSTOM_ID + an advisory citing it as a link; CHANGELOG + bump.
-:END:
-
-** TODO [#C] backlog-grooming skill: mechanize the registrar groom pass
+* TODO [#C] backlog-grooming skill: mechanize the registrar groom pass
 :PROPERTIES:
 :CREATED:  [2026-07-13 Mon 22:57]
 :END:
 :LOGBOOK:
+- Note taken on [2026-10-10 Sat 19:41] \\
+  Groom [2026-10-10 Sat], human ruling: step (5) of the spec below changes — closed entries are no longer pruned; DONE entries move to ~docs/completed.org~ with their full trail intact at every review, matching bear-cub's convention. KILL entries move to ~docs/wontdo.org~ the same way, replacing the spec's keep-declined-ideas-in-place clause; they still fence off relitigation from there. Shakedown findings from this third manual run: the evidence base must include the consuming repo's retros, not only kit source, since dormancy and recurrence are visible only there; memory notes count as recollection, not evidence.
 - Note taken on [2026-07-22 Wed 21:20] \\
   Groom [2026-07-22 Wed]: KEPT, [#C], untagged — and the act-condition is now SATISFIED: this groom is the second manual run. BUILD-ELIGIBLE; size at pull time. Shakedown findings for the build, from this run: \\
   (1) the step-1 STOP-on-dirty rule collides with the normal capture-then-groom flow — this run's dirt was exactly the registrar's own uncommitted captures plus the retro doc that birthed them; the built skill should distinguish registrar-capture dirt (proceed read-only, propose committing captures separately before the groom write, per this groom's ruling) from unrelated dirt (hard stop, surface to human); \\
@@ -137,61 +80,13 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Boundaries when built: touches only the backlog file — no chain documents, no kit source, no promotions executed; audits-not-maintains posture. Untagged deliberately — size at pull time; a second manual groom before building would shake down this spec the way the extras close did for initiative-close.
 :END:
 
-** KILL the ~create-prd~ skill must handle a pre-existing initiative directory
-:PROPERTIES:
-:CREATED:  [2026-07-11 Sat 21:38]
-:END:
-:LOGBOOK:
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: CLOSE confirmed. CANCELLED paragraph verified in the 0.4.1 CHANGELOG entry. Stays in the registrar per the declined-ideas convention — the entry exists to fence off relitigation.
-- Note taken on [2026-07-12 Sun 12:26] \\
-  CANCELLED 2026-07-11 by human ruling, superseding this item's original fix direction (the body previously said "prefer in-directory specs as the convention going forward" — the ruling went the opposite way): brainstorm outputs stay OUT of initiative directories entirely; they live in ~docs/superpowers/specs/~ and initiative directories contain only chain documents. create-prd creates the directory itself, per its own spec, and needs no reuse logic. Already recorded as CANCELLED in the 0.4.1 CHANGELOG; a repo-CLAUDE.md convention line (shipped in bear-cub) owns the placement rule, not skill logic. Kept here per the declined-ideas convention.
-:END:
-
-** TODO [#B] story-closeout owns doc-commit moments (three misses this batch) :oneshot:
+* TODO [#C] governance-file reconciliation: update-design corrects design-language.org/learnings.org in the same pass
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
 :LOGBOOK:
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B], tagged oneshot. Verified open — zero commit steps in skills/story-closeout/SKILL.md at 0.6.0. Interaction found at groom: 0.6.0's Document chain & version control section (920ddcc) defines the canonical commit moments but assigns no owner — this entry complements it, no duplication. Pairs with the bar-substitution entry below: both edit story-closeout; one compiled session prompt can carry both.
-- Note taken on [2026-07-18 Sat 23:33] \\
-  Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ performs the commits itself as its final step — code commit, then doc commit; the doc-commit message template enumerates any governance-file changes it touches (e.g. ~design-language.org~/~learnings.org~). Authoring skills (~user-stories~, ~chain-authoring~) end by instructing the human to make the milestone doc commit, not by making it themselves. Three instances this batch of doc-commit moments being missed because no step owned them.
-:END:
-
-** DONE [#B] dirty-tree guard: implementation sessions refuse to start over a dirty tree :hand:
-:PROPERTIES:
-:CREATED:  [2026-07-18 Sat 23:33]
-:END:
-- State "DONE"       from "TODO"       [2026-07-22 Wed 21:28]
-:LOGBOOK:
-- Note taken on [2026-07-22 Wed 21:28] \\
-  Shipped in 0.6.1 (b115ac9): both project-setup CLAUDE.md templates gain the rule at the end of their Workflow sections — refuse to start over a dirty tree, surface unexplained state rather than classify-and-fix, with the scratch-code-deletion incident as recorded provenance. Registrar-specific preflight handling stays with the backlog-grooming entry's shakedown note.
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B], tagged hand. No dirty-tree language anywhere in skills/ or project-setup/ at 0.6.0. Highest-severity retro incident (human scratch code silently deleted after misattribution). This groom's own preflight hit the adjacent case — registrar captures sitting uncommitted — a second live instance of the theme; the grooming-skill entry's shakedown note carries the registrar-specific handling.
-- Note taken on [2026-07-18 Sat 23:33] \\
-  Retro-born (bear-cub gamification retro, 2026-07-17): implementation sessions refuse to start over a dirty working tree, and unexplained working-tree state is surfaced to the human, never classified-and-fixed by the session itself. A session this batch silently deleted the human's uncommitted scratch code after misattributing it.
-:END:
-
-** DONE [#B] bar substitution guard: a red verify run is never self-ticked :oneshot:
-:PROPERTIES:
-:CREATED:  [2026-07-18 Sat 23:33]
-:END:
-- State "DONE"       from "TODO"       [2026-07-23 Thu 21:54]
-:LOGBOOK:
-- Note taken on [2026-07-23 Thu 21:54] \\
-  Shipped in 0.7.1 (ce4e929), one pass, three files as groomed. story-closeout carries the primary rule with its single sanctioned exit: a failing backing check (declared ~Verify command:~, test run, or the check the item itself states) never yields =[X]= under a reinterpreted, narrowed, or substituted bar — surface to the human, who may rule a documented deferral; only that ruling makes =[-]= legitimate for a red-run item, recorded in the LOGBOOK alongside the failing evidence. story-verifier's hard rules gain the matching verify-the-bar-as-written posture (a failing run is NOT MET however near the miss); phase-close step 1 extends "never fake a result" — jewel sentence untouched — to the automated checks, with unfixable failures routed to a human deferral ruling in the gate record. Dry read-through against bear-cub gamification stories confirmed the phrasing fits real AC items; ~test/hooks_test.sh~ green (45/45). The retro's third observation (advisory withdrawal by age heuristic instead of the reintroduction test) was not part of this item's scope and ships nothing here.
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B], tagged oneshot. Verified open — phase-close has "never fake a result" for manual gate criteria, but no never-self-tick-a-red-run rule exists in story-closeout, story-verifier, or phase-close at 0.6.0. One pass, three files; pairs with the doc-commit entry above (both edit story-closeout).
-- Note taken on [2026-07-18 Sat 23:33] \\
-  Retro-born (bear-cub gamification retro, 2026-07-17): ~story-closeout~ — a red verify run is never self-ticked; surface to the human, who may rule a documented deferral. Matching verify-the-bar-as-written language belongs in ~story-verifier~ and ~phase-close~ too. This batch, advisory withdrawal used an age heuristic instead of the reintroduction test.
-:END:
-
-** TODO [#C] governance-file reconciliation: update-design corrects design-language.org/learnings.org in the same pass
-:PROPERTIES:
-:CREATED:  [2026-07-18 Sat 23:33]
-:END:
-:LOGBOOK:
+- Note taken on [2026-10-11 Sun 06:58] \\
+  Groom [2026-10-11 Sun]: DECOUPLED, stands alone, [#C] unchanged. The bundle it rode with is dissolved — the initiative-close entry is KILLed (docs/wontdo.org) and the lessons codification it waited on shipped in 0.6.2 (3207d88), so the 2026-07-22 blocker is gone. Two batches of evidence (routine-schedule, weather-indicator) that update-design parks repo-level lessons in the chain; a third appearance sizes it.
 - Note taken on [2026-10-08 Thu 13:36] \\
   Evidence (bear-cub weather-indicator retro, 2026-10-08): three dev-environment facts — a Playwright resize that did not take, freezing the settle beat with ~liveSocket.disconnect()~, ~hydrate_cache/1~ undoing a staged cache — were written into PLAN LOGBOOK notes and moved to ~docs/learnings.org~ by hand at the retro; routine-schedule did the same for a Tailwind note. Second batch where update-design parked a repo-level lesson in the chain. Still coupled to the bundle; not built from the retro.
 - Note taken on [2026-07-22 Wed 21:20] \\
@@ -200,7 +95,7 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Retro-born (bear-cub gamification retro, 2026-07-17): ~update-design~'s checklist gains — if the pivot touches anything recorded in ~design-language.org~ or ~learnings.org~, correct that recording in the same pass. ~design-language.org~ went stale against D51/D52 within a day this batch.
 :END:
 
-** TODO [#C] AC altitude + TDD proportionality guidance in user-stories :oneshot:
+* TODO [#C] AC altitude + TDD proportionality guidance in user-stories :oneshot:
 :PROPERTIES:
 :CREATED:  [2026-07-18 Sat 23:33]
 :END:
@@ -209,107 +104,4 @@ Registrar files (backlog.org, learnings.org, design-language.org) are append-mos
   Groom [2026-07-22 Wed]: KEPT, [#C], tagged oneshot. user-stories carries the Technical Notes section but no altitude guidance at 0.6.0. Per the retro's cross-cutting ruling, this ships as template examples, not prose rules — crafting work, hence oneshot rather than hand.
 - Note taken on [2026-07-18 Sat 23:33] \\
   Retro-born (bear-cub gamification retro, 2026-07-17): ~user-stories~ guidance that ACs state behavior at the changeset/context level (migration/deployment mechanics go in Technical Notes instead); TDD guidance that framework contracts get no bespoke test harnesses at personal-mvp weight. Cross-cutting note for all five items captured from this retro: rulings ship as templates and examples in the skills, not prose rules — this batch proved sessions follow the nearest example over the stated rule.
-:END:
-
-** DONE [#C] authority marking in DESIGN docs: D-entries vs session-authored elaboration :hand:
-:PROPERTIES:
-:CREATED:  [2026-07-19 Sun 00:07]
-:END:
-- State "DONE"       from "TODO"       [2026-07-22 Wed 21:28]
-:LOGBOOK:
-- Note taken on [2026-07-22 Wed 21:28] \\
-  Shipped in 0.6.1 (b115ac9): org-conventions' Decision Log section closes with the yields-to-owner rule; promote-design carries the same rule plus the attribution discipline and the human-ruled pendulum counterweight, placed above its steps where it governs skeptic-review pushback in step 4.
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#C], tagged hand. No elaboration or authority language in org-conventions or promote-design at 0.6.0. The capture note below already carries the sentences to add, pendulum note included — an inert edit.
-- Note taken on [2026-07-19 Sun 00:07] \\
-  Retro-born (bear-cub gamification retro, 2026-07-17): human-litigated decisions (D-entries) and session-authored body elaboration are currently unmarked, and downstream layers defend session choices with decision-grade authority ("the design specifies…" when no decision does). Observed this batch: the derivation's implementation shape lived only in session-authored Context-bullet prose, but was cited downstream as if the human had ruled it. Fix: an elaboration-yields-to-owner sentence in ~org-conventions~ and ~promote-design~ (body prose beyond what a D-entry settles is implementation guidance, not contract — it yields to owner preference without ceremony), plus an honest-attribution discipline for sessions: canon is defended as canon with the citation checked; session choices are defended as choices, on the merits of the specific proposal at hand, not the category it resembles. Pendulum note, human-ruled: un-ruled positions are NOT thereby indefensible — pushback that keeps work on track is valued; the discipline governs what the defense is made of, not whether to defend.
-:END:
-
-** TODO dirty-tree rule: the "unexplained" qualifier licenses classify-and-commit
-:PROPERTIES:
-:CREATED:  [2026-07-23 Thu 16:50]
-:END:
-:LOGBOOK:
-- Note taken on [2026-07-23 Thu 16:50] \\
-  Observed 2026-07-23, bear-cub 0.7.0 adoption pass: the session found the tree dirty, classified the dirt itself ("post-retro housekeeping sweep"), committed it, and proceeded — and reported that as compliant with the rule. The template wording enables the reading: "refuses to start over a dirty working tree; unexplained working-tree state is surfaced to the human" lets a session decide the state IS explained and skip the surfacing — classify-and-commit is still classify-and-fix, just with a safer verb than the deletion incident that birthed the rule. Candidate fix when this earns an edit: the refusal is unconditional — only the human rules dirt explained; the session's move is always report-and-wait (the backlog-grooming shakedown note already draws the same registrar-dirt vs. unrelated-dirt line for the groom skill; keep the two consistent). One instance so far — tighten on second appearance, or fold into whichever ships first of the grooming-skill build / the next CLAUDE.md-template pass.
-:END:
-
-** DONE [#B] dev server as a session precondition: start-on-session hook + tidewave.proxy :promote:
-:PROPERTIES:
-:CREATED:  [2026-10-05 Mon 17:10]
-:END:
-- State "DONE"       from "TODO"       [2026-10-05 Mon 13:03]
-:LOGBOOK:
-- Note taken on [2026-10-05 Mon 13:03] \\
-  Narrowed to an MVP by ruling and shipped in 0.8.9: the human stays responsible for starting the server; tidewave-preflight now warns the human directly at session start (~systemMessage~: start the dev server, reconnect tidewave in ~/mcp~) and has the session raise it in its first reply. Default port 4000 kept; no proxy move. Ruling reasons: starting a server in the background is not acceptable without a clean way to stop it when no session needs it, and the server the hook would start is the whole development server, not a Tidewave sidecar, so automating it deserves its own design. Applicability stays the registered ~/tidewave/mcp~ URL with no ~mix.exs~ check — a registered Tidewave that is not answering is a problem in any stack. The automation and this item's three open questions move to the "session-owned dev server" entry below, with the answers found.
-- Note taken on [2026-10-05 Mon 17:10] \\
-  Retro-born (bear-cub routine-schedule batch 1, ruling "The dev server was not running", docs/2026-10-04-routine-schedule/retro.org). Two stories stalled on Tidewave because ~mix phx.server~ had never been started; the recovery was the human starting it or reconnecting the MCP server by hand. Tidewave's ~project_eval~ already reloads code before every eval, so a running server is current for ~lib/~ and ~dev/~ — the failure is remembering to run it, plus what the reloader cannot do (~mix.exs~, ~config/~, a migration added mid-batch). bear-cub also sits on the default port 4000 with every other Phoenix project on the machine.
-  Ruled shape: a session-start mechanism probes the repo's dev port, starts the server detached when nothing answers, waits for the probe, and reports when ~mix.exs~ or ~config/~ is newer than the running server; dev migrates on boot; no per-session tear-down (SessionEnd is not guaranteed to fire and a second open session would lose the server), a by-hand stop instead; the MCP registration moves to ~mix tidewave.proxy~ (stdio, a required ~port~ argument on every tool, forwards to ~127.0.0.1:port~, advertises its tool list without contacting the app — so registration succeeds with the app down, which removes the reconnect-by-hand step; needs a tidewave bump past 0.6.1). The repo takes a dedicated port (~BEAR_CUB_PORT~, default off 4000) read by ~config/dev.exs~ and named in CLAUDE.md so sessions pass it.
-  Open before building: (1) where the hook lives — the consuming repo's ~.claude/settings.json~, a kit hook gated on a CLAUDE.md line in the ~Verify command:~ / ~Local review:~ style (something like ~Dev server: mix phx.server on $BEAR_CUB_PORT~), or the dotfiles repo if it is a per-machine concern; the kit option is the one that generalises and the only one that keeps weight class as the amplitude knob, but it is a hook change and so owes ~test/hooks_test.sh~ cases; (2) whether ~mix tidewave.proxy~ compiles the project when it starts — a mix task in the project dir normally does, which would contend with the running server for ~_build~ and add the compile time to every session start; one read of ~Tidewave.MCP.Stdio.run/2~ answers it; (3) whether the proxy must run from the project directory (then a project ~.mcp.json~ entry) or can be one user-level entry serving every Phoenix project (then dotfiles). Acceptance: a fresh bear-cub session with no server running reaches ~project_eval~ with no human step; a second concurrent session does not start a second server; the retro of the next bear-cub batch records zero Tidewave stalls.
-:END:
-
-** TODO [#B] session-owned dev server: Claude starts, uses and stops the project's dev server :promote:
-:PROPERTIES:
-:CREATED:  [2026-10-05 Mon 13:03]
-:END:
-:LOGBOOK:
-- Note taken on [2026-10-05 Mon 13:03] \\
-  Follow-up to the 0.8.9 MVP (the "dev server as a session precondition" entry above). Goal: the session, not the human, makes sure the dev server is running, and stops it when no session needs it — for the whole development experience (browser review, logs, staging states), not only so Tidewave answers. Needs its own requirements before any build: what a session may do with a server it controls (start, restart after ~mix.exs~ / ~config/~ / migration changes, read its log), how the session and the human each learn its URL, and what happens to a server the human started by hand.
-  Findings from the 2026-10-05 design conversation, so they are not re-derived. (1) ~mix tidewave.proxy~ (tidewave 0.9.1, already in bear-cub) declares only ~@requirements ["loadpaths"]~: it compiles stale deps, never the project, so it adds no project compile at session start; it may briefly wait on Mix's build lock while the server compiles. (2) It is a Mix task from the tidewave dep, so it runs from the project directory and registers in the project's ~.mcp.json~; a user-level entry would spawn a failing server in every other repo. (3) Each proxied tool takes a required ~port~ argument, so the session must be told the port. (4) Claude Code runs a stdio MCP server as a child of the session; when the session ends by any route, including a crash or ~kill -9~, the pipe closes and the proxy exits. That is a reliable end-of-session signal where SessionEnd is not. The candidate shape: ~.mcp.json~ runs a project script instead of the bare proxy; the script starts the server as its own child when the port is free (stdin from ~/dev/null~, output to a log, never to stdout, which is the MCP channel), writes a pidfile and a portfile, runs the proxy in the foreground, and a watcher process stops the server and removes both files once the script is gone; a second session reads the portfile and reuses the server; a server it did not start is never stopped. Rare concurrent sessions in bear-cub make losing the server when the owning session closes acceptable. (5) Port: derived from the repo path (e.g. 4100 + hash mod 900, next free if taken) rather than random, so a restart keeps the port the session and browser already use; a ~mkdir~ lock around check-portfile, pick, start, write closes the two-sessions race. bear-cub's ~config/runtime.exs~ reads ~PORT~ for every non-test env, so a ~PORT~ the script sets wins over ~dev.exs~. (6) One server, not two: a Tidewave-only server beside a human one on 4000 works mechanically (bear-cub's ~listeners: [Phoenix.CodeReloader]~ makes a shared ~_build~ safe) but Tidewave then inspects a VM the human is not looking at — its logs, live state, and PubSub broadcasts (bear-cub's ~:schedule_changed~ scenario staging) stay in the other VM — and both run the asset watchers into one ~priv/static~. (7) A server started by hand has no portfile and would be invisible to the script; either hand starts go through the script, or the script adopts a listening ~beam~ whose cwd is the repo.
-:END:
-
-** Promotion candidates
-
-*** TODO [#B] [doctrine] initiative-close skill designed but not built :promote:
-:PROPERTIES:
-:CREATED:  [2026-07-11 Sat 13:04]
-:END:
-:LOGBOOK:
-- Note taken on [2026-07-22 Wed 21:20] \\
-  Groom [2026-07-22 Wed]: KEPT, [#B] promote, still the top promotion candidate — no ~skills/initiative-close/~ at 0.6.0; ~templates/PLAN.org~ line 17 still carries the stale "Promoted to v2 candidates" comment. Bundle grows: the governance-file reconciliation entry (2026-07-18) is coupled in per this groom's ruling, alongside the kit-side lessons codification already bundled.
-- Note taken on [2026-07-13 Mon 22:53] \\
-  Groom [2026-07-13 Mon]: PROMOTION CANDIDATE, [#B] — flagged only; the promotion runs in a fresh session. Verified not built (no ~skills/initiative-close/~ at 0.5.0); corroborated open by ~templates/PLAN.org~ line 17 still carrying the stale "Promoted to v2 candidates at initiative close" comment that note (2) below orders fixed. Bundles the kit-side lessons codification item above per groom ruling.
-- Note taken on [2026-07-11 Sat 13:04] \\
-  Carried forward from friction.org (retired). Chain-retirement extraction
-  pass, distinct from the per-batch gate: harvest confirmations from
-  surviving Decision Log entries and corrections from withdrawn advisories +
-  prior friction notes into a lessons store (one lesson per file, one-line
-  summary at top; record corrections and confirmed approaches with why they
-  mattered; don't duplicate what the repo or git already records; update
-  rather than duplicate; delete notes that prove wrong). Also owns Deferred
-  -> v2-candidate promotion and the stages-earned-their-keep retrospective --
-  both pulled out of phase-close in 0.3.0. Blocked on a real initiative
-  actually closing; do not build speculatively.
-- Note taken on [2026-07-12 Sun 12:26] \\
-  Spec corrections accumulated since the note above — when this is built, build to CURRENT doctrine, not the 0.3.0-era note:
-  (1) "one lesson per file" is superseded: lessons live in the single cumulative repo-level ~docs/learnings.org~ (one dated entry per learning);
-  (2) "Deferred → v2-candidate promotion" is superseded by the non-sequential-initiatives ruling: the step is "sweep PLAN's Deferred into the repo-level backlog" (a per-repo todo/backlog file) — no versioning language anywhere; ALSO fix the PLAN template's Deferred comment, which still says "Promoted to v2 candidates at initiative close";
-  (3) advisory withdrawal at close doubles as promotion review to lessons (unchanged);
-  (4) still blocked on a real initiative actually closing — bear-cub MVP close is on hold (Phase 5 unresolved) and extras is mid-batch; do not build speculatively. When one closes, the manual run is the spec shakedown.
-- Note taken on [2026-07-12 Sun 17:15] \\
-  UNBLOCKED 2026-07-12: extras initiative closed via a manual pass (bear-cub
-  86d9bf6) — this 11-step observed sequence is the empirical spec; build the
-  skill from it, not from the 0.3.0-era note above:
-  (1) load org-conventions before writing anything; (2) read learnings.org,
-  the chain's PLAN (gate record + Deferred), and confirm/locate the repo
-  backlog file (create docs/backlog.org with the standard header if absent);
-  (3) verify lesson citations against the DESIGN's actual Decision Log text,
-  never the gate summary; (4) read repo CLAUDE.md in full to enumerate
-  retirement edits; (5) append lessons to learnings.org, house format,
-  newest-first, harvesting selectively (gate-flagged candidates + surviving
-  D-entries that generalize — most don't); (6) sweep every PLAN Deferred item
-  to the backlog: condensed, file pointers and act-only-if conditions kept,
-  provenance-tagged; COPY forward — never edit the chain's Deferred section;
-  (7) self-check all written org for line-initial asterisks from quoted code
-  or error text (grep '^\*\*') — also a candidate rule for org-conventions
-  itself; (8) CLAUDE.md retirement edits: Active initiative → none-marker,
-  chain to historical tier with its D-range, backlog/learnings in the
-  repo-level tier, next-D pointer bumped; (9) one document-level LOGBOOK
-  drawer under the PLAN title recording the closure — gate record and story
-  entries untouched; (10) repo verify command before staging; (11) stage the
-  doc files explicitly by name and commit marking the initiative closed.
-  Skill boundaries when built: audits-not-maintains posture inherited from
-  phase-close; refuses to run on a chain whose last batch has no gate
-  record; the retrospective (stages-earned-their-keep) stays HUMAN — the
-  skill may prompt for it but never writes it.
 :END:
