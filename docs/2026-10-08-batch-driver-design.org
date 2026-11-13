@@ -56,7 +56,7 @@ These are the interruptions whose answer is never a judgment, taken from the ret
 
 - The driver stops before phase-close. The gate is where this batch's divergence check and advisory judgments landed, and the retro section is the human's by rule. A later ruling may add the gate as a fifth prompt once two or three batches have run clean; not now.
 - PRD.org is never touched. prd-lock runs in the headless session as it does today.
-- One open batch at a time, as org-conventions says; the driver refuses when PLAN.org has no open batch or the active initiative cannot be resolved from CLAUDE.md's ~Active initiative:~ line.
+- One open batch at a time, as org-conventions says; the driver refuses when PLAN.org has no open batch or the active initiative cannot be resolved from the ~Active initiative:~ line in CLAUDE.local.md.
 - Weight class: the driver adds no ceremony to any skill, so it needs no gate; a personal-mvp repo opts in by running it.
 
 ** Preconditions, settled at the retro

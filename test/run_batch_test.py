@@ -7,7 +7,8 @@ weather-indicator chain, never hand-built:
   open/…/PLAN.org              fb02740  (Stories 01–03 DONE, 04–05 TODO)
   open/…/story-04-….org        9bb9999  (ticked by its close-out)
   open/…/story-05-….org        354a999  (as written, nothing ticked)
-  */CLAUDE.md                  the first three lines of bear-cub's CLAUDE.md
+  */CLAUDE.md                  the first line of bear-cub's CLAUDE.md
+  */CLAUDE.local.md            its Active initiative: line, moved there (0.9.7)
 Story 04 ticked while its PLAN heading still reads TODO is the state an
 implementer that self-triggers story-closeout leaves behind.
 
@@ -98,6 +99,10 @@ class Base(unittest.TestCase):
             json.dump({"permissions": {"defaultMode": "auto"}}, f)
         self.repo = os.path.join(self.tmp, "repo")
         shutil.copytree(os.path.join(FIX, self.fixture), self.repo)
+        # as project-setup/.gitignore does; kept out of the fixture so the kit
+        # repo still tracks the fixture's CLAUDE.local.md
+        with open(os.path.join(self.repo, ".gitignore"), "w") as f:
+            f.write("CLAUDE.local.md\n")
         git(self.repo, "init", "-q")
         git(self.repo, "add", "-A")
         git(self.repo, "commit", "-qm", "fixture")
@@ -131,8 +136,62 @@ class OpenBatch(Base):
         self.assertEqual(batch.title, "Batch 1 — Weather indicator")
         self.assertEqual([s.path for s in batch.todo(INIT)], [S04, S05])
 
-    def test_initiative_from_claude_md(self):
+    def test_initiative_from_claude_local_md(self):
         self.assertEqual(rb.active_initiative(self.repo), INIT)
+
+    def move_line_to_claude_md(self):
+        local = os.path.join(self.repo, "CLAUDE.local.md")
+        line = rb.read(local)
+        os.remove(local)
+        with open(os.path.join(self.repo, "CLAUDE.md"), "a") as f:
+            f.write("\n" + line)
+
+    def test_line_in_claude_md_not_read_and_refused_with_move_hint(self):
+        self.move_line_to_claude_md()
+        with self.assertRaises(rb.Refusal) as cm:
+            rb.active_initiative(self.repo)
+        self.assertIn("move it to CLAUDE.local.md", str(cm.exception))
+
+    def test_line_in_both_files_reads_claude_local_md(self):
+        with open(os.path.join(self.repo, "CLAUDE.md"), "a") as f:
+            f.write("\nActive initiative: docs/2026-10-05-night-owl-bonus/\n")
+        self.assertEqual(rb.active_initiative(self.repo), INIT)
+
+    def test_no_claude_local_md_refused(self):
+        os.remove(os.path.join(self.repo, "CLAUDE.local.md"))
+        with self.assertRaises(rb.Refusal) as cm:
+            rb.active_initiative(self.repo)
+        self.assertIn("no CLAUDE.local.md", str(cm.exception))
+
+    def test_none_initiative_refused(self):
+        with open(os.path.join(self.repo, "CLAUDE.local.md"), "w") as f:
+            f.write("Active initiative: none\n")
+        with self.assertRaises(rb.Refusal) as cm:
+            rb.active_initiative(self.repo)
+        self.assertIn("names no active initiative", str(cm.exception))
+
+    def test_chain_ignored_refuses_when_git_fails(self):
+        # check-ignore exits 0 ignored, 1 not ignored, 128 on a fatal error
+        os.makedirs(os.path.join(self.tmp, "not-a-repo"))
+        with self.assertRaises(rb.Refusal) as cm:
+            rb.chain_ignored(os.path.join(self.tmp, "not-a-repo"), INIT)
+        self.assertIn("git check-ignore failed", str(cm.exception))
+
+    def test_git_failure_mid_story_is_a_stop_with_resume_hint(self):
+        def corrupt_index(repo):
+            mark_done(repo, S04)
+            with open(os.path.join(repo, ".git", "index"), "w") as f:
+                f.write("garbage")
+        self.stub([(corrupt_index, reply("RESULT: done", "sess-a"))])
+        rc, out = self.run_driver()
+        self.assertNotEqual(rc, 0)
+        self.assertIn("STOP at commit for story-04", out)
+        self.assertIn("Resume with: claude --resume sess-a", out)
+        self.assertNotIn("run-batch: refusing", out)
+
+    def test_system_prompt_forbids_force_adding_ignored_paths(self):
+        self.assertIn("git add -f", rb.SYSTEM_PROMPT)
+        self.assertIn("RESULT: blocked", rb.SYSTEM_PROMPT)
 
     def test_open_items_counted_and_unparseable_story_refused(self):
         self.assertEqual(rb.open_items(os.path.join(self.repo, S04)), 0)
@@ -199,7 +258,8 @@ class OpenBatch(Base):
         self.assertIn("STOP at commit", out)
         self.assertEqual(head, subprocess.run(["git", "-C", self.repo, "rev-parse", "HEAD"], capture_output=True, text=True).stdout)
         self.assertTrue(seen)
-        self.assertEqual({a[a.index("-C") + 2] for a in seen}, {"status"})
+        # read-only git only
+        self.assertLessEqual({a[a.index("-C") + 2] for a in seen}, {"status", "ls-files", "check-ignore"})
 
     def test_stops_before_phase_close(self):
         for story in (S04, S05):
@@ -362,6 +422,78 @@ class OpenBatch(Base):
         self.assertNotEqual(rc, 0)
         self.assertEqual(s.calls, [])
         self.assertIn("127.0.0.1:1/tidewave/mcp", out)
+
+
+class IgnoredChain(Base):
+    """The chain documents are git-ignored, as galileo's .git/info/exclude does with docs/."""
+
+    def setUp(self):
+        super().setUp()
+        git(self.repo, "rm", "-rq", "--cached", "docs")
+        git(self.repo, "commit", "-qm", "untrack the chain")
+        with open(os.path.join(self.repo, ".git", "info", "exclude"), "a") as f:
+            f.write("docs/\n")
+
+    def leave_code(self, repo):
+        # the story's code is still uncommitted when update-design finishes
+        mark_done(repo, S04)
+        with open(os.path.join(repo, "lib.ex"), "w") as f:
+            f.write("x")
+
+    def test_commit_prompt_asks_for_code_commit_only(self):
+        s = self.stub([
+            (self.leave_code, reply("RESULT: done", "a")),
+            (None, reply("RESULT: blocked — x", "a")),
+        ])
+        self.run_driver()
+        prompt = s.prompts()[1]
+        self.assertTrue(prompt.startswith("commit"), prompt)
+        self.assertIn("git-ignores", prompt)
+        self.assertIn(INIT, prompt)
+        self.assertIn("only the code commit", prompt)
+
+    def test_dry_run_says_docs_commit_is_skipped(self):
+        self.stub([])
+        rc, out = self.run_driver("--dry-run")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("chain documents: git-ignored", out)
+
+    def test_force_added_ignored_path_is_a_stop(self):
+        def force(repo):
+            git(repo, "add", "lib.ex")
+            git(repo, "add", "-f", S04)
+            git(repo, "commit", "-qm", "story")
+        self.stub([
+            (self.leave_code, reply("RESULT: done", "a")),
+            (force, reply("Committed.\nRESULT: done", "a")),
+        ])
+        rc, out = self.run_driver()
+        self.assertNotEqual(rc, 0)
+        self.assertIn("STOP at commit", out)
+        self.assertIn(S04, out)
+        self.assertIn("git-ignored", out)
+
+    def test_code_only_commit_passes(self):
+        def code(repo):
+            self.commit_all(repo)
+        self.stub([
+            (self.leave_code, reply("RESULT: done", "a")),
+            (code, reply("Committed.\nRESULT: done", "a")),
+            (None, reply("RESULT: blocked — stop at 05", "b")),
+        ])
+        rc, out = self.run_driver()
+        self.assertNotIn("STOP at commit", out)
+        self.assertIn("STOP at implement for story-05", out)
+
+
+class NotIgnored(Base):
+    def test_commit_prompt_unchanged_when_chain_tracked(self):
+        s = self.stub([
+            (lambda r: mark_done(r, S04), reply("RESULT: done", "a")),
+            (None, reply("RESULT: blocked — x", "a")),
+        ])
+        self.run_driver()
+        self.assertEqual(s.prompts()[1], "commit")
 
 
 class ClosedBatch(Base):

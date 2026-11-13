@@ -1,3 +1,7 @@
 # Brainstorm specs: scratch material for PRD/DESIGN drafting, never committed.
 # See org-conventions' Document chain & version control section.
 docs/superpowers/specs/
+
+# Per-user working state: the Active initiative: line lives here, and
+# run-batch.py refuses a dirty tree. See org-conventions' path resolution.
+CLAUDE.local.md

@@ -24,7 +24,7 @@ Soft bound: there is no turn count. If the conversation circles, say so, state w
 
 ## SKETCH.org
 
-The initiative directory `docs/YYYY-MM-DD-<initiative-slug>/` (date = today, via `date '+%Y-%m-%d'`; slug from the working name of the idea) is created at the first parked line or the first PRD draft, whichever comes first; set or update the `Active initiative:` line in the repo's CLAUDE.md at the same moment, noting its previous value. Create `SKETCH.org` in the directory from the repo-local `templates/SKETCH.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/SKETCH.org`, and append parked thoughts as list items, one per line, in the order they came up. No LOGBOOK, no timestamps, no sections. SKETCH.org has no authority and is never cited by any chain document; DESIGN.org supersedes it on contact.
+The initiative directory `docs/YYYY-MM-DD-<initiative-slug>/` (date = today, via `date '+%Y-%m-%d'`; slug from the working name of the idea) is created at the first parked line or the first PRD draft, whichever comes first; set or update the `Active initiative:` line in the repo's CLAUDE.local.md at the same moment, noting its previous value (create the file if absent, and if the repo's CLAUDE.md still carries the line, move it from there). Create `SKETCH.org` in the directory from the repo-local `templates/SKETCH.org` if present, otherwise `${CLAUDE_PLUGIN_ROOT}/templates/SKETCH.org`, and append parked thoughts as list items, one per line, in the order they came up. No LOGBOOK, no timestamps, no sections. SKETCH.org has no authority and is never cited by any chain document; DESIGN.org supersedes it on contact.
 
 ## Exit
 

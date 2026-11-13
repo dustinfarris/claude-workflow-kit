@@ -15,7 +15,7 @@ All durable planning artifacts are org format, never markdown: PRD.org, DESIGN.o
 
 The document chain for an initiative lives in a date-stamped initiative directory: `docs/YYYY-MM-DD-<initiative-slug>/` containing PRD.org, DESIGN.org, PLAN.org, and `stories/`. One initiative = one chain; phases of the same initiative share the directory (a new dated directory means a new PRD, not a new phase). `retro.org` lives alongside them: phase-close appends one batch section per gate crossed, holding the per-story metrics table, session observations, and a human-only Retro subheading. `SKETCH.org`, when present, sits beside PRD.org: scratch parked during the PRD conversation, the starting material for the design brainstorm, org like the rest, and never a chain document.
 
-Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.md, (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
+Path resolution, in order: (1) the `Active initiative:` line in the repo's CLAUDE.local.md — never CLAUDE.md: which chain is active is one person's working state, and a shared CLAUDE.md is not always that person's to edit; CLAUDE.local.md stays git-ignored — (2) the newest `docs/*/` dated initiative directory, (3) the repo root (legacy layout). Filenames inside the directory stay canonical uppercase (PRD.org, DESIGN.org, PLAN.org) — the prd-lock hook matches `*PRD.org` at any depth, and lowercase names escape the lock.
 
 ## Lessons file
 

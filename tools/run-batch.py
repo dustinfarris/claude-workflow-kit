@@ -21,6 +21,11 @@ only for a connection lost mid-response. A stage with no result within
 --stage-timeout minutes (default 60) is killed and is a stop: in -p mode a
 step waiting on a permission prompt would otherwise hang without a word.
 
+The Active initiative: line is read from CLAUDE.local.md only.
+When the chain documents are git-ignored, the commit prompt asks for the code
+commit only, and a commit stage that leaves a newly tracked ignored path (a
+force-add) is a stop.
+
 It refuses with no open batch, a dirty tree before a story's implement stage,
 a Tidewave dev server not answering, or a bypassPermissions default. The
 permission mode is the human's interactive default (permissions.defaultMode).
@@ -71,8 +76,10 @@ Expected outcome of each turn:
 - implement: the story's code and tests written and the repo's verify command green.
 - /workflow-kit:story-closeout: every Acceptance Criteria and Definition of Done item ticked from the verifier's pass, or a named item the human must rule on (blocked).
 - /workflow-kit:update-design: the story's PLAN heading marked DONE, and a DESIGN body edit only together with its Decision Log entry and Advisory.
-- commit: a code commit, then a doc-only commit, and a clean working tree. A commit that cannot be signed is blocked; never bypass signing.
-- continue: finish the turn the lost connection interrupted, with its expected outcome."""
+- commit: a code commit, then a doc-only commit, and a clean working tree; only the code commit when the prompt says the repo git-ignores the chain documents. A commit that cannot be signed is blocked; never bypass signing.
+- continue: finish the turn the lost connection interrupted, with its expected outcome.
+
+Never stage a path git ignores: no git add -f, no git add --force, no editing .gitignore or .git/info/exclude to get a file in. What a repo keeps out of its history stays out. If a stage seems to need an ignored file committed, end with RESULT: blocked and name the file."""
 
 
 class Refusal(Exception):
@@ -91,13 +98,18 @@ def read(path):
 # --- the chain -------------------------------------------------------------
 
 def active_initiative(repo):
-    """The initiative directory named by CLAUDE.md's Active initiative: line."""
-    path = os.path.join(repo, "CLAUDE.md")
-    if not os.path.isfile(path):
-        raise Refusal("no CLAUDE.md, so no Active initiative: line to resolve the chain from")
-    m = re.search(r"^Active initiative:\s*(\S+)", read(path), re.M)
+    """The initiative directory named by CLAUDE.local.md's Active initiative: line.
+    CLAUDE.md is read only to say the line must move when it is still there."""
+    line = re.compile(r"^Active initiative:\s*(\S+)", re.M)
+    local, shared = (os.path.join(repo, n) for n in ("CLAUDE.local.md", "CLAUDE.md"))
+    m = line.search(read(local)) if os.path.isfile(local) else None
+    if not m:
+        if os.path.isfile(shared) and line.search(read(shared)):
+            raise Refusal("the Active initiative: line is in CLAUDE.md; move it to CLAUDE.local.md, where the chain is resolved from")
+        if not os.path.isfile(local):
+            raise Refusal("no CLAUDE.local.md, so no Active initiative: line to resolve the chain from")
     if not m or m.group(1).rstrip(".") == "none":
-        raise Refusal("CLAUDE.md names no active initiative")
+        raise Refusal("CLAUDE.local.md names no active initiative")
     init = m.group(1).rstrip("/")
     if not os.path.isfile(os.path.join(repo, init, "PLAN.org")):
         raise Refusal(f"no PLAN.org in the active initiative {init}/")
@@ -181,6 +193,31 @@ def git_status(repo):
     if r.returncode:
         raise Refusal(f"git status failed: {r.stderr.strip()}")
     return r.stdout.strip()
+
+
+def chain_ignored(repo, init):
+    """True when the chain documents are untracked and git-ignored (galileo's
+    .git/info/exclude keeps docs/ out), so there is no doc-only commit to make."""
+    r = subprocess.run(["git", "-C", repo, "check-ignore", "-q", os.path.join(init, "PLAN.org")],
+                       capture_output=True, text=True)
+    if r.returncode not in (0, 1):
+        raise Refusal(f"git check-ignore failed: {r.stderr.strip()}")
+    return r.returncode == 0
+
+
+def tracked_ignored(repo):
+    """Tracked paths that match an ignore rule; a new one after a commit stage was force-added."""
+    r = subprocess.run(["git", "-C", repo, "ls-files", "-ci", "--exclude-standard"], capture_output=True, text=True)
+    if r.returncode:
+        raise Refusal(f"git ls-files failed: {r.stderr.strip()}")
+    return set(r.stdout.split("\n")) - {""}
+
+
+def commit_prompt(repo, init):
+    if not chain_ignored(repo, init):
+        return PROMPTS["commit"]
+    return (f"{PROMPTS['commit']} — this repo git-ignores the chain documents under {init}/, so make only the code commit "
+            f"and leave them uncommitted; never force-add an ignored path")
 
 
 def plan_status(repo, init, story):
@@ -354,28 +391,46 @@ def run_story(repo, init, story, mode, timeout_min=STAGE_TIMEOUT_MIN):
         if dirty:
             raise Refusal(dirty_message(story, dirty))
     session, started = str(uuid.uuid4()), False
-    for stage in STAGES[STAGES.index(start):]:
-        if stage != "implement" and predicate(stage, repo, init, story):
-            print(f"  {stage}: already done, skipped")
-            continue
-        prompt = f"implement @{story.path}" if stage == "implement" else PROMPTS[stage]
-        print(f"  {stage}: {prompt}", flush=True)
-        try:
-            data = claude(prompt, repo, mode, session, started, timeout_min * 60)
-            started = True
-            session = data.get("session_id") or session
-            if lost(data):
-                print(f"  {stage}: connection lost, sending {CONTINUE} once", flush=True)
-                data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60)
+    try:
+        for stage in STAGES[STAGES.index(start):]:
+            if stage != "implement" and predicate(stage, repo, init, story):
+                print(f"  {stage}: already done, skipped")
+                continue
+            if stage == "implement":
+                prompt = f"implement @{story.path}"
+            elif stage == "commit":
+                prompt = commit_prompt(repo, init)
+                ignored_before = tracked_ignored(repo)
+            else:
+                prompt = PROMPTS[stage]
+            print(f"  {stage}: {prompt}", flush=True)
+            try:
+                data = claude(prompt, repo, mode, session, started, timeout_min * 60)
+                started = True
                 session = data.get("session_id") or session
-        except StageTimeout:
-            return stop(stage, story, session, None,
-                        f"no result after {timeout_min:g} min, so the stage was stopped; a step waiting on a permission prompt looks like this")
-        if not clean(data):
-            return stop(stage, story, session, data.get("result"), "the turn did not end in a clean " + DONE_LINE)
-        if stage != "implement" and not predicate(stage, repo, init, story):
-            return stop(stage, story, session, data.get("result"),
-                        f"the turn said done but its artifact disagrees ({describe(stage, repo, init, story)})")
+                if lost(data):
+                    print(f"  {stage}: connection lost, sending {CONTINUE} once", flush=True)
+                    data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60)
+                    session = data.get("session_id") or session
+            except StageTimeout:
+                return stop(stage, story, session, None,
+                            f"no result after {timeout_min:g} min, so the stage was stopped; a step waiting on a permission prompt looks like this")
+            if not clean(data):
+                return stop(stage, story, session, data.get("result"), "the turn did not end in a clean " + DONE_LINE)
+            if stage != "implement" and not predicate(stage, repo, init, story):
+                return stop(stage, story, session, data.get("result"),
+                            f"the turn said done but its artifact disagrees ({describe(stage, repo, init, story)})")
+            if stage == "commit":
+                forced = sorted(tracked_ignored(repo) - ignored_before)
+                if forced:
+                    return stop(stage, story, session, data.get("result"),
+                                "the turn committed git-ignored path(s) this repo keeps out of its history: " + ", ".join(forced)
+                                + ". Undo that commit's additions by hand (git rm --cached, then amend or a new commit) before rerunning.")
+    except Refusal as e:
+        # a git read failing mid-story: stop with the session, not a bare refusal
+        if not started:
+            raise
+        return stop(stage, story, session, None, str(e))
     return 0
 
 
@@ -401,6 +456,8 @@ def preflight(repo):
 def dry_run(repo, init, batch, problems):
     stories = batch.todo(init)
     print(f"working tree: {'clean' if git_status(repo) == '' else 'dirty'} (now)")
+    print("chain documents: " + ("git-ignored, so the commit stage asks for the code commit only" if chain_ignored(repo, init)
+                                 else "tracked, so the commit stage asks for a code commit and a doc-only commit"))
     first = None
     for story in stories:
         print(f"\n{story.name}  ({story.path})")
