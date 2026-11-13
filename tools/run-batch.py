@@ -270,29 +270,38 @@ def permission_mode(repo):
     return None, None
 
 
+TIDEWAVE_URL = re.compile(r"https?://\S*/tidewave/mcp\S*")
+
+
 def tidewave(repo):
-    """(name, url) of the repo's Tidewave registration, as the preflight hook finds it."""
+    """(name, url) of the repo's Tidewave registration, as the preflight hook finds it:
+    local scope in ~/.claude.json first, since Claude Code lets it shadow .mcp.json,
+    then .mcp.json. The URL is the server's url, or one in a stdio proxy's command
+    line; a proxy naming tidewave with no URL anywhere (mix tidewave.proxy) is
+    (name, None), registered but not probeable."""
     def pick(servers):
         for name, s in (servers or {}).items():
-            url = (s or {}).get("url") or ""
-            if "/tidewave/mcp" in url:
-                return name, url
+            s = s or {}
+            argv = [str(a) for a in [s.get("url") or "", s.get("command") or ""] + list(s.get("args") or [])]
+            for a in argv:
+                m = TIDEWAVE_URL.search(a)
+                if m:
+                    return name, m.group(0)
+            if s.get("type", "stdio") == "stdio" and any("tidewave" in a for a in argv):
+                return name, None
         return None
-    try:
-        hit = pick(json.loads(read(os.path.join(repo, ".mcp.json"))).get("mcpServers"))
-        if hit:
-            return hit
-    except (OSError, ValueError):
-        pass
     try:
         projects = json.loads(read(os.path.expanduser("~/.claude.json"))).get("projects") or {}
     except (OSError, ValueError):
-        return None
+        projects = {}
     for key in (repo, os.path.realpath(repo)):
         hit = pick((projects.get(key) or {}).get("mcpServers"))
         if hit:
             return hit
-    return None
+    try:
+        return pick(json.loads(read(os.path.join(repo, ".mcp.json"))).get("mcpServers"))
+    except (OSError, ValueError):
+        return None
 
 
 def probe(url):
@@ -442,7 +451,9 @@ def preflight(repo):
     if mode == "bypassPermissions":
         problems.append("the interactive default permission mode is bypassPermissions; the driver never runs with permission checks bypassed")
     tw = tidewave(repo)
-    if tw:
+    if tw and not tw[1]:
+        print(f"dev server: {tw[0]} is a stdio proxy with no URL in its config; not probed")
+    elif tw:
         name, url = tw
         why = probe(url)
         print(f"dev server: {url} " + ("answering" if not why else f"not answering ({why})"))

@@ -126,6 +126,18 @@ check "URL found in ~/.claude.json"        "$(tw_ctx "$tw_jump" | grep -c 'dev s
 check "warning names the registered server" "$(tw_msg "$tw_jump" | grep -c 'reconnect jump in /mcp')" 1
 check "other project's server ignored"     "$(tw_out "$(mktemp -d)")" ""
 
+# A stdio proxy carries the URL in its args (galileo's local-scope mcp-proxy entry).
+jq -n --arg d "$TWDIR" '{projects:{($d):{mcpServers:{tidewave:{type:"stdio",command:"/Users/x/.local/bin/mcp-proxy",args:["http://127.0.0.1:1/tidewave/mcp"]}}}}}' > "$TWHOME/.claude.json"
+tw_proxy="$(tw_out "$TWDIR")"
+check "URL found in a stdio proxy's args"  "$(tw_msg "$tw_proxy" | grep -c '127.0.0.1:1/tidewave/mcp')" 1
+
+# A proxy with no URL anywhere (galileo's .mcp.json: mix tidewave.proxy) has nothing to probe.
+rm -f "$TWHOME/.claude.json"
+echo '{"mcpServers":{"tidewave":{"type":"stdio","command":"elixir","args":["-S","mix","tidewave.proxy"]}}}' > "$TWDIR/.mcp.json"
+check "URL-less proxy is silent"           "$(tw_out "$TWDIR")" ""
+check "URL-less proxy exits 0"             "$(tw_rc "$TWDIR")" 0
+rm -f "$TWDIR/.mcp.json"
+
 # Server up: a stub that answers the ping with 200.
 TWPORT="$(python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));p=s.getsockname()[1];s.close();print(p)')"
 python3 "$ROOT/test/fixtures/tidewave-stub.py" "$TWPORT" &
@@ -137,6 +149,12 @@ done
 jq -n --arg u "http://127.0.0.1:$TWPORT/tidewave/mcp" '{mcpServers:{tidewave:{type:"http",url:$u}}}' > "$TWDIR/.mcp.json"
 check "live endpoint is silent"       "$(tw_out "$TWDIR")" ""
 check "live endpoint exits 0"         "$(tw_rc "$TWDIR")" 0
+
+# Local scope shadows .mcp.json, as in Claude Code: a live local entry over a dead project one.
+echo '{"mcpServers":{"tidewave":{"type":"http","url":"http://127.0.0.1:1/tidewave/mcp"}}}' > "$TWDIR/.mcp.json"
+jq -n --arg d "$TWDIR" --arg u "http://127.0.0.1:$TWPORT/tidewave/mcp" '{projects:{($d):{mcpServers:{tidewave:{type:"http",url:$u}}}}}' > "$TWHOME/.claude.json"
+check "local scope wins over .mcp.json"    "$(tw_out "$TWDIR")" ""
+rm -f "$TWHOME/.claude.json"
 
 # Listening, but that path is not a Tidewave endpoint: wrong app on the port, or wrong transport.
 jq -n --arg u "http://127.0.0.1:$TWPORT/wrong/tidewave/mcp" '{mcpServers:{tidewave:{type:"http",url:$u}}}' > "$TWDIR/.mcp.json"

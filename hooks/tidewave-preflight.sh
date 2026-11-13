@@ -8,8 +8,9 @@
 # than mid-task. Advisory only: it never blocks a tool call and never starts anything
 # itself.
 #
-# No-op unless this project has an MCP server whose URL contains /tidewave/mcp, so it
-# stays silent in every non-Tidewave repo the plugin is enabled in.
+# No-op unless this project has an MCP server whose URL, or stdio proxy command
+# line, contains /tidewave/mcp, so it stays silent in every non-Tidewave repo the
+# plugin is enabled in.
 
 INPUT=$(cat)
 
@@ -20,18 +21,23 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
 [ -n "$CWD" ] || CWD="${CLAUDE_PROJECT_DIR:-}"
 [ -n "$CWD" ] || exit 0
 
-# The URL Claude Code itself would dial: the project's checked-in config first, then
-# the per-project entry in ~/.claude.json, where `claude mcp add` writes it. Matching on
-# the URL rather than the server name catches the ones registered under another name.
-# Each candidate is "<server name> <url>"; the name is what the human reconnects in /mcp.
+# The URL Claude Code itself would dial: the per-project entry in ~/.claude.json first
+# (local scope, where `claude mcp add` writes it, shadows the checked-in config), then
+# the project's .mcp.json. The URL is the server's url, or one on a stdio proxy's
+# command line (mcp-proxy http://…/tidewave/mcp); a proxy with no URL anywhere
+# (mix tidewave.proxy) has nothing to probe and stays silent. Matching on the URL
+# rather than the server name catches the ones registered under another name. Each
+# candidate is "<server name> <url>"; the name is what the human reconnects in /mcp.
+PICK='to_entries[] | .key as $n
+  | ([.value.url, .value.command] + (.value.args // []) | map(select(type == "string"))
+     | map(capture("(?<u>https?://[^ ]*/tidewave/mcp[^ ]*)").u) | first) as $u
+  | select($u != null) | "\($n) \($u)"'
 ENTRY=""
-if [ -f "$CWD/.mcp.json" ]; then
-  ENTRY=$(jq -r '(.mcpServers // {}) | to_entries[] | "\(.key) \(.value.url // "")"' "$CWD/.mcp.json" 2>/dev/null \
-        | grep -m1 '/tidewave/mcp')
+if [ -f "$HOME/.claude.json" ]; then
+  ENTRY=$(jq -r --arg d "$CWD" "((.projects[\$d].mcpServers) // {}) | $PICK" "$HOME/.claude.json" 2>/dev/null | head -1)
 fi
-if [ -z "$ENTRY" ] && [ -f "$HOME/.claude.json" ]; then
-  ENTRY=$(jq -r --arg d "$CWD" '((.projects[$d].mcpServers) // {}) | to_entries[] | "\(.key) \(.value.url // "")"' \
-        "$HOME/.claude.json" 2>/dev/null | grep -m1 '/tidewave/mcp')
+if [ -z "$ENTRY" ] && [ -f "$CWD/.mcp.json" ]; then
+  ENTRY=$(jq -r "(.mcpServers // {}) | $PICK" "$CWD/.mcp.json" 2>/dev/null | head -1)
 fi
 [ -n "$ENTRY" ] || exit 0
 NAME=${ENTRY%% *}

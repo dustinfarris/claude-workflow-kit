@@ -423,6 +423,46 @@ class OpenBatch(Base):
         self.assertEqual(s.calls, [])
         self.assertIn("127.0.0.1:1/tidewave/mcp", out)
 
+    # Registration shapes copied from galileo's .mcp.json and its ~/.claude.json entry.
+    MIX_PROXY = {"type": "stdio", "command": "elixir", "args": [
+        "-e", 'Application.ensure_all_started(:inets); Application.ensure_all_started(:ssl); '
+              ':httpc.request(:get, {~c"http://127.0.0.1:9/", []}, [], [])',
+        "-S", "mix", "tidewave.proxy"]}
+
+    def mcp_proxy(self, url):
+        return {"type": "stdio", "command": "/Users/x/.local/bin/mcp-proxy", "args": [url]}
+
+    def register(self, project=None, local=None):
+        if project:
+            with open(os.path.join(self.repo, ".mcp.json"), "w") as f:
+                json.dump({"mcpServers": project}, f)
+        if local:
+            with open(os.path.join(self.home, ".claude.json"), "w") as f:
+                json.dump({"projects": {self.repo: {"mcpServers": local}}}, f)
+
+    def test_tidewave_url_found_in_stdio_proxy_args(self):
+        self.register(local={"tidewave": self.mcp_proxy("http://localhost:4000/tidewave/mcp")})
+        self.assertEqual(rb.tidewave(self.repo), ("tidewave", "http://localhost:4000/tidewave/mcp"))
+
+    def test_tidewave_local_scope_wins_over_mcp_json(self):
+        # Claude Code's precedence: a local-scope server shadows the project's .mcp.json
+        self.register(project={"tidewave": self.MIX_PROXY},
+                      local={"tidewave": self.mcp_proxy("http://localhost:4000/tidewave/mcp")})
+        self.assertEqual(rb.tidewave(self.repo), ("tidewave", "http://localhost:4000/tidewave/mcp"))
+
+    def test_tidewave_proxy_without_url_registered_but_not_probed(self):
+        self.register(project={"tidewave": self.MIX_PROXY})
+        self.commit_all(self.repo)
+        self.assertEqual(rb.tidewave(self.repo), ("tidewave", None))
+        self.stub([])
+        rc, out = self.run_driver("--dry-run")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("dev server: tidewave is a stdio proxy with no URL in its config; not probed", out)
+
+    def test_non_tidewave_stdio_server_ignored(self):
+        self.register(project={"context7": {"type": "stdio", "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"]}})
+        self.assertIsNone(rb.tidewave(self.repo))
+
 
 class IgnoredChain(Base):
     """The chain documents are git-ignored, as galileo's .git/info/exclude does with docs/."""
