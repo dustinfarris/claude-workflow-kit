@@ -537,6 +537,64 @@ class RunLog(Base):
         self.assertIsNone(rb.event_line("not json"))
 
 
+class TtyBuffer(io.StringIO):
+    def isatty(self):
+        return True
+
+
+class Spinner(Base):
+    """The in-place status line a terminal shows while a stage runs."""
+
+    def test_elapsed_format(self):
+        self.assertEqual(rb.elapsed(7), "7s")
+        self.assertEqual(rb.elapsed(75), "1m15s")
+        self.assertEqual(rb.elapsed(3725), "1h02m05s")
+
+    def test_redraws_stage_time_and_latest_activity_then_clears(self):
+        buf = TtyBuffer()
+        sp = rb.Spinner(buf, "implement", interval=0.01)
+        sp.start()
+        sp.activity("    18:50:59 Bash: mix test")
+        time.sleep(0.1)
+        sp.stop()
+        out = buf.getvalue()
+        self.assertIn("implement 0s · Bash: mix test", out)
+        self.assertRegex(out, r"\r\x1b\[K[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] implement")
+        self.assertTrue(out.endswith("\r\x1b[K"), repr(out[-20:]))
+
+    def test_line_fits_the_terminal_width(self):
+        buf = TtyBuffer()
+        sp = rb.Spinner(buf, "implement", interval=0.01, width=lambda: 30)
+        sp.activity("    18:50:59 Bash: " + "x" * 100)
+        sp.draw()
+        last = buf.getvalue().split("\r\x1b[K")[-1]
+        self.assertLessEqual(len(last), 29)
+
+    def test_run_wires_events_to_the_spinner_on_a_terminal(self):
+        drawn = []
+        real = rb.Spinner
+
+        class Spy(real):
+            def stop(self):
+                drawn.append((self.stage, self.last))
+                super().stop()
+        rb.Spinner = Spy
+        try:
+            self.stub([(None, "".join(STREAM_EVENTS) + reply("RESULT: blocked — x", "a") + "\n")])
+            out = TtyBuffer()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                rb.main(["--repo", self.repo])
+        finally:
+            rb.Spinner = real
+        self.assertEqual(drawn, [("update-design", "result: success after 0s")])
+        self.assertNotIn("⠋", rb.read(os.path.join(self.state, "run-batch", "latest.log")))
+
+    def test_no_spinner_when_not_a_terminal(self):
+        self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        rc, out = self.run_driver()
+        self.assertNotIn("\x1b[K", out)
+
+
 class PluginDir(Base):
     """--plugin-dir reaches every stage and the resume line, as claude --plugin-dir would."""
 

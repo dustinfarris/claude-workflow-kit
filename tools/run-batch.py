@@ -34,7 +34,8 @@ Each run writes one log, $XDG_STATE_HOME/run-batch/<repo>-<time>.log (default
 ~/.local/state), holding the driver's output and a line per message and tool
 call from every turn as it happens; latest.log points at the newest run, so
 tail -F ~/.local/state/run-batch/latest.log follows whatever is running. The
-dry run writes none.
+dry run writes none. On a terminal, a status line redrawn in place shows the
+stage in flight, its time so far and the turn's latest event.
 
 A --plugin-dir PATH (repeatable) is passed to every turn and printed in the
 resume line, for a plugin loaded from a local checkout instead of a marketplace.
@@ -46,10 +47,12 @@ Design: docs/2026-10-08-batch-driver-design.org in the kit.
 Python 3 standard library only.
 """
 import argparse
+import contextlib
 import json
 import os
 import re
 import shlex
+import shutil
 import signal
 import subprocess
 import sys
@@ -333,7 +336,9 @@ def probe(url):
 
 # --- the run log -----------------------------------------------------------
 
-RUN_LOG = None  # the open log file while a run is in progress
+RUN_LOG = None   # the open log file while a run is in progress
+TERMINAL = None  # the human's terminal while a run is in progress, when it is one
+SPINNER = None   # the status line of the turn in flight
 
 
 def parse_event(line):
@@ -377,9 +382,74 @@ def event_line(line):
 
 
 def log_event(line):
-    shown = RUN_LOG and event_line(line)
-    if shown:
+    shown = (RUN_LOG or SPINNER) and event_line(line)
+    if shown and RUN_LOG:
         RUN_LOG.write(shown + "\n")
+    if shown and SPINNER:
+        SPINNER.activity(shown)
+
+
+def elapsed(seconds):
+    m, s = divmod(int(seconds), 60)
+    h, m = divmod(m, 60)
+    return f"{h}h{m:02d}m{s:02d}s" if h else f"{m}m{s:02d}s" if m else f"{s}s"
+
+
+class Spinner:
+    """One line redrawn in place while a turn runs: a frame, the stage, its time so
+    far and the turn's latest event, so a long stage visibly is not a hang. Written
+    to the terminal only, never the log, and cleared when the turn returns."""
+
+    FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+    def __init__(self, stream, stage, interval=0.1, width=None):
+        self.stream, self.stage, self.interval = stream, stage, interval
+        self.width = width or (lambda: shutil.get_terminal_size().columns)
+        self.last, self.frame, self.t0 = "", 0, time.monotonic()
+        self.done, self.lock, self.thread = threading.Event(), threading.Lock(), None
+
+    def activity(self, shown):
+        self.last = re.sub(r"^\s*\d\d:\d\d:\d\d ", "", shown.splitlines()[-1])
+
+    def draw(self):
+        with self.lock:
+            text = f"{self.FRAMES[self.frame % len(self.FRAMES)]} {self.stage} {elapsed(time.monotonic() - self.t0)}"
+            if self.last:
+                text += " · " + self.last
+            self.frame += 1
+            self.stream.write("\r\x1b[K" + text[:max(self.width() - 1, 0)])
+            self.stream.flush()
+
+    def start(self):
+        def spin():
+            self.draw()
+            while not self.done.wait(self.interval):
+                self.draw()
+        self.thread = threading.Thread(target=spin, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        self.done.set()
+        if self.thread:
+            self.thread.join()
+        with self.lock:
+            self.stream.write("\r\x1b[K")
+            self.stream.flush()
+
+
+@contextlib.contextmanager
+def spinning(stage):
+    global SPINNER
+    if not TERMINAL:
+        yield
+        return
+    SPINNER = Spinner(TERMINAL, stage)
+    SPINNER.start()
+    try:
+        yield
+    finally:
+        SPINNER.stop()
+        SPINNER = None
 
 
 class Tee:
@@ -525,12 +595,14 @@ def run_story(repo, init, story, mode, timeout_min=STAGE_TIMEOUT_MIN, flags=()):
                 prompt = PROMPTS[stage]
             print(f"  {stage}: {prompt}", flush=True)
             try:
-                data = claude(prompt, repo, mode, session, started, timeout_min * 60, flags)
+                with spinning(stage):
+                    data = claude(prompt, repo, mode, session, started, timeout_min * 60, flags)
                 started = True
                 session = data.get("session_id") or session
                 if lost(data):
                     print(f"  {stage}: connection lost, sending {CONTINUE} once", flush=True)
-                    data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60, flags)
+                    with spinning(stage):
+                        data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60, flags)
                     session = data.get("session_id") or session
             except StageTimeout:
                 return stop(stage, story, session, flags, None,
@@ -651,9 +723,10 @@ def main(argv=None):
 def run(repo, init, batch, mode, timeout_min, flags):
     """The batch, story by story, with the driver's output and every turn's
     events going to the run log as well."""
-    global RUN_LOG
+    global RUN_LOG, TERMINAL
     log, d, name = open_run_log(repo)
     saved = sys.stdout, sys.stderr
+    TERMINAL = saved[0] if saved[0].isatty() else None
     sys.stdout, sys.stderr = Tee(sys.stdout, log), Tee(sys.stderr, log)
     RUN_LOG = log
     try:
@@ -670,7 +743,7 @@ def run(repo, init, batch, mode, timeout_min, flags):
         print(f"run-batch: refusing: {e}", file=sys.stderr)
         return 1
     finally:
-        RUN_LOG = None
+        RUN_LOG = TERMINAL = None
         sys.stdout, sys.stderr = saved
         log.close()
 
