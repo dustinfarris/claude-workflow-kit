@@ -77,11 +77,14 @@ class Stub:
     def __init__(self, repo, steps):
         self.repo, self.steps, self.calls = repo, list(steps), []
 
-    def __call__(self, argv, cwd, timeout=None):
+    def __call__(self, argv, cwd, timeout=None, on_line=None):
         self.calls.append(argv)
         effect, out = self.steps.pop(0)
         if effect:
             effect(self.repo)
+        for line in out.splitlines(keepends=True):
+            if on_line:
+                on_line(line)
         return 0, out, ""
 
     def prompts(self):
@@ -107,11 +110,17 @@ class Base(unittest.TestCase):
         git(self.repo, "add", "-A")
         git(self.repo, "commit", "-qm", "fixture")
         self._home, os.environ["HOME"] = os.environ.get("HOME"), self.home
+        self._state = os.environ.get("XDG_STATE_HOME")
+        self.state = os.environ["XDG_STATE_HOME"] = os.path.join(self.tmp, "state")
         self._invoke = rb.invoke
 
     def tearDown(self):
         rb.invoke = self._invoke
         os.environ["HOME"] = self._home
+        if self._state is None:
+            os.environ.pop("XDG_STATE_HOME", None)
+        else:
+            os.environ["XDG_STATE_HOME"] = self._state
         shutil.rmtree(self.tmp)
 
     def run_driver(self, *flags):
@@ -290,7 +299,7 @@ class OpenBatch(Base):
 
     def test_stage_timeout_default_and_passed_through(self):
         seen = []
-        rb.invoke = lambda argv, cwd, timeout=None: (seen.append(timeout), (0, reply("RESULT: blocked — x"), ""))[1]
+        rb.invoke = lambda argv, cwd, timeout=None, on_line=None: (seen.append(timeout), (0, reply("RESULT: blocked — x"), ""))[1]
         self.run_driver()
         self.assertEqual(seen, [60 * 60])
         seen.clear()
@@ -309,7 +318,8 @@ class OpenBatch(Base):
         self.run_driver()
         argv = s.calls[0]
         self.assertEqual(argv[argv.index("--permission-mode") + 1], "auto")
-        self.assertEqual(argv[argv.index("--output-format") + 1], "json")
+        self.assertEqual(argv[argv.index("--output-format") + 1], "stream-json")
+        self.assertIn("--verbose", argv)  # stream-json requires it in -p mode
         self.assertIn("RESULT: done", argv[argv.index("--append-system-prompt") + 1])
         flags = argv[:argv.index("--append-system-prompt")] + argv[argv.index("--append-system-prompt") + 2:]
         source = rb.read(os.path.join(ROOT, "tools", "run-batch.py"))
@@ -462,6 +472,69 @@ class OpenBatch(Base):
     def test_non_tidewave_stdio_server_ignored(self):
         self.register(project={"context7": {"type": "stdio", "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"]}})
         self.assertIsNone(rb.tidewave(self.repo))
+
+
+# A real `claude -p --output-format stream-json --verbose` session (one Bash
+# call, then "done"), keeping only its assistant, user and result events.
+STREAM = open(os.path.join(FIX, "stream.jsonl")).read()
+STREAM_EVENTS = STREAM.splitlines(keepends=True)[:-1]
+
+
+class RunLog(Base):
+    """The run's consolidated log: the driver's own lines and every turn's events."""
+
+    def log_dir(self):
+        return os.path.join(self.state, "run-batch")
+
+    def latest(self):
+        return rb.read(os.path.join(self.log_dir(), "latest.log"))
+
+    def test_result_event_read_from_a_real_stream(self):
+        rb.invoke = Stub(self.repo, [(None, STREAM)])
+        data = rb.claude("x", self.repo, None, "sid", False, 60)
+        self.assertEqual(data["result"], "done")
+        self.assertEqual(data["subtype"], "success")
+        self.assertEqual(data["session_id"], json.loads(STREAM.splitlines()[-1])["session_id"])
+
+    def test_stream_without_result_event_is_a_stop(self):
+        self.stub([(None, "".join(STREAM_EVENTS))])
+        rc, out = self.run_driver()
+        self.assertNotEqual(rc, 0)
+        self.assertIn("did not end in a clean RESULT: done", out)
+
+    def test_log_holds_driver_lines_and_turn_events(self):
+        self.stub([(None, "".join(STREAM_EVENTS) + reply("RESULT: blocked — x", "a") + "\n")])
+        rc, out = self.run_driver()
+        self.assertIn("log: " + self.log_dir(), out)
+        log = self.latest()
+        self.assertIn("update-design: /workflow-kit:update-design", log)
+        self.assertIn("Bash: echo fixture", log)
+        self.assertIn("says: done", log)
+        self.assertIn("STOP at update-design", log)
+        self.assertNotIn("Bash: echo fixture", out)  # the terminal stays as it was
+
+    def test_latest_points_at_the_newest_run(self):
+        for _ in range(2):
+            self.stub([(None, reply("RESULT: blocked — x", "a"))])
+            self.run_driver()
+            time.sleep(1.1)  # log names are per second
+        logs = sorted(n for n in os.listdir(self.log_dir()) if n != "latest.log")
+        self.assertEqual(len(logs), 2)
+        self.assertEqual(os.readlink(os.path.join(self.log_dir(), "latest.log")), logs[-1])
+
+    def test_dry_run_writes_no_log(self):
+        self.stub([])
+        self.run_driver("--dry-run")
+        self.assertFalse(os.path.exists(self.log_dir()))
+
+    def test_event_lines(self):
+        lines = [rb.event_line(l) for l in STREAM.splitlines()]
+        shown = [l for l in lines if l]
+        self.assertEqual(len(shown), 3, shown)  # thinking and a clean tool result are not shown
+        self.assertTrue(shown[0].endswith("Bash: echo fixture"), shown[0])
+        self.assertTrue(shown[1].endswith("says: done"), shown[1])
+        self.assertRegex(shown[2], r"result: success after \d+s, \$\d+\.\d\d$")
+        self.assertIsNone(rb.event_line("not json"))
 
 
 class PluginDir(Base):

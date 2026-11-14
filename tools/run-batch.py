@@ -30,6 +30,12 @@ It refuses with no open batch, a dirty tree before a story's implement stage,
 a Tidewave dev server not answering, or a bypassPermissions default. The
 permission mode is the human's interactive default (permissions.defaultMode).
 
+Each run writes one log, $XDG_STATE_HOME/run-batch/<repo>-<time>.log (default
+~/.local/state), holding the driver's output and a line per message and tool
+call from every turn as it happens; latest.log points at the newest run, so
+tail -F ~/.local/state/run-batch/latest.log follows whatever is running. The
+dry run writes none.
+
 A --plugin-dir PATH (repeatable) is passed to every turn and printed in the
 resume line, for a plugin loaded from a local checkout instead of a marketplace.
 
@@ -47,6 +53,8 @@ import shlex
 import signal
 import subprocess
 import sys
+import threading
+import time
 import uuid
 import urllib.error
 import urllib.request
@@ -323,43 +331,141 @@ def probe(url):
 
 # --- Claude ----------------------------------------------------------------
 
-def invoke(argv, cwd, timeout=None):
-    """The one place Claude is run. Tests replace this. Returns (rc, stdout, stderr);
-    raises StageTimeout after killing the session's whole process group."""
+# --- the run log -----------------------------------------------------------
+
+RUN_LOG = None  # the open log file while a run is in progress
+
+
+def parse_event(line):
+    try:
+        ev = json.loads(line)
+    except ValueError:
+        return {}
+    return ev if isinstance(ev, dict) else {}
+
+
+def one_line(text, width=200):
+    text = " ".join(str(text).split())
+    return text if len(text) <= width else text[:width - 1] + "…"
+
+
+def event_line(line):
+    """A stream-json event as log lines, or None for one not worth showing
+    (thinking, a tool result that did not fail, system events)."""
+    ev = parse_event(line)
+    shown = []
+    if ev.get("type") == "assistant":
+        for c in (ev.get("message") or {}).get("content") or []:
+            if c.get("type") == "tool_use":
+                i = c.get("input") or {}
+                what = next((i[k] for k in ("command", "file_path", "pattern", "skill", "description", "prompt") if i.get(k)), "")
+                shown.append(f"{c.get('name')}: {one_line(what)}")
+            elif c.get("type") == "text" and c.get("text", "").strip():
+                shown.append("says: " + one_line(c["text"]))
+    elif ev.get("type") == "user":
+        for c in (ev.get("message") or {}).get("content") or []:
+            if isinstance(c, dict) and c.get("type") == "tool_result" and c.get("is_error"):
+                shown.append("tool error: " + one_line(c.get("content")))
+    elif ev.get("type") == "result":
+        cost = ev.get("total_cost_usd")
+        shown.append(f"result: {ev.get('subtype')} after {(ev.get('duration_ms') or 0) / 1000:.0f}s"
+                     + (f", ${cost:.2f}" if isinstance(cost, (int, float)) else ""))
+    if not shown:
+        return None
+    stamp = time.strftime("%H:%M:%S")
+    return "\n".join(f"    {stamp} {x}" for x in shown)
+
+
+def log_event(line):
+    shown = RUN_LOG and event_line(line)
+    if shown:
+        RUN_LOG.write(shown + "\n")
+
+
+class Tee:
+    """The driver's own output, to the terminal as before and to the run log."""
+
+    def __init__(self, stream, log):
+        self.stream, self.log = stream, log
+
+    def write(self, text):
+        self.log.write(text)
+        return self.stream.write(text)
+
+    def flush(self):
+        self.log.flush()
+        self.stream.flush()
+
+
+def open_run_log(repo):
+    """$XDG_STATE_HOME/run-batch/<repo>-<time>.log, with latest.log pointing at it."""
+    d = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"), "run-batch")
+    os.makedirs(d, exist_ok=True)
+    name = f"{os.path.basename(repo)}-{time.strftime('%Y%m%d-%H%M%S')}.log"
+    log = open(os.path.join(d, name), "a", buffering=1)
+    link = os.path.join(d, "latest.log")
+    tmp = link + ".tmp"
+    if os.path.lexists(tmp):
+        os.remove(tmp)
+    os.symlink(name, tmp)
+    os.replace(tmp, link)
+    return log, d, name
+
+
+def invoke(argv, cwd, timeout=None, on_line=None):
+    """The one place Claude is run. Tests replace this. Returns (rc, stdout, stderr),
+    handing each stdout line to on_line as it arrives; raises StageTimeout after
+    killing the session's whole process group."""
     p = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, text=True, start_new_session=True)
+    out, err = [], []
+
+    def pump(stream, into, each=None):
+        for line in stream:
+            into.append(line)
+            if each:
+                each(line)
+
+    readers = [threading.Thread(target=pump, args=(p.stdout, out, on_line), daemon=True),
+               threading.Thread(target=pump, args=(p.stderr, err), daemon=True)]
+    for t in readers:
+        t.start()
     try:
-        out, err = p.communicate(timeout=timeout)
+        p.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
         for sig in (signal.SIGTERM, signal.SIGKILL):
             try:
                 os.killpg(p.pid, sig)
-                p.communicate(timeout=10)
+                p.wait(timeout=10)
                 break
             except ProcessLookupError:
                 break
             except subprocess.TimeoutExpired:
                 continue
         raise StageTimeout()
-    return p.returncode, out, err
+    for t in readers:
+        t.join(timeout=10)
+    return p.returncode, "".join(out), "".join(err)
 
 
 def claude(prompt, repo, mode, session, resume, timeout, flags=()):
     """One turn. The first stage of a story names its session up front
     (--session-id) so even a turn that never returns can be resumed by id.
     flags are the human's own claude options (--plugin-dir), sent every turn."""
-    argv = CLAUDE + list(flags) + ["-p", prompt, "--output-format", "json", "--append-system-prompt", SYSTEM_PROMPT]
+    argv = CLAUDE + list(flags) + ["-p", prompt, "--output-format", "stream-json", "--verbose",
+                                   "--append-system-prompt", SYSTEM_PROMPT]
     if mode:
         argv += ["--permission-mode", mode]
     argv += ["--resume" if resume else "--session-id", session]
-    rc, out, err = invoke(argv, repo, timeout=timeout)
-    try:
-        data = json.loads(out)
-    except ValueError:
-        data = {}
-    if not isinstance(data, dict):
-        data = {}
-    data.setdefault("result", (out or err or f"claude exited {rc} with no output").strip())
+    rc, out, err = invoke(argv, repo, timeout=timeout, on_line=log_event)
+    # the stream's last result event carries what --output-format json printed alone
+    data = {}
+    for line in out.splitlines():
+        ev = parse_event(line)
+        if ev.get("type") == "result":
+            data = ev
+    data.setdefault("result", (err.strip() or (out.strip().splitlines() or [""])[-1]
+                               or f"claude exited {rc} with no output"))
     data["_rc"] = rc
     return data
 
@@ -536,17 +642,37 @@ def main(argv=None):
             return dry_run(repo, init, batch, problems)
         if problems:
             raise Refusal("\n".join(problems))
+        return run(repo, init, batch, mode, args.stage_timeout, flags)
+    except Refusal as e:
+        print(f"run-batch: refusing: {e}", file=sys.stderr)
+        return 1
+
+
+def run(repo, init, batch, mode, timeout_min, flags):
+    """The batch, story by story, with the driver's output and every turn's
+    events going to the run log as well."""
+    global RUN_LOG
+    log, d, name = open_run_log(repo)
+    saved = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = Tee(sys.stdout, log), Tee(sys.stderr, log)
+    RUN_LOG = log
+    try:
+        print(f"log: {os.path.join(d, name)} (follow with: tail -F {os.path.join(d, 'latest.log')})", flush=True)
         while True:
             todo = open_batch(read(os.path.join(repo, init, "PLAN.org"))).todo(init)
             if not todo:
                 print(f"\nNo TODO story left in {batch.title}: phase-close is next, and it is the human's to run.")
                 return 0
             print(f"\n{todo[0].name}", flush=True)
-            if run_story(repo, init, todo[0], mode, args.stage_timeout, flags):
+            if run_story(repo, init, todo[0], mode, timeout_min, flags):
                 return 1
     except Refusal as e:
         print(f"run-batch: refusing: {e}", file=sys.stderr)
         return 1
+    finally:
+        RUN_LOG = None
+        sys.stdout, sys.stderr = saved
+        log.close()
 
 
 if __name__ == "__main__":
