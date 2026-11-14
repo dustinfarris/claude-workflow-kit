@@ -464,6 +464,68 @@ class OpenBatch(Base):
         self.assertIsNone(rb.tidewave(self.repo))
 
 
+class PluginDir(Base):
+    """--plugin-dir reaches every stage and the resume line, as claude --plugin-dir would."""
+
+    def setUp(self):
+        super().setUp()
+        self.plugin = os.path.join(self.tmp, "superpowers")
+        os.makedirs(self.plugin)
+        self.plugin = os.path.realpath(self.plugin)
+
+    def flag_values(self, argv):
+        return [argv[i + 1] for i, a in enumerate(argv) if a == "--plugin-dir"]
+
+    def test_every_stage_gets_the_plugin_dir(self):
+        s = self.stub([
+            (lambda r: mark_done(r, S04), reply("RESULT: done", "a")),
+            (self.commit_all, reply("RESULT: done", "a")),
+            (None, reply("RESULT: blocked — x", "b")),
+        ])
+        self.run_driver("--plugin-dir", self.plugin)
+        self.assertEqual(len(s.calls), 3)
+        for argv in s.calls:
+            self.assertEqual(self.flag_values(argv), [self.plugin])
+
+    def test_repeatable_and_resolved_to_absolute_paths(self):
+        other = os.path.join(self.tmp, "other")
+        os.makedirs(other)
+        s = self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        cwd = os.getcwd()
+        os.chdir(self.tmp)
+        try:
+            self.run_driver("--plugin-dir", "superpowers", "--plugin-dir", "~/../other")
+        finally:
+            os.chdir(cwd)
+        self.assertEqual(self.flag_values(s.calls[0]), [self.plugin, os.path.realpath(other)])
+
+    def test_resume_line_carries_the_plugin_dir(self):
+        self.stub([(None, reply("RESULT: blocked — x", "sess-a"))])
+        rc, out = self.run_driver("--plugin-dir", self.plugin)
+        self.assertNotEqual(rc, 0)
+        self.assertIn(f"Resume with: claude --plugin-dir {self.plugin} --resume sess-a", out)
+
+    def test_missing_plugin_dir_refused_before_any_turn(self):
+        s = self.stub([])
+        rc, out = self.run_driver("--plugin-dir", os.path.join(self.tmp, "nope"))
+        self.assertNotEqual(rc, 0)
+        self.assertEqual(s.calls, [])
+        self.assertIn("--plugin-dir", out)
+        self.assertIn("nope", out)
+
+    def test_dry_run_names_the_plugin_dir(self):
+        self.stub([])
+        rc, out = self.run_driver("--dry-run", "--plugin-dir", self.plugin)
+        self.assertEqual(rc, 0, out)
+        self.assertIn(f"plugin dirs: {self.plugin}", out)
+
+    def test_no_flag_sends_none(self):
+        s = self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        rc, out = self.run_driver()
+        self.assertEqual(self.flag_values(s.calls[0]), [])
+        self.assertIn("Resume with: claude --resume a", out)
+
+
 class IgnoredChain(Base):
     """The chain documents are git-ignored, as galileo's .git/info/exclude does with docs/."""
 

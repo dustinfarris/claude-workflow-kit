@@ -30,8 +30,11 @@ It refuses with no open batch, a dirty tree before a story's implement stage,
 a Tidewave dev server not answering, or a bypassPermissions default. The
 permission mode is the human's interactive default (permissions.defaultMode).
 
+A --plugin-dir PATH (repeatable) is passed to every turn and printed in the
+resume line, for a plugin loaded from a local checkout instead of a marketplace.
+
 Usage:
-  run-batch.py [--repo PATH] [--stage-timeout MINUTES] [--dry-run]
+  run-batch.py [--repo PATH] [--stage-timeout MINUTES] [--plugin-dir PATH]... [--dry-run]
 
 Design: docs/2026-10-08-batch-driver-design.org in the kit.
 Python 3 standard library only.
@@ -40,6 +43,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import signal
 import subprocess
 import sys
@@ -340,10 +344,11 @@ def invoke(argv, cwd, timeout=None):
     return p.returncode, out, err
 
 
-def claude(prompt, repo, mode, session, resume, timeout):
+def claude(prompt, repo, mode, session, resume, timeout, flags=()):
     """One turn. The first stage of a story names its session up front
-    (--session-id) so even a turn that never returns can be resumed by id."""
-    argv = CLAUDE + ["-p", prompt, "--output-format", "json", "--append-system-prompt", SYSTEM_PROMPT]
+    (--session-id) so even a turn that never returns can be resumed by id.
+    flags are the human's own claude options (--plugin-dir), sent every turn."""
+    argv = CLAUDE + list(flags) + ["-p", prompt, "--output-format", "json", "--append-system-prompt", SYSTEM_PROMPT]
     if mode:
         argv += ["--permission-mode", mode]
     argv += ["--resume" if resume else "--session-id", session]
@@ -375,12 +380,12 @@ def clean(data):
 
 # --- the run ---------------------------------------------------------------
 
-def stop(stage, story, session, message, why):
+def stop(stage, story, session, flags, message, why):
     print(f"\nSTOP at {stage} for {story.name}: {why}", file=sys.stderr)
     print(f"session: {session or '(none started)'}", file=sys.stderr)
     print("final message:\n" + (message or "(none)").rstrip(), file=sys.stderr)
     if session:
-        print(f"\nResume with: claude --resume {session}\nanswer there, then rerun run-batch.py.", file=sys.stderr)
+        print(f"\nResume with: {' '.join(shlex.quote(a) for a in ['claude', *flags])} --resume {session}\nanswer there, then rerun run-batch.py.", file=sys.stderr)
     return 1
 
 
@@ -391,7 +396,7 @@ def dirty_message(story, dirty):
             f"Otherwise commit or stash them yourself, then rerun run-batch.py.")
 
 
-def run_story(repo, init, story, mode, timeout_min=STAGE_TIMEOUT_MIN):
+def run_story(repo, init, story, mode, timeout_min=STAGE_TIMEOUT_MIN, flags=()):
     start = first_stage(repo, init, story)
     if start is None:
         raise Refusal(f"{story.name} reads TODO in PLAN.org but every stage predicate is already true")
@@ -414,32 +419,32 @@ def run_story(repo, init, story, mode, timeout_min=STAGE_TIMEOUT_MIN):
                 prompt = PROMPTS[stage]
             print(f"  {stage}: {prompt}", flush=True)
             try:
-                data = claude(prompt, repo, mode, session, started, timeout_min * 60)
+                data = claude(prompt, repo, mode, session, started, timeout_min * 60, flags)
                 started = True
                 session = data.get("session_id") or session
                 if lost(data):
                     print(f"  {stage}: connection lost, sending {CONTINUE} once", flush=True)
-                    data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60)
+                    data = claude(CONTINUE, repo, mode, session, True, timeout_min * 60, flags)
                     session = data.get("session_id") or session
             except StageTimeout:
-                return stop(stage, story, session, None,
+                return stop(stage, story, session, flags, None,
                             f"no result after {timeout_min:g} min, so the stage was stopped; a step waiting on a permission prompt looks like this")
             if not clean(data):
-                return stop(stage, story, session, data.get("result"), "the turn did not end in a clean " + DONE_LINE)
+                return stop(stage, story, session, flags, data.get("result"), "the turn did not end in a clean " + DONE_LINE)
             if stage != "implement" and not predicate(stage, repo, init, story):
-                return stop(stage, story, session, data.get("result"),
+                return stop(stage, story, session, flags, data.get("result"),
                             f"the turn said done but its artifact disagrees ({describe(stage, repo, init, story)})")
             if stage == "commit":
                 forced = sorted(tracked_ignored(repo) - ignored_before)
                 if forced:
-                    return stop(stage, story, session, data.get("result"),
+                    return stop(stage, story, session, flags, data.get("result"),
                                 "the turn committed git-ignored path(s) this repo keeps out of its history: " + ", ".join(forced)
                                 + ". Undo that commit's additions by hand (git rm --cached, then amend or a new commit) before rerunning.")
     except Refusal as e:
         # a git read failing mid-story: stop with the session, not a bare refusal
         if not started:
             raise
-        return stop(stage, story, session, None, str(e))
+        return stop(stage, story, session, flags, None, str(e))
     return 0
 
 
@@ -496,6 +501,18 @@ def dry_run(repo, init, batch, problems):
     return 1 if problems else 0
 
 
+def plugin_flags(paths):
+    """claude --plugin-dir options for each path, absolute because every turn runs
+    from the repo root; a path that is neither a directory nor a .zip is refused."""
+    flags = []
+    for p in paths:
+        full = os.path.realpath(os.path.expanduser(p))
+        if not (os.path.isdir(full) or (os.path.isfile(full) and full.endswith(".zip"))):
+            raise Refusal(f"--plugin-dir {p}: no such directory or .zip")
+        flags += ["--plugin-dir", full]
+    return flags
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=os.getcwd())
@@ -503,12 +520,17 @@ def main(argv=None):
                     help=f"wall-clock limit for one stage before the run stops (default {STAGE_TIMEOUT_MIN:g})")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the stories, stages and predicate results it would act on, without invoking Claude")
+    ap.add_argument("--plugin-dir", action="append", default=[], metavar="PATH",
+                    help="passed to every claude turn and the resume line, as claude --plugin-dir; repeatable")
     args = ap.parse_args(argv)
     repo = os.path.abspath(args.repo)
     try:
+        flags = plugin_flags(args.plugin_dir)
         init = active_initiative(repo)
         batch = open_batch(read(os.path.join(repo, init, "PLAN.org")))
         print(f"initiative: {init}/\nopen batch: {batch.title}")
+        if args.plugin_dir:
+            print("plugin dirs: " + " ".join(flags[1::2]))
         mode, problems = preflight(repo)
         if args.dry_run:
             return dry_run(repo, init, batch, problems)
@@ -520,7 +542,7 @@ def main(argv=None):
                 print(f"\nNo TODO story left in {batch.title}: phase-close is next, and it is the human's to run.")
                 return 0
             print(f"\n{todo[0].name}", flush=True)
-            if run_story(repo, init, todo[0], mode, args.stage_timeout):
+            if run_story(repo, init, todo[0], mode, args.stage_timeout, flags):
                 return 1
     except Refusal as e:
         print(f"run-batch: refusing: {e}", file=sys.stderr)
