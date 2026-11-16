@@ -2,7 +2,7 @@
 
 ## Weight class
 
-work-grade. This is serious, multi-phase software with other stakeholders and a long lifespan. Full ceremony earns its keep here. Skills read this section: it selects the full Definition of Done (`mix check`, moduledocs, integration tests) and enables the skeptic design review in `/workflow-kit:promote-design`.
+work-grade. This is serious, multi-phase software with other stakeholders and a long lifespan. Full ceremony earns its keep here. Skills read this section: it selects the full Definition of Done (`mix check`, moduledocs, integration tests) and enables the skeptic design review in `/workflow-kit:promote-design`. In a shared repo, where CLAUDE.md is the team's, this section and the `Verify command:` and `Local review:` lines below go in your uncommitted CLAUDE.local.md instead; skills read each from CLAUDE.local.md, else CLAUDE.md.
 
 ## Stack & commands
 

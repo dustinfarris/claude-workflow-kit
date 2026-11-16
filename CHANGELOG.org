@@ -1,5 +1,15 @@
 #+title: Changelog — workflow-kit
 
+* 0.9.12 — [2026-11-16]
+
+A repo may declare its ~Verify command:~, ~## Weight class~ and ~Local review:~ in CLAUDE.local.md or in CLAUDE.md, and when both files carry the same declaration, CLAUDE.local.md's is the one that applies. In a shared repo (galileo) CLAUDE.md is the team's and the kit is one person's workflow, so the declarations belong in that person's uncommitted file; in a repo the person owns (bear-cub) they are repo facts and stay in the committed CLAUDE.md. Both layouts keep working unchanged. The rule is stated once in org-conventions, next to path resolution, and each reader names both files itself because story files embed these lines: both Definition of Done variants' Verify command line and the visual review item and its gate in user-stories, story-verifier, story-closeout and phase-close for the Verify command, promote-design and create-prd for the weight class. Both CLAUDE.md templates say that in a shared repo these sections go in CLAUDE.local.md, and the README's weight-class paragraph and setup step 3 say the same.
+
+Reading CLAUDE.local.md first is what keeps the 0.9.7 hazard out: an unfilled template line in a shared CLAUDE.md cannot shadow a real declaration in CLAUDE.local.md. The ~Active initiative:~ line is untouched and keeps its own rule — CLAUDE.local.md only, never CLAUDE.md, no fallback. No script or hook reads any of the three declarations, so this is wording only.
+
+Setup step 3 also gains two facts from the same batch: the repo default model can be set in ~.claude/settings.local.json~ when ~.claude/settings.json~ is the team's; and on Amazon Bedrock the ~sonnet~ alias resolves to Sonnet 4.5 unless ~ANTHROPIC_DEFAULT_SONNET_MODEL~ is set, which silently puts every ~model: sonnet~ pin on the old model — galileo's verifier ran on ~claude-sonnet-4-5-20250929~ for the whole batch.
+
+Raised from galileo's event-oos-trends batch (nine stories, gate 2026-11-14), which is this change's consuming-repo read-through. It ran with all three declarations in CLAUDE.local.md and none in CLAUDE.md, and worked only because both files load into context: every story file there reads "(CLAUDE.md; default mix check)" while the verifier's notes say "from CLAUDE.local.md". Ruled by the human on 2026-11-16. No hook or tool changes; ~test/hooks_test.sh~ green (104/104) with no new cases.
+
 * 0.9.11 — [2026-11-13]
 
 While a stage runs, the driver's terminal now shows a status line redrawn in place: a spinner frame, the stage, its elapsed time, and the turn's latest event (~⠹ implement 3m12s · Bash: mix test …~), cleared when the turn returns. A stage prints its prompt and then nothing until it ends, which on galileo's first run meant an implement stage sat on one line long enough to look like a hung laptop; 0.9.10's log answers that only for someone who knows to tail it. The line is fed by the same stream events as the log, fits the terminal width, is written only when stdout is a terminal, and never reaches the log, so piped output and tests are unchanged.

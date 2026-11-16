@@ -2,7 +2,7 @@
 
 ## Weight class
 
-personal-mvp. This is a personal project for my family / my own use. Bias toward shipping. No speculative abstractions, no scaling concerns, no multi-tenancy. If unsure whether to add something, leave it out and record it as a Deferred item. Skills read this section: it selects the lighter Definition of Done and skips the skeptic design review.
+personal-mvp. This is a personal project for my family / my own use. Bias toward shipping. No speculative abstractions, no scaling concerns, no multi-tenancy. If unsure whether to add something, leave it out and record it as a Deferred item. Skills read this section: it selects the lighter Definition of Done and skips the skeptic design review. In a shared repo, where CLAUDE.md is the team's, this section and the `Verify command:` and `Local review:` lines below go in your uncommitted CLAUDE.local.md instead; skills read each from CLAUDE.local.md, else CLAUDE.md.
 
 ## Stack & commands
 

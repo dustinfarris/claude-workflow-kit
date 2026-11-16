@@ -61,7 +61,7 @@ Each user story includes, at a minimum:
 ** [ ] Integration tests written and passing for all user flows in this story
 ** [ ] moduledocs have been reviewed and updated if appropriate
 ** [ ] Code follows style guidelines in CLAUDE.md
-** [ ] The repo's declared ~Verify command:~ (CLAUDE.md; default ~mix check~) passes without errors
+** [ ] The repo's declared ~Verify command:~ (CLAUDE.local.md, else CLAUDE.md; default ~mix check~) passes without errors
 ```
 
 ## Definition of Done — personal-mvp weight class (verbatim)
@@ -72,7 +72,7 @@ Each user story includes, at a minimum:
 ** [ ] All acceptance criteria have been either met or have had a documented removal or deferral
 ** [ ] Tests written and passing for the acceptance criteria in this story
 ** [ ] Code follows style guidelines in CLAUDE.md
-** [ ] The repo's declared ~Verify command:~ (CLAUDE.md; default ~mix format --check-formatted~ and ~mix test~) passes without errors
+** [ ] The repo's declared ~Verify command:~ (CLAUDE.local.md, else CLAUDE.md; default ~mix format --check-formatted~ and ~mix test~) passes without errors
 ```
 
 ## Definition of Done — visual review item (conditional, verbatim)
@@ -80,12 +80,12 @@ Each user story includes, at a minimum:
 A story's Definition of Done gains one more item, appended after the weight-class block, when both of these hold:
 
 1. The story's Design excerpt touches visuals — it includes content from a Screens section of DESIGN.org, or it specifies styling (layout, color, typography, spacing, CSS).
-2. The repo's CLAUDE.md carries a `Local review:` line of the form `Local review: <viewport> via <staging mechanism>` — the viewport visual work is reviewed at, and the mechanism that stages a reviewable state for that review. Both must be named; a line that names only one, or no line at all, means the repo has not declared a local review. Read the line; do not infer a local review from other prose in CLAUDE.md.
+2. The repo carries a `Local review:` line, read from its CLAUDE.local.md, else its CLAUDE.md, of the form `Local review: <viewport> via <staging mechanism>` — the viewport visual work is reviewed at, and the mechanism that stages a reviewable state for that review. Both must be named; a line that names only one, or no line at all, means the repo has not declared a local review. Read the line; do not infer a local review from other prose in CLAUDE.local.md or CLAUDE.md.
 
 The item applies at every weight class; the `Local review:` line is its gate, not the weight class. When either condition fails, omit the item — do not add it with a guessed viewport or staging step. Copy the item verbatim; the viewport and the staging mechanism are read from the `Local review:` line when the review is done and are never written into the story.
 
 ```org
-** [ ] The story's visual changes were viewed at the repo's declared review viewport, in a state staged through its declared staging mechanism (CLAUDE.md ~Local review:~ line), before close-out — a screenshot at that viewport is the evidence
+** [ ] The story's visual changes were viewed at the repo's declared review viewport, in a state staged through its declared staging mechanism (~Local review:~ line in CLAUDE.local.md, else CLAUDE.md), before close-out — a screenshot at that viewport is the evidence
 ```
 
 ## DESIGN EXCERPT SCOPE
