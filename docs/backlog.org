@@ -84,3 +84,22 @@ Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipp
   Retro-born (bear-cub gamification retro, 2026-07-17): ~update-design~'s checklist gains — if the pivot touches anything recorded in ~design-language.org~ or ~learnings.org~, correct that recording in the same pass. ~design-language.org~ went stale against D51/D52 within a day this batch.
 :END:
 
+* TODO story-metrics: verifier minutes count API stalls as work
+:PROPERTIES:
+:CREATED:  [2026-11-16 Mon 13:47]
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-16 Mon 13:47] \\
+  Retro-born (galileo event-oos-trends retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. ~tools/story-metrics.py~ leaves gaps over ~IDLE_GAP~ (600 s) out of the Impl, Closeout and Update-design minutes, but a verifier dispatch is timed from dispatch to completion with nothing left out (~analyse~, the ~verifier["ms"]~ sum in ~finish~). Evidence: Story 01's row reads =1(44.0m)=, and phase-close wrote the observation "ran 44.0 min" from it. The sub-agent's own transcript (~072a8fee…/subagents/agent-ada0ec48666d3e8e2.jsonl~ in galileo's project directory) holds a 34.4-minute gap ending in a "response above was cut off mid-stream" retry, and about 6 minutes of verification either side. The batch total (=10(93.8m)=) is a third stall. Smallest shape: apply the same idle-gap rule inside a verifier dispatch, reading the sub-agent's transcript when it is on this machine, and keep the wall-clock figure only when it is not. A fixture for it must be copied from the real transcript (0.8.7 rule).
+  The same batch had a second stall the table could not show at all: Story 04's implement turn spans 85 minutes of wall clock for 14 active, and 70.9 of the difference is one gap between an API request and the next event, in an unattended driver run. The Impl column is right to leave it out; whether the retro should name stalls as their own figure is open.
+:END:
+
+* TODO story-metrics: work after the gate is counted in the last story's row
+:PROPERTIES:
+:CREATED:  [2026-11-16 Mon 13:47]
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-16 Mon 13:47] \\
+  Retro-born (galileo event-oos-trends retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. Run again on 2026-11-16 with the same nine story files, the script prints a different Story 09 row from the one ~retro.org~ froze at the gate on 2026-11-14: Update-design 1 → 96 min, test runs 13 → 24, output tokens 81.1k → 346.2k, Δcode 111 → 215, and every total with it. Cause: the session that implemented Story 09 went on to run phase-close and then two more days of work outside any story (seeding a local database, a post-gate fix committed as ~fae3d48~, a later ~/workflow-kit:update-design~), and a session is attributed whole to the story its first prompt names. The frozen table is correct and org-conventions already makes it append-only, so no retro is wrong today. The risk is the correction path: a "corrected table as a new note beneath the old" would carry the inflated row. Smallest shape: stop counting a story's session at the first ~phase-close~ skill invocation, or at the story's commit when the driver made one. Act only if a second batch shows the drift or a correction note is ever needed.
+:END:
+
