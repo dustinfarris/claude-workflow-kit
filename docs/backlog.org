@@ -89,6 +89,8 @@ Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipp
 :CREATED:  [2026-11-16 Mon 13:47]
 :END:
 :LOGBOOK:
+- Note taken on [2026-11-21 Sat 09:41] \\
+  Second batch of evidence, different cause (dotfiles pr-home retro, Batch 1): no stalls, but the Verifier column was still not audit time. About 100 of 112 minutes were the verify command running inside each dispatch. The column wants splitting into suite time and audit time whichever fix lands.
 - Note taken on [2026-11-16 Mon 13:47] \\
   Retro-born (galileo event-oos-trends retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. ~tools/story-metrics.py~ leaves gaps over ~IDLE_GAP~ (600 s) out of the Impl, Closeout and Update-design minutes, but a verifier dispatch is timed from dispatch to completion with nothing left out (~analyse~, the ~verifier["ms"]~ sum in ~finish~). Evidence: Story 01's row reads =1(44.0m)=, and phase-close wrote the observation "ran 44.0 min" from it. The sub-agent's own transcript (~072a8fee…/subagents/agent-ada0ec48666d3e8e2.jsonl~ in galileo's project directory) holds a 34.4-minute gap ending in a "response above was cut off mid-stream" retry, and about 6 minutes of verification either side. The batch total (=10(93.8m)=) is a third stall. Smallest shape: apply the same idle-gap rule inside a verifier dispatch, reading the sub-agent's transcript when it is on this machine, and keep the wall-clock figure only when it is not. A fixture for it must be copied from the real transcript (0.8.7 rule).
   The same batch had a second stall the table could not show at all: Story 04's implement turn spans 85 minutes of wall clock for 14 active, and 70.9 of the difference is one gap between an API request and the next event, in an unattended driver run. The Impl column is right to leave it out; whether the retro should name stalls as their own figure is open.
@@ -103,3 +105,38 @@ Groomed [2026-07-13 Mon 22:53]: six DONE entries pruned per ruling — all shipp
   Retro-born (galileo event-oos-trends retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. Run again on 2026-11-16 with the same nine story files, the script prints a different Story 09 row from the one ~retro.org~ froze at the gate on 2026-11-14: Update-design 1 → 96 min, test runs 13 → 24, output tokens 81.1k → 346.2k, Δcode 111 → 215, and every total with it. Cause: the session that implemented Story 09 went on to run phase-close and then two more days of work outside any story (seeding a local database, a post-gate fix committed as ~fae3d48~, a later ~/workflow-kit:update-design~), and a session is attributed whole to the story its first prompt names. The frozen table is correct and org-conventions already makes it append-only, so no retro is wrong today. The risk is the correction path: a "corrected table as a new note beneath the old" would carry the inflated row. Smallest shape: stop counting a story's session at the first ~phase-close~ skill invocation, or at the story's commit when the driver made one. Act only if a second batch shows the drift or a correction note is ever needed.
 :END:
 
+* TODO story-metrics: test runs and Δtest only recognise an Elixir layout
+:PROPERTIES:
+:CREATED:  [2026-11-21 Sat 09:41]
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-21 Sat 09:41] \\
+  Retro-born (dotfiles pr-home retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. ~tools/story-metrics.py~ counts a test run only when a Bash command matches ~TEST_RE~ (=mix test|precommit|check=), and counts a path as test only when it starts with ~test/~ or contains =_test.=. Evidence: the pr-home table reads Test runs 0 and Δtest 0 for all ten stories, while the 19 verifier transcripts each ran ~make test </dev/null && make lint~ and the tests live in ~doom/lisp/pr-prep-test.el~ and ~bin/*-test.sh~, so they were counted as code. phase-close wrote an observation guessing the Δtest cause and none for Test runs. Smallest shape: match the repo's declared verify command (the ~Verify command:~ line the kit already reads) alongside ~TEST_RE~, and widen the path rule to =-test.= and =.test.=. Test runs inside a verifier sub-agent are not in the story session's transcript; whether to count them is open.
+:END:
+
+* TODO story-closeout: a re-verify after a prose-only fix re-runs the whole verify command
+:PROPERTIES:
+:CREATED:  [2026-11-21 Sat 09:41]
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-21 Sat 09:41] \\
+  Retro-born (dotfiles pr-home retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. Human ruling, not to be relitigated: a re-verify re-audits only the items that failed, and re-runs the verify command only when code or tests changed since the last green run. Evidence: all 19 verifier transcripts ran 5.5–6.5 minutes, and in 16 the longest gap (about 5.4 minutes) was the wait on ~make test </dev/null && make lint~, so about 100 of the batch's 112 verifier minutes were suite time. Seven stories needed a second pass; in four (02, 03, 08, 10) the first-pass findings were prose only (stale comments, ~CLAUDE.md~ bullets, docstrings over 80 columns), and Story 03 ran four passes. The three test findings (01, 07, 09) were real catches and keep the full run. Estimated saving this batch: 25–30 minutes. Smallest shape: story-closeout's fix loop tells the re-dispatch which items failed and whether anything outside comments, docstrings and docs changed; story-verifier skips the verify command when told nothing did and says so in its evidence.
+:END:
+
+* TODO phase-close: list the builder's own readings for the human at the gate
+:PROPERTIES:
+:CREATED:  [2026-11-21 Sat 09:41]
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-21 Sat 09:41] \\
+  Retro-born (dotfiles pr-home retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. Human ruling: at the gate, phase-close lists every Plan LOGBOOK note where a story chose a reading of the design or departed from it, for the human to accept or reverse; a note in PLAN alone is not enough under the driver. Evidence: ten driver-run stories asked no human question, and their Plan notes hold at least four such calls (Story 08's alert click leaving the star, "a deliberate reading"; Story 09 holding "read-only tools" by prompt and permission mode rather than a tool list; Story 02's task note omitting the severity breakdown the DESIGN example shows; Story 05 not deduplicating a re-prep comment against an open thread). The gate record says "no divergences" and names none. All four were accepted at the retro. Smallest shape: one step in phase-close's reconciliation that collects them into the gate record under their own label, and a STOP for rulings before the verdict.
+:END:
+
+* TODO implement stage: stale prose about removed code reaches closeout
+:PROPERTIES:
+:CREATED:  [2026-11-21 Sat 09:41]
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-21 Sat 09:41] \\
+  Retro-born (dotfiles pr-home retro, Batch 1, consultant session). Untriaged: no priority or size tag until a groom. Human ruling: fix this with context at the implement stage, not with more verification. Evidence: in five of ten stories (02, 03, 04, 08, 10) the docs or comments describing replaced behaviour were corrected only at closeout, and in four the verifier's finding forced a second pass. Smallest shape: one line in the driver's implement brief (~tools/run-batch.py~) or the story template's Definition of Done: before finishing, grep the repo for every name this story removed or renamed and bring comments, docstrings and ~CLAUDE.md~ into line. Pairs with the re-verify entry above; this one removes the cause, that one the cost.
+:END:
