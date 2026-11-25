@@ -8,7 +8,7 @@ model: opus
 
 Read the `org-conventions` skill bundled in this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/org-conventions/SKILL.md`) before writing any files.
 
-The user may pass paths when invoking (e.g. `/workflow-kit:user-stories PRD.org DESIGN.org`); otherwise resolve the active initiative directory per org-conventions (CLAUDE.local.md `Active initiative:` line, else newest `docs/*/` dated directory, else repo root) and use its `PRD.org` and `DESIGN.org`. Read both fully before writing anything. Also read the `## Weight class` section of CLAUDE.md — it selects the Definition of Done variant below.
+The user may pass paths when invoking (e.g. `/workflow-kit:user-stories PRD.org DESIGN.org`); otherwise resolve the active initiative directory per org-conventions' path resolution and use its `PRD.org` and `DESIGN.org`. Read both fully before writing anything. Also read the `## Weight class` section (CLAUDE.local.md, else CLAUDE.md) — it selects the Definition of Done variant below.
 
 Create user stories to implement the design in a `stories/` sub-directory adjacent to the PRD. The stories are written in org format and saved with numbered filenames for easy reference (e.g. `story-01-<slug>.org`).
 

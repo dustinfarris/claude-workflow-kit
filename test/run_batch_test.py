@@ -184,7 +184,8 @@ class OpenBatch(Base):
         os.makedirs(os.path.join(self.tmp, "not-a-repo"))
         with self.assertRaises(rb.Refusal) as cm:
             rb.chain_ignored(os.path.join(self.tmp, "not-a-repo"), INIT)
-        self.assertIn("git check-ignore failed", str(cm.exception))
+        # the main-checkout lookup runs first, so either git read may refuse
+        self.assertRegex(str(cm.exception), r"git (rev-parse|check-ignore) failed")
 
     def test_git_failure_mid_story_is_a_stop_with_resume_hint(self):
         def corrupt_index(repo):
@@ -268,7 +269,7 @@ class OpenBatch(Base):
         self.assertEqual(head, subprocess.run(["git", "-C", self.repo, "rev-parse", "HEAD"], capture_output=True, text=True).stdout)
         self.assertTrue(seen)
         # read-only git only
-        self.assertLessEqual({a[a.index("-C") + 2] for a in seen}, {"status", "ls-files", "check-ignore"})
+        self.assertLessEqual({a[a.index("-C") + 2] for a in seen}, {"status", "ls-files", "check-ignore", "rev-parse"})
 
     def test_stops_before_phase_close(self):
         for story in (S04, S05):
@@ -727,6 +728,159 @@ class NotIgnored(Base):
         ])
         self.run_driver()
         self.assertEqual(s.prompts()[1], "commit")
+
+
+class Worktree(Base):
+    """The driver run from a git worktree, as claude --worktree makes one: the
+    worktree has only tracked files, so CLAUDE.local.md and any git-ignored
+    chain exist in the main checkout alone."""
+
+    def add_worktree(self):
+        self.wt = os.path.join(self.tmp, "wt")
+        git(self.repo, "worktree", "add", "-q", "-b", "story", self.wt)
+        return self.wt
+
+    def run_in_worktree(self, *flags):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            rc = rb.main(["--repo", self.wt] + list(flags))
+        return rc, out.getvalue() + err.getvalue()
+
+    def test_main_checkout_of_a_worktree_and_of_itself(self):
+        self.add_worktree()
+        self.assertEqual(rb.main_checkout(self.wt), os.path.realpath(self.repo))
+        self.assertEqual(rb.main_checkout(self.repo), os.path.realpath(self.repo))
+
+    def test_claude_local_md_read_from_the_main_checkout(self):
+        self.add_worktree()
+        self.assertFalse(os.path.exists(os.path.join(self.wt, "CLAUDE.local.md")))
+        self.assertEqual(rb.active_initiative(self.wt), INIT)
+
+    def test_worktree_copy_of_claude_local_md_not_read(self):
+        # galileo, 2026-11-24: a skill created a stub in the worktree
+        self.add_worktree()
+        with open(os.path.join(self.wt, "CLAUDE.local.md"), "w") as f:
+            f.write("Active initiative: none\n")
+        self.assertEqual(rb.active_initiative(self.wt), INIT)
+
+    def test_tracked_chain_resolved_in_the_worktree(self):
+        self.add_worktree()
+        s = self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        s.repo = self.wt
+        self.run_in_worktree()
+        # S04 is ticked, so the first turn is update-design; the chain path
+        # stays relative: the branch commits the worktree's copy
+        self.assertEqual(s.prompts()[0], "/workflow-kit:update-design")
+        rc, out = self.run_in_worktree("--dry-run")
+        self.assertIn(f"initiative: {INIT}/", out)
+
+    def ignore_chain(self):
+        git(self.repo, "rm", "-rq", "--cached", "docs")
+        git(self.repo, "commit", "-qm", "untrack the chain")
+        with open(os.path.join(self.repo, ".git", "info", "exclude"), "a") as f:
+            f.write("docs/\n")
+
+    def test_ignored_chain_resolved_in_the_main_checkout(self):
+        self.ignore_chain()
+        self.add_worktree()
+        self.assertFalse(os.path.exists(os.path.join(self.wt, INIT)))
+        main = os.path.realpath(self.repo)
+        self.assertEqual(rb.active_initiative(self.wt), os.path.join(main, INIT))
+        self.assertTrue(rb.chain_ignored(self.wt, os.path.join(main, INIT)))
+        rc, out = self.run_in_worktree("--dry-run")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("chain documents: git-ignored", out)
+
+    def test_ignored_chain_symlinked_into_the_worktree(self):
+        # galileo, 2026-11-24: the worktree keeps a symlink to the main
+        # checkout's initiative for a session on an older kit, and git
+        # check-ignore refuses a path beyond a symlink
+        self.ignore_chain()
+        self.add_worktree()
+        main = os.path.realpath(self.repo)
+        os.makedirs(os.path.dirname(os.path.join(self.wt, INIT)))  # galileo's docs/ is tracked
+        os.symlink(os.path.join(main, INIT), os.path.join(self.wt, INIT))
+        self.assertEqual(rb.active_initiative(self.wt), os.path.join(main, INIT))
+        rc, out = self.run_in_worktree("--dry-run")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("chain documents: git-ignored", out)
+
+    def test_ignored_chain_stages_read_and_name_the_main_checkout_copy(self):
+        self.ignore_chain()
+        self.add_worktree()
+        main = os.path.realpath(self.repo)
+
+        def update_design(_):
+            mark_done(main, S04)
+            with open(os.path.join(self.wt, "lib.ex"), "w") as f:
+                f.write("x")
+
+        def code(_):
+            self.commit_all(self.wt)
+
+        s = self.stub([
+            (update_design, reply("RESULT: done", "a")),
+            (code, reply("Committed.\nRESULT: done", "a")),
+            (None, reply("RESULT: blocked — stop at 05", "b")),
+        ])
+        rc, out = self.run_in_worktree()
+        self.assertNotIn("STOP at update-design", out)
+        self.assertNotIn("STOP at commit", out)
+        self.assertIn(f"{main}/{INIT}/", s.prompts()[1])
+        self.assertEqual(s.prompts()[2], f"implement @{os.path.join(main, S05)}")
+        self.assertIn("STOP at implement for story-05", out)
+
+    def add_dirs(self, argv):
+        return [argv[i + 1] for i, a in enumerate(argv) if a == "--add-dir"]
+
+    def test_ignored_chain_grants_every_turn_the_main_checkout_docs(self):
+        # galileo, 2026-11-24: update-design in a worktree was refused its
+        # PLAN.org write, which lives in the main checkout, outside the
+        # session's directory; docs/ also holds decisions.org and learnings.org
+        self.ignore_chain()
+        self.add_worktree()
+        docs = os.path.join(os.path.realpath(self.repo), "docs")
+        s = self.stub([
+            (lambda _: mark_done(os.path.realpath(self.repo), S04), reply("RESULT: done", "a")),
+            (None, reply("RESULT: blocked — x", "a")),
+        ])
+        s.repo = self.wt
+        rc, out = self.run_in_worktree()
+        self.assertEqual(len(s.calls), 2)
+        for argv in s.calls:
+            self.assertEqual(self.add_dirs(argv), [docs])
+        self.assertIn(f"Resume with: claude --add-dir {docs} --resume a", out)
+
+    def test_ignored_chain_dry_run_names_the_granted_directory(self):
+        self.ignore_chain()
+        self.add_worktree()
+        docs = os.path.join(os.path.realpath(self.repo), "docs")
+        rc, out = self.run_in_worktree("--dry-run")
+        self.assertEqual(rc, 0, out)
+        self.assertIn(f"chain access: --add-dir {docs}", out)
+
+    def test_ignored_chain_keeps_plugin_dirs_alongside_the_grant(self):
+        self.ignore_chain()
+        self.add_worktree()
+        plugin = os.path.join(self.tmp, "superpowers")
+        os.makedirs(plugin)
+        plugin = os.path.realpath(plugin)
+        docs = os.path.join(os.path.realpath(self.repo), "docs")
+        s = self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        s.repo = self.wt
+        rc, out = self.run_in_worktree("--plugin-dir", plugin)
+        self.assertEqual(self.add_dirs(s.calls[0]), [docs])
+        self.assertIn(plugin, s.calls[0])
+        rc, out = self.run_in_worktree("--dry-run", "--plugin-dir", plugin)
+        self.assertIn(f"plugin dirs: {plugin}\n", out)
+
+    def test_tracked_chain_in_a_worktree_grants_nothing(self):
+        self.add_worktree()
+        s = self.stub([(None, reply("RESULT: blocked — x", "a"))])
+        s.repo = self.wt
+        rc, out = self.run_in_worktree()
+        self.assertEqual(self.add_dirs(s.calls[0]), [])
+        self.assertIn("Resume with: claude --resume a", out)
 
 
 class ClosedBatch(Base):

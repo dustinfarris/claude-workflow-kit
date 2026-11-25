@@ -1,0 +1,68 @@
+#+title: Design — git-ignored kit state under git worktrees
+#+date: [2026-11-24 Tue]
+
+Status: ruled 2026-11-24 (the main-checkout rule, with the three Open items settled as recorded under Rulings), built in 0.9.13. galileo's batch (pre-event-competitor-pricing, stories 01–03 run from a worktree on 2026-11-24) is the driver's read-through, and it found the two gaps recorded in the addendum. create-prd's worktree check, from the third ruling, runs at the next new initiative. The remove-hook guard under Follow-ups is still open.
+
+* Problem
+
+The kit keeps some of its state in git-ignored files: CLAUDE.local.md always, and in a shared repo the chain documents too. A git worktree checks out tracked files only, so a worktree starts without any of them. Anything the kit writes there is written into the worktree directory, and dies with it. =git worktree remove --force= deletes ignored files without a word, so removing the worktree destroys them.
+
+Galileo, 2026-11-24, with worktrees made by ~claude --worktree~ through the personal WorktreeCreate hook ~galileo-worktree-create.sh~:
+
+- In galileo, the team tracks =docs/= and =CLAUDE.md=, so worktrees do get those. =.git/info/exclude='s =docs/= line hides only the untracked files under it: the initiative directories, =docs/learnings.org=, =docs/decisions.org=, =docs/backlog.org=, and =docs/superpowers/=. Which kit paths are ignored therefore has to be asked per path, never assumed for all of =docs/=.
+- A create-prd conversation in the worktree =prototype-early-competitor-spreadsheet= wrote =docs/2026-11-24-pre-event-competitor-pricing/= (PRD.org, SKETCH.org). The main checkout does not have it. The worktree's remove hook ends in =git worktree remove --force=, so removing the worktree would delete the PRD.
+- The worktree had no CLAUDE.local.md, so create-prd created one, as its step says to when the file is absent. The new file held only the =Active initiative:= line. The main checkout's CLAUDE.local.md also carries =## Weight class= (work-grade), =Verify command: bash -c 'mix precommit --fast'=, and the human's PR rules. In that worktree, skills would read no weight class and fall back to the default verify command, and nothing would warn about either.
+- =.worktreeinclude= cannot fix this. It copies files into a new worktree once, and it skips directories. A copy is also the wrong model for chain documents: an edit made in the worktree never gets back to the main checkout.
+
+The ignore rules are not the problem. =.git/info/exclude= lives in the common git directory, so every worktree uses the same rules, and the prd-lock hook matches =*PRD.org= at any depth.
+
+* Proposal
+
+An ignored file is kept in one place: the main checkout. The main checkout is the directory above the path that ~git rev-parse --path-format=absolute --git-common-dir~ prints. That command works from any worktree, and from the main checkout itself it names the main checkout, so nothing changes in a repo used without worktrees. The kit reads and writes each path as follows:
+
+- CLAUDE.local.md is always read and written in the main checkout. It is ignored by definition (project-setup's =.gitignore=), and it holds one person's working state, which is the same in every worktree.
+- For a chain path (an initiative directory, or one of the repo-level =docs/learnings.org=, =docs/decisions.org=, =docs/backlog.org=), ask ~git check-ignore~. If the path is ignored, it lives in the main checkout. If it is not, it lives in the current worktree, because the branch will commit it and the worktree's copy is the one that ends up in history. ~git check-ignore~ goes by the ignore patterns, so it gives an answer for a path that does not exist yet, which covers an initiative started inside a worktree.
+
+This is one rule in one place: org-conventions' path resolution, which every skill already points to with "the repo's CLAUDE.local.md". The skills keep their wording; the conventions file defines what "the repo's" means. ~tools/run-batch.py~ applies the same rule in ~active_initiative()~ and wherever it joins =repo= with the initiative path. Its ~chain_ignored()~ already asks ~git check-ignore~ per path.
+
+The same rule reaches ~tools/story-metrics.py~, found while building: it kept only sessions whose working directory is the repo itself, so every session run in a worktree fell out of phase-close's retro table. A session now counts when it ran in the repo or in a worktree of it. A ~claude --worktree~ worktree sits under =<repo>/.claude/worktrees/<name>=, which still matches by path after the worktree is removed (the retro usually runs after that). Any other worktree is matched through git while it still exists.
+
+Consequences:
+
+- Two worktrees working at once in one initiative share one PLAN.org, and their story checkboxes and LOGBOOK entries land in the same files. That is accurate, because there is one plan. Running two batch drivers on the same open batch was never supported, and this design does not make it so.
+- An initiative started in a worktree of a shared repo lands in the main checkout, and so does its =Active initiative:= line. That is the galileo case above, now with nothing lost and nothing duplicated.
+- For tracked chains, as in bear-cub, nothing changes except that CLAUDE.local.md is read from the main checkout.
+
+* Not proposed, and why
+
+- Copying files into the worktree at creation and back at removal. Two-way sync conflicts as soon as both sides change a file, and a removal path that is skipped (a crash, a manual =git worktree remove=) loses whatever was not copied back.
+- Symlinking the ignored paths into each worktree. This needs a creation hook in every repo, and the kit cannot ship one, because a WorktreeCreate hook replaces Claude Code's own worktree creation and galileo already has its own. It also breaks quietly: a symlink is a file to git, so a trailing-slash rule such as =docs/= does not ignore a symlink named =docs=, and ~git status~ reports it untracked, ready for a =git add -A=. That was checked in a scratch repo on 2026-11-24. And a new initiative started in a worktree still lands in the worktree.
+- Moving the chain documents out of the repo, to a fixed path or a private repo. Worktrees would stop mattering, and a shared repo's chain would get a history it does not have today. It breaks the =docs/YYYY-MM-DD-<initiative>/= convention that every skill and the batch driver assume, which is too big a change to fix this problem. It stays open as its own idea if a missing chain history ever costs something.
+
+* Rulings [2026-11-24 Tue]
+
+- The "newest =docs/*/= dated directory" fallback is cut. In a worktree with no =Active initiative:= line, it silently picked whatever initiative was newest, and once CLAUDE.local.md is read from the main checkout it is almost never reached. Path resolution becomes the =Active initiative:= line, else the repo root (the legacy layout). This follows the kit's rule to cut what is not consulted.
+- The brainstorm spec gets a README note, not skill logic. Superpowers writes =docs/superpowers/specs/= relative to the session's directory, which the kit does not control, so a design session held in a worktree leaves its spec where promote-design, run in the main checkout, will not find it. The README says to hold design sessions in the main checkout. That session is already a fresh session by rule, so the note costs nothing.
+- create-prd gets no guard of its own. Its "create CLAUDE.local.md if absent" step writes the main checkout's file under the main-checkout rule, so the galileo stub cannot recur. A skill has no automated test, so the check is the read-through in a consuming repo: create-prd started from a worktree updates the main checkout's CLAUDE.local.md and creates no file in the worktree.
+
+* Files
+
+- =skills/org-conventions/SKILL.md=: the main-checkout rule in path resolution, the newest-directory fallback removed, and the same rule for the repo-level files named under Lessons file, Set-aside ideas and Decision Log. The Decision Log spec's wording is a verbatim crown jewel: the location rule changes only in the path-resolution paragraph, and the crown-jewel blocks stay as they are.
+- =skills/user-stories/SKILL.md=: its inline restatement of path resolution ("else newest =docs/*/= dated directory") loses the cut fallback.
+- =tools/run-batch.py=: resolve CLAUDE.local.md and an ignored initiative through the main checkout. New cases in =test/run_batch_test.py= cover a worktree of a fixture repo, one with an ignored chain and one with a tracked chain.
+- =tools/story-metrics.py=: a session run in a worktree of the repo counts as the repo's. New ~test/hooks_test.sh~ cases move the real fixture's =cwd= into a removed ~claude --worktree~ path, into a live worktree outside the repo, and into a sibling directory, which must not match.
+- =README.org=: one sentence on worktrees in the shared-repo setup paragraph, and the note that design sessions are held in the main checkout.
+- CHANGELOG.org and =.claude-plugin/plugin.json=: the release entry and version bump, per this repo's iteration loop.
+
+* Follow-ups outside the kit, after galileo is free
+
+- Copy =docs/2026-11-24-pre-event-competitor-pricing/= from the =prototype-early-competitor-spreadsheet= worktree into the main checkout, and point the main checkout's =Active initiative:= line at it, keeping the "previously" note. Do this only once no session in that worktree is still editing it.
+- In ~galileo-worktree-remove.sh~, before =git worktree remove --force=, refuse and list the paths when the worktree holds an ignored =docs/20*/= directory the main checkout lacks, or a CLAUDE.local.md that differs from the main checkout's. This also protects worktrees created before the kit change.
+
+* Addendum [2026-11-24 Tue] — the galileo move
+
+The =prototype-early-competitor-spreadsheet= worktree's initiative (PRD, SKETCH, DESIGN, PLAN, four stories) and its brainstorm spec were copied into the main checkout and confirmed identical. The worktree's originals and its stub CLAUDE.local.md went to a backup under =$TMPDIR=, and each was replaced by a symlink to the main checkout's copy. The symlinks are a bridge for the session still running in that worktree on kit 0.9.12, which resolves paths from its own directory. The session had already made the same kind of symlink for =docs/decisions.org= and =docs/learnings.org=. The existing =docs/= and =CLAUDE.local.md= exclude rules cover these symlinks, so both checkouts' ~git status~ stayed empty. The main checkout's =Active initiative:= line now names the new initiative.
+
+The driver's dry run from the worktree then hit one gap: ~git check-ignore~ refuses a path that goes through a symlink ("beyond a symbolic link"). ~chain_ignored()~ now asks in the main checkout, where an ignored chain is a real directory, and a test case covers a worktree holding that symlink. After the fix, the dry run from the worktree resolves the main checkout's initiative and open batch, and reports the chain git-ignored.
+
+The batch then found a second gap. In the 18:05 run, update-design's edit to PLAN.org was refused: through the worktree's symlink, the path resolves into the main checkout, which is outside the session's allowed directories. A chain resolved into the main checkout is only half done if the sessions cannot write it. Every turn, and the printed resume line, now gets ~--add-dir~ for the main checkout's =docs/=, the initiative's parent, so the repo-level =decisions.org=, =learnings.org= and =backlog.org= beside it are covered too. A tracked chain, or a run from the main checkout, gets no flag. The 18:47 run carried the flag and took story 03 through all four stages. It stopped at story 04 only because that story is the human's prod launch.

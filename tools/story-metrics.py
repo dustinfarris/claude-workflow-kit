@@ -3,9 +3,10 @@
 
 Reads the JSONL session transcripts Claude Code keeps under
 ~/.claude/projects/, keeps the sessions whose recorded working directory is
-this repo, attributes each to the story its prompts and tool calls name, and
-prints an org table (one row per story, a totals row) followed by a per-story
-event timeline for the phase-close session to write observations from.
+this repo or a worktree of it, attributes each to the story its prompts and
+tool calls name, and prints an org table (one row per story, a totals row)
+followed by a per-story event timeline for the phase-close session to write
+observations from.
 
 Usage:
   story-metrics.py [--repo PATH] [--projects-dir DIR] [--no-git] STORY...
@@ -24,6 +25,7 @@ Python 3 standard library only.
 """
 import argparse
 import datetime as dt
+import functools
 import json
 import os
 import re
@@ -48,9 +50,36 @@ def parse_ts(s):
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def same_repo(a, b):
-    a, b = os.path.realpath(a), os.path.realpath(b)
-    return a == b or a.lower() == b.lower()
+@functools.lru_cache(maxsize=None)
+def main_checkout(path):
+    """The main checkout of the git worktree at path, or None when path is not
+    a worktree (a removed one included)."""
+    if not os.path.isdir(path):
+        return None
+    r = subprocess.run(["git", "-C", path, "rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir"],
+                       capture_output=True, text=True)
+    if r.returncode:
+        return None
+    git_dir, common = r.stdout.split("\n")[:2]
+    if os.path.realpath(git_dir) == os.path.realpath(common):
+        return None
+    return os.path.dirname(common)
+
+
+def same_repo(cwd, repo):
+    """True when a session ran in repo or in a worktree of it. A claude
+    --worktree worktree sits under repo/.claude/worktrees/, which still matches
+    after it is removed; any other worktree matches while it exists."""
+    def eq(x, y):
+        x, y = os.path.realpath(x), os.path.realpath(y)
+        return x == y or x.lower() == y.lower()
+    if eq(cwd, repo):
+        return True
+    parent, name = os.path.split(os.path.normpath(cwd))
+    if name and eq(parent, os.path.join(repo, ".claude", "worktrees")):
+        return True
+    main = main_checkout(cwd)
+    return bool(main) and eq(main, repo)
 
 
 def session_cwd(path):

@@ -214,6 +214,21 @@ ASYNC="$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-
 check "story-metrics async-launched verifier timed by its queued_command notification" "$(echo "$ASYNC" | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$7); print $7}')" "2(6.3m)"
 check "story-metrics repeat notification and launch ack add no completion" "$(echo "$ASYNC" | grep -c 'done (')" 2
 check "story-metrics missing story flagged" "$(python3 "$ROOT/tools/story-metrics.py" --repo /fixture/repo --projects-dir "$FIX/projects" --no-git story-09-none 2>/dev/null | grep -c '^| story-09 .*no transcript')" 1
+# Sessions run in a worktree of the repo are the repo's: the same fixture with
+# its cwd moved, once into a claude --worktree path that no longer exists
+# (removed after the batch), once into a live worktree outside the repo.
+SMTMP="$(mktemp -d)"
+sm_moved() { # sm_moved <new cwd> <repo> — story-01-widget's row, phase minutes
+  rm -rf "$SMTMP/projects"; cp -R "$FIX/projects" "$SMTMP/projects"
+  for f in "$SMTMP"/projects/*/*.jsonl; do sed -i.bak "s#\"cwd\": \"/fixture/repo\"#\"cwd\": \"$1\"#" "$f" && rm "$f.bak"; done
+  python3 "$ROOT/tools/story-metrics.py" --repo "$2" --projects-dir "$SMTMP/projects" --no-git story-01-widget 2>/dev/null | grep '^| story-01 ' | awk -F'|' '{gsub(/ /,"",$3); gsub(/ /,"",$4); gsub(/ /,"",$5); print $3"/"$4"/"$5}'
+}
+check "story-metrics counts a removed claude --worktree session" "$(sm_moved /fixture/repo/.claude/worktrees/story-01 /fixture/repo)" "5/3/3"
+check "story-metrics does not count a sibling directory" "$(sm_moved /fixture/repo-other /fixture/repo | grep -c '5/3/3')" 0
+git -c init.defaultBranch=main init -q "$SMTMP/main" && git -C "$SMTMP/main" -c core.hooksPath=/dev/null -c user.name=f -c user.email=f@example.invalid commit -q --allow-empty -m fixture && git -C "$SMTMP/main" worktree add -q "$SMTMP/wt" 2>/dev/null
+SMWT="$(cd "$SMTMP/wt" && pwd -P)"; SMMAIN="$(cd "$SMTMP/main" && pwd -P)"
+check "story-metrics counts a live worktree outside the repo" "$(sm_moved "$SMWT" "$SMMAIN")" "5/3/3"
+rm -rf "$SMTMP"
 
 echo "== run-batch driver =="
 # Fixtures are bear-cub's weather-indicator PLAN and stories at real commits;

@@ -21,7 +21,11 @@ only for a connection lost mid-response. A stage with no result within
 --stage-timeout minutes (default 60) is killed and is a stop: in -p mode a
 step waiting on a permission prompt would otherwise hang without a word.
 
-The Active initiative: line is read from CLAUDE.local.md only.
+The Active initiative: line is read from CLAUDE.local.md only, the main
+checkout's when run from a git worktree; a git-ignored chain is read and named
+there too, since a worktree checks out tracked files only. Every turn, and the
+resume line, then gets --add-dir for the main checkout's docs/, so the sessions
+running in the worktree may write the chain they were pointed at.
 When the chain documents are git-ignored, the commit prompt asks for the code
 commit only, and a commit stage that leaves a newly tracked ignored path (a
 force-add) is a stop.
@@ -112,11 +116,30 @@ def read(path):
 
 # --- the chain -------------------------------------------------------------
 
+def main_checkout(repo):
+    """The repo's main checkout: repo itself, unless repo is a linked worktree
+    (its git directory is not the common one), then the directory above the
+    common git directory. Git-ignored kit state lives there, because a worktree
+    checks out tracked files only."""
+    r = subprocess.run(["git", "-C", repo, "rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir"],
+                       capture_output=True, text=True)
+    if r.returncode:
+        raise Refusal(f"git rev-parse failed: {r.stderr.strip()}")
+    git_dir, common = r.stdout.split("\n")[:2]
+    if os.path.realpath(git_dir) == os.path.realpath(common):
+        return os.path.realpath(repo)
+    return os.path.realpath(os.path.dirname(common))
+
+
 def active_initiative(repo):
-    """The initiative directory named by CLAUDE.local.md's Active initiative: line.
-    CLAUDE.md is read only to say the line must move when it is still there."""
+    """The initiative directory named by the main checkout's CLAUDE.local.md
+    Active initiative: line. Relative to repo when the chain is tracked, so a
+    worktree's branch commits its own copy; absolute, in the main checkout, when
+    it is git-ignored. CLAUDE.md is read only to say the line must move when it
+    is still there."""
     line = re.compile(r"^Active initiative:\s*(\S+)", re.M)
-    local, shared = (os.path.join(repo, n) for n in ("CLAUDE.local.md", "CLAUDE.md"))
+    main = main_checkout(repo)
+    local, shared = os.path.join(main, "CLAUDE.local.md"), os.path.join(repo, "CLAUDE.md")
     m = line.search(read(local)) if os.path.isfile(local) else None
     if not m:
         if os.path.isfile(shared) and line.search(read(shared)):
@@ -126,6 +149,8 @@ def active_initiative(repo):
     if not m or m.group(1).rstrip(".") == "none":
         raise Refusal("CLAUDE.local.md names no active initiative")
     init = m.group(1).rstrip("/")
+    if main != os.path.realpath(repo) and chain_ignored(repo, init):
+        init = os.path.join(main, init)
     if not os.path.isfile(os.path.join(repo, init, "PLAN.org")):
         raise Refusal(f"no PLAN.org in the active initiative {init}/")
     return init
@@ -212,8 +237,14 @@ def git_status(repo):
 
 def chain_ignored(repo, init):
     """True when the chain documents are untracked and git-ignored (galileo's
-    .git/info/exclude keeps docs/ out), so there is no doc-only commit to make."""
-    r = subprocess.run(["git", "-C", repo, "check-ignore", "-q", os.path.join(init, "PLAN.org")],
+    .git/info/exclude keeps docs/ out), so there is no doc-only commit to make.
+    Asked in the main checkout, where an ignored chain is a real directory: a
+    worktree may hold a symlink to it, and check-ignore refuses a path beyond
+    one. An absolute init is the main checkout's copy, asked by its path there."""
+    main = main_checkout(repo)
+    if os.path.isabs(init):
+        init = os.path.relpath(init, main)
+    r = subprocess.run(["git", "-C", main, "check-ignore", "-q", os.path.join(init, "PLAN.org")],
                        capture_output=True, text=True)
     if r.returncode not in (0, 1):
         raise Refusal(f"git check-ignore failed: {r.stderr.strip()}")
@@ -691,6 +722,15 @@ def plugin_flags(paths):
     return flags
 
 
+def access_flags(init):
+    """claude --add-dir for the main checkout's docs/ when the chain resolved
+    there (an absolute init: git-ignored, run from a worktree). Every turn runs
+    in the worktree, so without it a write to PLAN.org, a story, or the
+    repo-level decisions.org, learnings.org and backlog.org beside the
+    initiative falls outside the session's directories and is refused."""
+    return ["--add-dir", os.path.dirname(init)] if os.path.isabs(init) else []
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=os.getcwd())
@@ -703,12 +743,16 @@ def main(argv=None):
     args = ap.parse_args(argv)
     repo = os.path.abspath(args.repo)
     try:
-        flags = plugin_flags(args.plugin_dir)
+        plugins = plugin_flags(args.plugin_dir)
         init = active_initiative(repo)
+        access = access_flags(init)
+        flags = plugins + access
         batch = open_batch(read(os.path.join(repo, init, "PLAN.org")))
         print(f"initiative: {init}/\nopen batch: {batch.title}")
         if args.plugin_dir:
-            print("plugin dirs: " + " ".join(flags[1::2]))
+            print("plugin dirs: " + " ".join(plugins[1::2]))
+        if access:
+            print("chain access: " + " ".join(access))
         mode, problems = preflight(repo)
         if args.dry_run:
             return dry_run(repo, init, batch, problems)
